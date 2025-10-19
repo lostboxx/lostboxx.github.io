@@ -1,0 +1,541 @@
+* { box-sizing: border-box; }
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: #f0f4f8;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-family: 'sans-serif';
+}
+
+/* ПАНЕЛЬ ВВЕРХУ - ОСТАВЛЯЕМ ОРИГИНАЛЬНОЙ (60px) */
+.toolbar {
+  height: 60px; /* ОРИГИНАЛ */
+  background: linear-gradient(to right, #1168c2, #0d5aa6, #1168c2);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  flex-shrink: 0;
+  z-index: 100;
+}
+
+.toolbar-left {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+}
+
+.toolbar-right {
+  display: flex;
+  align-items: center;
+}
+
+/* СОДЕРЖИМОЕ ТУЛБАРА - ОСТАВЛЯЕМ ОРИГИНАЛЬНЫМ */
+.toolbar img {
+  height: 40px;
+  width: 40px;
+  margin-right: 12px;
+  image-rendering: pixelated;
+  flex-shrink: 0;
+}
+
+.title {
+  font-size: 1.4em;
+  font-weight: bold;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-shrink: 1;
+}
+
+.icon-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 8px;
+}
+
+.icon-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  transition: background 0.2s ease, transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.icon-circle img {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+}
+
+.icon-circle:hover {
+  background: #e3f0ff;
+  transform: scale(1.1);
+}
+
+#newsIcon {
+  font-size: 16px;
+}
+
+/* --- ОСНОВНОЙ ИНТЕРФЕЙС - УМЕНЬШАЕМ --- */
+
+.centered {
+  flex: 1;
+  display: flex;
+  position: relative;
+  padding: 15px; /* УМЕНЬШЕНО: БЫЛО 20px */
+}
+
+.content-box {
+  width: 100%;
+  height: 100%;
+  background: white;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  border-radius: 10px; /* УМЕНЬШЕНО: БЫЛО 12px */
+  overflow: hidden;
+}
+
+.main-menu {
+  padding: 20px; /* УМЕНЬШЕНО: БЫЛО 30px */
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.profile-summary {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px; /* УМЕНЬШЕНО: БЫЛО 30px */
+}
+
+/* АВАТАР - УМЕНЬШАЕМ */
+.avatar {
+  width: 50px; /* УМЕНЬШЕНО: БЫЛО 60px */
+  height: 50px; /* УМЕНЬШЕНО: БЫЛО 60px */
+  border-radius: 50%;
+  background: #e0e0e0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px; /* УМЕНЬШЕНО: БЫЛО 30px */
+  margin-right: 10px; /* УМЕНЬШЕНО: БЫЛО 15px */
+  background-size: cover;
+  background-position: center;
+}
+
+/* ИМЯ ПОЛЬЗОВАТЕЛЯ - УМЕНЬШАЕМ */
+.username {
+  font-size: 1.1em; /* УМЕНЬШЕНО: БЫЛО 1.2em */
+  font-weight: bold;
+  color: #333;
+}
+
+.menu-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px; /* УМЕНЬШЕНО: БЫЛО 15px */
+}
+
+/* ГЛАВНЫЕ КНОПКИ - УМЕНЬШАЕМ */
+.ripple-button {
+  position: relative;
+  overflow: hidden;
+  background: #ffffff;
+  color: #1168c2;
+  padding: 8px 16px; /* УМЕНЬШЕНО: БЫЛО 12px 24px */
+  border: none;
+  border-radius: 6px; /* УМЕНЬШЕНО: БЫЛО 8px */
+  font-size: 15px; /* УМЕНЬШЕНО: БЫЛО 16px */
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(17,104,194,0.3);
+  transition: background 0.3s, box-shadow 0.2s;
+  text-align: left;
+  max-width: 300px;
+}
+
+.ripple-button:hover {
+  background: #e3f0ff;
+}
+
+.ripple-button.active {
+  box-shadow: 0 0 0 3px rgba(17,104,194,0.4);
+}
+
+.ripple {
+  position: absolute;
+  border-radius: 50%;
+  transform: scale(0);
+  background-color: rgba(17, 104, 194, 0.4);
+  animation: ripple-animation 0.6s linear;
+  pointer-events: none;
+}
+
+@keyframes ripple-animation {
+  to {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+.profile-page {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px; /* УМЕНЬШЕНО: БЫЛО 30px */
+  width: 100%;
+  position: relative;
+}
+
+.back-button {
+  align-self: flex-start;
+  background: none;
+  border: none;
+  font-size: 16px; /* УМЕНЬШЕНО: БЫЛО 18px */
+  color: #1168c2;
+  cursor: pointer;
+  padding: 8px; /* УМЕНЬШЕНО: БЫЛО 10px */
+  margin-bottom: 15px; /* УМЕНЬШЕНО: БЫЛО 20px */
+}
+
+/* БОЛЬШОЙ АВАТАР - УМЕНЬШАЕМ */
+.avatar-large {
+  width: 90px; /* УМЕНЬШЕНО: БЫЛО 120px */
+  height: 90px; /* УМЕНЬШЕНО: БЫЛО 120px */
+  border-radius: 50%;
+  background: #e0e0e0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40px; /* УМЕНЬШЕНО: БЫЛО 50px */
+  margin-bottom: 20px; /* УМЕНЬШЕНО: БЫЛО 25px */
+  background-size: cover;
+  background-position: center;
+}
+
+/* ШРИФТ В ПРОФИЛЕ - УМЕНЬШАЕМ */
+.profile-username {
+  font-size: 1.3em; /* УМЕНЬШЕНО: БЫЛО 1.4em */
+  margin-bottom: 20px; /* УМЕНЬШЕНО: БЫЛО 30px */
+  font-weight: bold;
+  color: #333;
+}
+
+.profile-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 10px; /* УМЕНЬШЕНО: БЫЛО 15px */
+  width: 100%;
+  max-width: 300px;
+}
+
+#usernameInput {
+  padding: 10px; /* УМЕНЬШЕНО: БЫЛО 12px */
+  border: 1px solid #ddd;
+  border-radius: 6px; /* УМЕНЬШЕНО: БЫЛО 8px */
+  font-size: 15px; /* УМЕНЬШЕНО: БЫЛО 16px */
+  margin-bottom: 8px; /* УМЕНЬШЕНО: БЫЛО 10px */
+}
+
+.repair-section {
+  margin-top: 20px; /* УМЕНЬШЕНО: БЫЛО 30px */
+  align-self: flex-start;
+  display: flex;
+  align-items: center;
+  gap: 8px; /* УМЕНЬШЕНО: БЫЛО 10px */
+  color: #1168c2;
+}
+
+.repair-section a {
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.repair-section a:hover {
+  text-decoration: underline;
+}
+
+iframe {
+  border: none;
+  width: 100%;
+  height: 100%;
+  background: white;
+  display: none;
+}
+
+/* ПАНЕЛЬ ВНИЗУ - ОСТАВЛЯЕМ ОРИГИНАЛЬНОЙ (60px) */
+.bottom-bar {
+  height: 60px; /* ОРИГИНАЛ */
+  background: linear-gradient(to right, #1168c2, #0d5aa6, #1168c2);
+  flex-shrink: 0;
+  z-index: 100;
+}
+
+/* КОНТЕЙНЕРЫ ФРЕЙМОВ - ОСТАВЛЯЕМ ОРИГИНАЛЬНЫМИ (позиционирование 60px/60px) */
+.frame-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: none;
+  z-index: 1000;
+}
+
+.frame-container.tools {
+  top: 0;
+  height: 100%;
+}
+
+.frame-container.games {
+  top: 0;
+  height: 100%;
+}
+
+.frame-container.news {
+  top: 60px; /* ОРИГИНАЛ */
+  height: calc(100% - 120px); /* ОРИГИНАЛ */
+  background: white;
+}
+
+.frame-container.guestbook {
+  top: 60px; /* ОРИГИНАЛ */
+  height: calc(100% - 120px); /* ОРИГИНАЛ */
+}
+
+.frame-container.news iframe {
+  display: block;
+}
+
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.5);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+/* МОДАЛЬНОЕ ОКНО - УМЕНЬШАЕМ */
+.modal-content {
+  background: white;
+  padding: 15px; /* УМЕНЬШЕНО: БЫЛО 20px */
+  border-radius: 6px; /* УМЕНЬШЕНО: БЫЛО 8px */
+  max-width: 280px; /* УМЕНЬШЕНО: БЫЛО 300px */
+  width: 100%;
+  text-align: center;
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 10px; /* УМЕНЬШЕНО: БЫЛО 15px */
+  margin-top: 15px; /* УМЕНЬШЕНО: БЫЛО 20px */
+}
+
+.modal-buttons button {
+  padding: 6px 12px; /* УМЕНЬШЕНО: БЫЛО 8px 16px */
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px; /* УМЕНЬШЕНО: БЫЛО 16px */
+}
+
+#byjar {
+  position: absolute;
+  bottom: 8px; /* УМЕНЬШЕНО: БЫЛО 10px */
+  left: 8px; /* УМЕНЬШЕНО: БЫЛО 10px */
+  color: #000000;
+  padding: 4px 8px; /* УМЕНЬШЕНО: БЫЛО 5px 10px */
+  border-radius: 4px; /* УМЕНЬШЕНО: БЫЛО 6px */
+  opacity: 1.0;
+  font-size: 10px; /* УМЕНЬШЕНО: БЫЛО 12px */
+}
+
+#clock {
+    font-size: 18px; /* УМЕНЬШЕНО: БЫЛО 20px */
+    color: #333;
+    text-shadow: 
+        -1px -1px 0 #FFF,  
+        0.5px -0.5px 0 #FFF,
+        -0.5px 0.5px 0 #FFF,
+        0.5px 0.5px 0 #FFF;
+    margin-left: 20px; /* УМЕНЬШЕНО: БЫЛО 30px */
+}
+
+
+.modal-buttons button:first-child {
+  background: #1168c2;
+  color: white;
+}
+
+.modal-buttons button:last-child {
+  background: #e0e0e0;
+  color: #333;
+}
+
+/* Стили для личной папки */
+.private-folder-fullscreen {
+  position: fixed;
+  top: 60px; /* ОРИГИНАЛ */
+  left: 0;
+  right: 0;
+  bottom: 60px; /* ОРИГИНАЛ */
+  z-index: 95;
+  background: white;
+  display: none;
+}
+
+.private-folder-fullscreen iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+.profile-private-btn {
+  position: absolute;
+  top: 8px; /* УМЕНЬШЕНО: БЫЛО 10px */
+  right: 8px; /* УМЕНЬШЕНО: БЫЛО 10px */
+  background: none;
+  border: none;
+  color: #666;
+  font-size: 10px; /* УМЕНЬШЕНО: БЫЛО 12px */
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 3px; /* УМЕНЬШЕНО: БЫЛО 5px */
+  z-index: 10;
+}
+
+#bugreport {
+  position: absolute;
+  top: 8px; /* УМЕНЬШЕНО: БЫЛО 10px */
+  left: 8px; /* УМЕНЬШЕНО: БЫЛО 10px */
+  background: none;
+  border: none;
+  color: #666;
+  font-size: 10px; /* УМЕНЬШЕНО: БЫЛО 12px */
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 3px; /* УМЕНЬШЕНО: БЫЛО 5px */
+  z-index: 10;
+}
+
+.profile-private-btn:hover {
+  color: #333;
+}
+
+@media (max-width: 768px) {
+  .centered { padding: 8px; } /* УМЕНЬШЕНО: БЫЛО 10px */
+  .main-menu { padding: 15px; } /* УМЕНЬШЕНО: БЫЛО 20px */
+  .avatar { width: 40px; height: 40px; font-size: 20px; } /* УМЕНЬШЕНО: БЫЛО 50px */
+  .ripple-button { padding: 6px 12px; font-size: 14px; } /* УМЕНЬШЕНО: БЫЛО 10px 20px */
+}
+ /* Стили только для кнопки "Личная папка" */
+    .profile-private-btn {
+      position: absolute;
+      top: 8px; /* УМЕНЬШЕНО: БЫЛО 10px */
+      right: 8px; /* УМЕНЬШЕНО: БЫЛО 10px */
+      background: none;
+      border: none;
+      color: #666;
+      font-size: 10px; /* УМЕНЬШЕНО: БЫЛО 12px */
+      cursor: pointer;
+      text-decoration: underline;
+      padding: 3px; /* УМЕНЬШЕНО: БЫЛО 5px */
+      z-index: 10;
+    }
+    
+    .profile-private-btn:hover {
+      color: #333;
+    }
+    
+    /* Полноэкранный iframe для личной папки */
+    .private-folder-fullscreen {
+      position: fixed;
+      top: 60px; /* ОРИГИНАЛ */
+      left: 0;
+      right: 0;
+      bottom: 60px; /* ОРИГИНАЛ */
+      z-index: 95;
+      background: white;
+      display: none;
+    }
+    
+    .private-folder-fullscreen iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+    
+    /* Фикс для аватарки в профиле */
+    .profile-page .avatar-large {
+      margin-left: auto;
+      margin-right: auto;
+    }
+      .tutorial-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      z-index: 2000;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding-top: 60px; /* УМЕНЬШЕНО: БЫЛО 80px */
+    }
+    
+    .tutorial-message {
+      background-color: #1168c2;
+      color: white;
+      padding: 10px 15px; /* УМЕНЬШЕНО: БЫЛО 15px 20px */
+      border-radius: 6px; /* УМЕНЬШЕНО: БЫЛО 8px */
+      max-width: 250px; /* УМЕНЬШЕНО: БЫЛО 300px */
+      text-align: center;
+      position: relative;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      animation: fadeIn 0.3s ease;
+    }
+    
+    .tutorial-message:after {
+      content: '';
+      position: absolute;
+      top: -8px; /* УМЕНЬШЕНО: БЫЛО -10px */
+      left: 15px; /* УМЕНЬШЕНО: БЫЛО 20px */
+      width: 0;
+      height: 0;
+      border-left: 8px solid transparent; /* УМЕНЬШЕНО: БЫЛО 10px */
+      border-right: 8px solid transparent; /* УМЕНЬШЕНО: БЫЛО 10px */
+      border-bottom: 8px solid #1168c2; /* УМЕНЬШЕНО: БЫЛО 10px */
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
