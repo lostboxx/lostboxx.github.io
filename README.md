@@ -16,3 +16,5 @@
 
 # Website features
 ### There's a hex editor for editing binary data, tools for base 64 databases, tools for working with JSON, EXIF, SVG, and CSV, etc.
+
+## Click on the logo on the main page (index.html) to open the policy.
