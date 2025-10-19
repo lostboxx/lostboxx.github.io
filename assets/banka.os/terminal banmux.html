@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="robots" content="noindex, follow">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BanMux >/</title>
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  body {
+    background: black;
+    color: #00ff00;
+    font-family: monospace;
+    padding: 3px;
+    user-select: none;
+    height: 100vh;
+    display: flex; 
+    flex-direction: column;
+    overflow: hidden;
+    font-size: 14px;
+    line-height: 1.1;
+  }
+  #welcome {
+    flex-shrink: 0;
+    border-bottom: 1px solid #004400;
+    padding: 3px 0;
+  }
+  #terminal {
+    flex-grow: 1;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    padding: 0;
+  }
+  .line {
+    display: flex;
+    margin-bottom: 1px;
+  }
+  .prompt {
+    flex-shrink: 0;
+    padding-right: 2px;
+  }
+  .input-line {
+    outline: none;
+    flex-grow: 1;
+    caret-color: transparent;
+  }
+  .input-line:after {
+    content: "";
+    display: inline-block;
+    width: 8px;
+    height: 1.1em;
+    background: #00ff00;
+    animation: blink 1s steps(1) infinite;
+    vertical-align: bottom;
+    margin-left: 1px;
+  }
+  @keyframes blink {
+    50% { opacity: 0; }
+  }
+  .output-line {
+    user-select: text;
+  }
+</style>
+</head>
+<body tabindex="0">
+  <div id="welcome">₸Добро пожаловать в BanMux!</div>
+<div id="terminal" aria-live="polite"></div>
+
+<script>
+  const terminal = document.getElementById('terminal');
+  let isAwaitingConfirmation = false;
+  let binaryMode = false;
+  let maxInputLength = 16;
+  let angelProtection = false;
+
+  const specialCommands = new Set([
+    "703691", "00:00", "1234", "deleteOS", "%", 
+    "224466", "19414", "666666", "102938", "102", 
+    "103", "1111111111111111", "404", "777", "010101", "3333",
+    "9143", "000", "2014", "000000"
+  ]);
+
+  function textToBinary(text) {
+    return text.split('').map(char => 
+      char.charCodeAt(0).toString(2).padStart(8, '0')
+    ).join(' ');
+  }
+
+  function handleCommand(inputText, inputLine) {
+    const trimmed = inputText.trim();
+
+    inputLine.contentEditable = false;
+    inputLine.classList.remove('input-line');
+    inputLine.classList.add('output-line');
+
+    if (binaryMode) {
+      inputLine.textContent = textToBinary(inputLine.textContent);
+    }
+
+    if (isAwaitingConfirmation) {
+      if (trimmed === '1') {
+        terminal.innerHTML = '';
+        addOutputLine('😄 Операционная система сброшена до заводских настроек.');
+        const welcome = document.getElementById('welcome');
+        welcome.textContent = '₸Добро пожаловать в BanMux!';
+        binaryMode = false;
+        maxInputLength = 16;
+        angelProtection = false;
+      } else if (trimmed === '2') {
+        addOutputLine('😄 ОС в порядке');
+      } else {
+        addOutputLine('🫨 Введите 1 для подтверждения или 2 для отмены');
+        createInputLine();
+        return;
+      }
+      isAwaitingConfirmation = false;
+    } else {
+      if (trimmed === "3333") {
+        if (angelProtection) {
+          maxInputLength = 16;
+          angelProtection = false;
+          addOutputLine("👼 Ангельская защита отключена (лимит 16)");
+        } else {
+          maxInputLength = 50;
+          angelProtection = true;
+          addOutputLine("👼 Ангельская защита активирована (лимит 50)");
+        }
+      } else if (trimmed === "9143") {
+        addOutputLine("🆘 Список полезных команд:");
+        addOutputLine("777 - Проверить удачу");
+        addOutputLine("% - Узнать заряд батареи");
+        addOutputLine("00:00 - Узнать текущее время");
+        addOutputLine("102 - Вызвать багофикс");
+        addOutputLine("103 - Проверить здоровье ОС");
+        addOutputLine("000 - Ничто...");
+        addOutputLine("2014 - Год основания");
+        addOutputLine("000000 - Раздражение разработчика");
+        addOutputLine("Если непонятно, вводи все подряд 😉");
+      } else if (trimmed === "000") {
+        addOutputLine("🕳️ Ничто... Знакомое чувство, правда?");
+      } else if (trimmed === "2014") {
+        try {
+          const currentYear = new Date().getFullYear();
+          const yearsPassed = currentYear - 2014;
+          addOutputLine(`👶 Уже прошло ${yearsPassed} лет...`);
+        } catch (e) {
+          addOutputLine("👶 Год рождения создателя...");
+        }
+      } else if (trimmed === "000000") {
+        addOutputLine("😡 Бесит каждого разработчика");
+      } else if (trimmed.startsWith('>/')) {
+        addOutputLine(trimmed);
+        addOutputLine('запрос принят\\');
+      } else if (trimmed === "703691") {
+        addOutputLine("⚡ Режим разработчика активирован!");
+      } else if (trimmed === "00:00") {
+        const now = new Date();
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        addOutputLine(`📟 Время на телефоне: ${hours}:${minutes}`);
+      } else if (trimmed === "1234") {
+        addOutputLine("😁 Тот самый пароль");
+      } else if (trimmed === "deleteOS") {
+        addOutputLine("😨 Точно сбросить Банка ОС?");
+        addOutputLine("1 - ДА!");
+        addOutputLine("2 - НЕТ!");
+        isAwaitingConfirmation = true;
+      } else if (trimmed === "%") {
+        if ('getBattery' in navigator) {
+          navigator.getBattery().then(battery => {
+            const level = Math.round(battery.level * 100);
+            if (level < 50) {
+              addOutputLine(`🪫 У вас ${level}% Советуем поставить телефон на зарядку`);
+            } else {
+              addOutputLine(`🔋 У вас ${level}%`);
+            }
+          }).catch(() => {
+            addOutputLine('🫨 Не удалось получить данные о батарее');
+          });
+        } else {
+          addOutputLine('🫨 Ваш браузер не поддерживает Battery API');
+        }
+      } else if (trimmed === "224466") {
+        addOutputLine("🥲 Тот самый пароль из 2019");
+      } else if (trimmed === "19414") {
+        addOutputLine("😬 Не стоит вводить это число");
+      } else if (trimmed === "666666") {
+        addOutputLine("👿 Умно. Очень умно");
+      } else if (trimmed === "102938") {
+        addOutputLine("😅 Тот самый надёжный пароль");
+      } else if (trimmed === "102") {
+        addOutputLine("🚓 Багофикс тут");
+      } else if (trimmed === "103") {
+        addOutputLine("🚑 Лечим ОС!");
+      } else if (trimmed === "1111111111111111") {
+        addOutputLine("😉 Не стоит делать такие пароли");
+      } else if (trimmed === "404") {
+        addOutputLine("🔍 Команда не найдена");
+      } else if (trimmed === "777") {
+        addOutputLine("🎰 Джекпот! Ваш выигрыш: 0₸");
+      } else if (trimmed === "010101") {
+        binaryMode = !binaryMode;
+        addOutputLine(binaryMode ? 
+          "🤖 Режим бинарного мышления активирован" : 
+          "🤖 Режим бинарного мышления деактивирован"
+        );
+      } 
+      // Проверка на повторяющиеся цифры только для не-специальных команд
+      else if (/^(\d)\1*$/.test(trimmed) && trimmed.length >= 1 && !specialCommands.has(trimmed)) {
+        addOutputLine("😎 Не очень оригинально, правда?");
+      } else {
+        addOutputLine("🫨 Неверная команда! Напишите '9143'");
+      }
+    }
+
+    createInputLine();
+    terminal.scrollTop = terminal.scrollHeight;
+  }
+
+  function addOutputLine(text) {
+    const line = document.createElement('div');
+    line.className = 'line output-line';
+    line.textContent = binaryMode ? textToBinary(text) : text;
+    terminal.appendChild(line);
+  }
+
+  function createInputLine() {
+    const line = document.createElement('div');
+    line.className = 'line';
+
+    const prompt = document.createElement('span');
+    prompt.className = 'prompt';
+    prompt.textContent = '> ';
+    const inputLine = document.createElement('span');
+    inputLine.className = 'input-line';
+    inputLine.contentEditable = "true";
+    inputLine.spellcheck = false;
+    inputLine.setAttribute('role', 'textbox');
+    inputLine.setAttribute('aria-multiline', 'false');
+
+    inputLine.addEventListener('input', function() {
+      if (this.textContent.length > maxInputLength) {
+        this.textContent = this.textContent.substring(0, maxInputLength);
+        
+        const range = document.createRange();
+        const sel = window.getSelection();
+        range.selectNodeContents(this);
+        range.collapse(false);
+        sel.removeAllRanges();
+        sel.addRange(range);
+      }
+    });
+
+    line.appendChild(prompt);
+    line.appendChild(inputLine);
+    terminal.appendChild(line);
+
+    inputLine.focus();
+
+    return inputLine;
+  }
+
+  window.onload = () => {
+    createInputLine();
+
+    terminal.addEventListener('keydown', (e) => {
+      if (e.target.classList.contains('input-line')) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          handleCommand(e.target.textContent, e.target);
+        }
+      }
+    });
+  };
+
+  terminal.addEventListener('click', () => {
+    const inputs = terminal.querySelectorAll('.input-line');
+    if (inputs.length) {
+      inputs[inputs.length - 1].focus();
+    }
+  });
+</script>
+
+</body>
+</html>

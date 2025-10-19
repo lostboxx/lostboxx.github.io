@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="robots" content="noindex, follow">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BANKA.OS beta 1.0.6</title>
+  <style>
+    html, body {
+      margin: 0; padding: 0;
+      width: 100%; height: 100%;
+      font-family: sans-serif;
+      background: black;
+      overflow: hidden;
+    }
+    .screen {
+      display: none;
+      width: 100%; height: 100%;
+      position: absolute; top: 0; left: 0;
+      background: black; color: white;
+      justify-content: center; align-items: center; flex-direction: column;
+    }
+    #photoSquare {
+      width: 80vmin; height: 80vmin;
+      background: white; margin-bottom: 20px;
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden;
+    }
+    #photoSquare img {
+      width: 100%; height: 100%; object-fit: cover;
+    }
+    button {
+      background: white; color: black;
+      border: none; border-radius: 12px;
+      padding: 10px 20px; margin: 10px;
+      font-size: 1.2em; cursor: pointer;
+    }
+    #audioBtn {
+      position: fixed; bottom: 20px; right: 20px;
+      background: white; border-radius: 50%;
+      width: 50px; height: 50px;
+      font-size: 1.5em; display: none;
+      align-items: center; justify-content: center;
+      z-index: 1000;
+    }
+    #backBtn {
+      position: absolute; top: 10px; left: 10px;
+      background: white; border-radius: 50%;
+      width: 40px; height: 40px; font-size: 1.2em; z-index: 100;
+    }
+    #favoriteBtn {
+  position: absolute; top: 10px; right: 10px;
+  background: white; border-radius: 50%;
+  width: 40px; height: 40px; font-size: 1.2em; z-index: 100;
+}
+#starBtn {
+  background: white; border-radius: 50%;
+  width: 40px; height: 40px; font-size: 1.2em;
+  margin-bottom: 10px; cursor: pointer;
+  border: none;
+}
+#avatar, #avatarProfile {
+  width: 100px; height: 100px;
+  object-fit: cover; border-radius: 10px;
+  margin-bottom: 20px;
+}
+canvas {
+  position: absolute; top: 0; left: 0;
+}
+#win {
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(255,255,255,0.9); color: #000;
+  padding: 20px; border-radius: 10px;
+  display: none; z-index: 10; text-align: center;
+}
+#gameNotice {
+  position: absolute; top: 10%; left: 50%;
+  transform: translateX(-50%);
+  background: yellow; color: black;
+  padding: 10px 20px; border-radius: 10px;
+  display: none; z-index: 30;
+}
+#pinPromptOverlay {
+  position: absolute; top: 0; left: 0;
+  width: 100%; height: 100%; background: rgba(0,0,0,0.8);
+  display: none; justify-content: center; align-items: center; z-index: 10000;
+}
+#pinPromptBox {
+  background: white; color: black;
+  padding: 20px; border-radius: 10px;
+  display: flex; flex-direction: column; align-items: center;
+}
+#pinPromptBox input {
+  font-size: 1.2em; padding: 5px; margin: 10px;
+  width: 100px; text-align: center;
+}
+#pinWarning {
+  margin-top: 10px; color: orange; font-size: 0.9em; display: none;
+}
+.achievement {
+  background: gold; padding: 10px 20px;
+  border-radius: 12px; color: black;
+  font-size: 1.1em; text-align: center; position: fixed;
+  top: 10%; left: 50%; transform: translateX(-50%);
+  display: none; z-index: 1000;
+}
+#favoritesGallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+  padding: 20px;
+  max-height: 70vh;
+  overflow-y: auto;
+  width: 90%;
+}
+.favorite-item {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 10px;
+  cursor: pointer;
+}
+#notesSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px;
+  height: calc(100% - 100px);
+}
+#notesList {
+  width: 100%;
+  flex-grow: 1;
+  overflow-y: auto;
+  padding: 10px;
+}
+.note {
+  background: #333;
+  padding: 15px;
+  margin: 10px 0;
+  border-radius: 10px;
+  position: relative;
+  cursor: pointer;
+}
+    .note-content {
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .note-preview {
+      color: #aaa;
+    }
+    .note-delete {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      background: red;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    #addNoteBtn {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      background: white;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      font-size: 1.5em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    #noteEditor {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.9);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 10000;
+    }
+    #noteEditor textarea {
+      width: 80%;
+      height: 60%;
+      padding: 15px;
+      font-size: 1.2em;
+      background: #333;
+      color: white;
+      border: none;
+      border-radius: 10px;
+    }
+    #noteEditor button {
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <video id="bootVideo" muted playsinline style="position:absolute;width:100%;height:100%;object-fit:cover;z-index:9999;">
+    <source src="https://files.catbox.moe/2fzdfk.mp4" type="video/mp4" />
+  </video>
+  <button id="startBtn" style="display:none;position:absolute;top:50%;left:50%;transform:translate(-50%, -50%);z-index:10000;padding:20px 40px;background:white;color:black;font-size:1.5em;border:none;border-radius:12px;cursor:pointer;">Начать</button>
+  <div id="pinPromptOverlay">
+  <div id="pinPromptBox">
+    <div id="pinPromptText" style="font-size:1.2em;color:black;">Введите PIN-код:</div>
+    <input type="password" id="pinInput" maxlength="4" />
+    <button onclick="submitPin()">OK</button>
+    <div id="pinWarning">⚠ Осталось 5 попыток, иначе BANKA.OS будет сброшена</div>
+  </div>
+</div>
+
+<div id="loginScreen" class="screen">
+  <img id="avatar" src="https://files.catbox.moe/94rsda.jpg" alt="Avatar" />
+  <button onclick="attemptLogin()">▶ Войти</button>
+  <div style="font-size: 1.5em;" id="userDisplay">Пользователь: BANKA</div>
+</div>
+
+<div id="mainMenu" class="screen">
+  <button onclick="playClick(); showSection(\'announcements\')">📢 Объявления</button>
+  <button onclick="playClick(); showSection('photo')">📸 Фото одним кликом</button>
+  <button onclick="playClick(); showSection('game')">🎮 Поиграть в ParodiaBall</button>
+  <button onclick="playClick(); showSection('notes')">📝 Заметки</button>
+  <button onclick="playClick(); showSection('achievements')">🏆 Достижения</button>
+  <button onclick="playClick(); showSection('settings')">⚙ Настройки</button>
+</div>
+
+<div id="photoSection" class="screen">
+  <button id="backBtn" onclick="showSection('main')">◀</button>
+  <button id="favoriteBtn" onclick="showSection('favorites')">🌟</button>
+  <button id="starBtn" onclick="toggleFavorite()">☆</button>
+  <div id="photoSquare"></div>
+  <button onclick="playClick(); showPhoto()">Показать фото</button>
+</div>
+
+<div id="favoritesSection" class="screen">
+  <button id="backBtn" onclick="showSection('photo')">◀</button>
+  <div id="favoritesGallery"></div>
+</div>
+<div id="notesSection" class="screen">
+  <button id="backBtn" onclick="showSection('main')">◀</button>
+  <div id="notesList"></div>
+  <button id="addNoteBtn" onclick="createNewNote()">+</button>
+
+<div id="announcementsSection" class="screen">
+  <button id="backBtn" onclick="showSection('main')">◀</button>
+  <div id="announcementsList" style="padding:10px; overflow-y:auto; width:90%; max-height:80%;"></div>
+</div>
+
+</div>
+
+<div id="achievementsSection" class="screen">
+  <button id="backBtn" onclick="showSection('main')">◀</button>
+  <div id="achievementList"></div>
+</div>
+
+<div id="settingsSection" class="screen">
+  <button id="backBtn" onclick="showSection('main')">◀</button>
+  <button onclick="showSection('profile')">Профиль</button>
+  <button onclick="showSection('pinSettings')">Пароль</button>
+</div>
+
+<div id="profileSection" class="screen">
+  <button id="backBtn" onclick="showSection('settings')">◀</button>
+  <img id="avatarProfile" src="https://files.catbox.moe/94rsda.jpg" alt="Avatar" />
+  <div style="font-size:1.2em;" id="userDisplayProfile">Пользователь: BANKA</div>
+  <button onclick="changeNameProfile()">Сменить имя</button>
+  <button onclick="changeAvatarProfile()">Сменить фото</button>
+  <button onclick="resetProfile()">Сбросить профиль</button>
+</div>
+
+<div id="pinSettingsSection" class="screen">
+  <button id="backBtn" onclick="showSection('settings')">◀</button>
+  <button onclick="setPin()">Установить PIN-код</button>
+  <button onclick="removePin()">Удалить PIN-код</button>
+</div>
+<div id="gameSection" class="screen">
+  <button id="backBtn" onclick="showSection('main')">◀</button>
+  <div id="gameNotice">Мобильная версия ParodiaBall сломанная, просим перейти на ПК версию сайта!</div>
+  <canvas id="gameCanvas"></canvas>
+  <div id="win">
+    <div>Вы выиграли!</div>
+    <button onclick="nextLevel()">Новый уровень</button>
+  </div>
+</div>
+
+<div id="achievementBanner" class="achievement"></div>
+
+<div id="noteEditor">
+  <textarea id="noteEditorText" placeholder="Введите текст заметки..."></textarea>
+  <button onclick="saveNote()">Сохранить</button>
+  <button onclick="cancelEdit()">Отмена</button>
+</div>
+
+<input type="file" id="avatarInput" accept="image/*" style="display:none;" />
+<button id="audioBtn" onclick="toggleAudio()">🔇</button>
+
+<audio id="clickSound"><source src="https://files.catbox.moe/xp0o5c.mp3" /></audio>
+<audio id="winSound"><source src="https://files.catbox.moe/1f2se4.mp3" /></audio>
+<audio id="startupSound"><source src="https://files.catbox.moe/otlana.mp3" /></audio>
+<audio id="bgMusic" loop><source src="https://files.catbox.moe/w7d9lj.mp3" /></audio>
+
+<script>
+  const bootVideo = document.getElementById("bootVideo");
+  const startBtn = document.getElementById("startBtn");
+  const pinOverlay = document.getElementById("pinPromptOverlay");
+  const pinInput = document.getElementById("pinInput");
+  const pinWarning = document.getElementById("pinWarning");
+  const loginScreen = document.getElementById("loginScreen");
+  const mainMenu = document.getElementById("mainMenu");
+  const photoSection = document.getElementById("photoSection");
+  const favoritesSection = document.getElementById("favoritesSection");
+  const notesSection = document.getElementById("notesSection");
+  const notesList = document.getElementById("notesList");
+  const addNoteBtn = document.getElementById("addNoteBtn");
+  const noteEditor = document.getElementById("noteEditor");
+  const noteEditorText = document.getElementById("noteEditorText");
+  const achievementsSection = document.getElementById("achievementsSection");
+const settingsSection = document.getElementById("settingsSection");
+const profileSection = document.getElementById("profileSection");
+const pinSettingsSection = document.getElementById("pinSettingsSection");
+const gameSection = document.getElementById("gameSection");
+const avatar = document.getElementById("avatar");
+const avatarProfile = document.getElementById("avatarProfile");
+const userDisplay = document.getElementById("userDisplay");
+const userDisplayProfile = document.getElementById("userDisplayProfile");
+const avatarInput = document.getElementById("avatarInput");
+const clickSound = document.getElementById("clickSound");
+const winSound = document.getElementById("winSound");
+const startupSound = document.getElementById("startupSound");
+const bgMusic = document.getElementById("bgMusic");
+const audioBtn = document.getElementById("audioBtn");
+const gameNotice = document.getElementById("gameNotice");
+const achievementBanner = document.getElementById("achievementBanner");
+const achievementList = document.getElementById("achievementList");
+const starBtn = document.getElementById("starBtn");
+const favoritesGallery = document.getElementById("favoritesGallery");
+
+let musicIsPlaying = false;
+let level = 1;
+let pinTries = 0;
+let achievements = JSON.parse(localStorage.getItem("achievements")) || [];
+let currentPhotoUrl = '';
+let favoritePhotos = JSON.parse(localStorage.getItem("favoritePhotos")) || [];
+let notes = JSON.parse(localStorage.getItem("notes")) || [];
+function showAchievement(msg) {
+  achievementBanner.textContent = msg;
+  achievementBanner.style.display = 'block';
+  setTimeout(() => { achievementBanner.style.display = 'none'; }, 3000);
+  achievements.push(msg);
+  localStorage.setItem('achievements', JSON.stringify(achievements));
+  updateAchievements();
+}
+
+function updateAchievements() {
+  achievementList.innerHTML = '';
+  achievements.forEach(msg => {
+    const div = document.createElement('div');
+    div.textContent = msg;
+    div.style.background = 'gold';
+    div.style.color = 'black';
+    div.style.padding = '10px';
+    div.style.margin = '5px';
+    div.style.borderRadius = '5px';
+    achievementList.appendChild(div);
+  });
+}
+
+let currentNoteIndex = -1;
+let lastClickTime = 0;
+
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+const winScreen = document.getElementById("win");
+
+const GRAVITY = 0.5;
+const JUMP_VY = -12;
+const MOVE_SPEED = 3;
+const PLATFORM_WIDTH = 120;
+const PLATFORM_HEIGHT = 12;
+const STAR_RADIUS = 10;
+const TOTAL_PLATFORMS = 20;
+const STAR_PLATFORMS = [10, 15, 20];
+
+let platforms = [], stars = [], starsCollected = 0;
+let ball = { x: 0, y: 0, radius: 15, vx: 0, vy: 0 };
+let moving = { left: false, right: false };
+let animFrameId = null;
+
+window.addEventListener("load", () => {
+  const playPromise = bootVideo.play();
+  if (playPromise !== undefined) {
+    playPromise.then(() => {
+      bootVideo.addEventListener("ended", () => {
+        bootVideo.style.display = "none";
+        showScreen(loginScreen);
+        initSettings();
+      });
+    }).catch(() => {
+      startBtn.style.display = "block";
+    });
+  } else {
+    startBtn.style.display = "block";
+  }
+  setTimeout(() => {
+    if (!bootVideo.ended) {
+      startBtn.style.display = "block";
+    }
+  }, 8000);
+});
+startBtn.onclick = () => {
+  bootVideo.style.display = "none";
+  startBtn.style.display = "none";
+  showScreen(loginScreen);
+  initSettings();
+};
+
+function hideAll() {
+  [loginScreen, mainMenu, photoSection, favoritesSection, notesSection, 
+   achievementsSection, settingsSection, profileSection, 
+   pinSettingsSection, gameSection].forEach(s => s.style.display = 'none');
+}
+
+function showScreen(screenEl) {
+  hideAll();
+  screenEl.style.display = 'flex';
+  if (screenEl === notesSection) {
+    updateNotesList();
+  }
+}
+
+function initSettings() {
+  const name = localStorage.getItem("banka_name");
+  const ava = localStorage.getItem("banka_avatar");
+  if (name) {
+    userDisplay.textContent = "Пользователь: " + name;
+    userDisplayProfile.textContent = "Пользователь: " + name;
+  }
+  if (ava) {
+    avatar.src = ava;
+    avatarProfile.src = ava;
+  }
+  updateAchievements();
+}
+
+function attemptLogin() {
+  const pin = localStorage.getItem("banka_pin");
+  if (pin) {
+    pinOverlay.style.display = 'flex';
+    pinInput.value = '';
+    pinWarning.style.display = 'none';
+    pinTries = 0;
+  } else {
+    startOS();
+  }
+}
+
+function submitPin() {
+  const saved = localStorage.getItem("banka_pin");
+  if (pinInput.value === saved) {
+    pinOverlay.style.display = 'none';
+    pinTries = 0;
+    startOS();
+  } else {
+    pinTries++;
+    if (pinTries >= 5 && pinTries < 10) {
+      pinWarning.style.display = 'block';
+    }
+    if (pinTries >= 10) {
+      resetProfile();
+      localStorage.removeItem("banka_pin");
+      pinTries = 0;
+      pinOverlay.style.display = 'none';
+      alert("Все данные сброшены. Запуск заново.");
+      showScreen(loginScreen);
+    } else {
+      alert("Неверный PIN. Попыток: " + pinTries + "/10");
+    }
+  }
+}
+
+function startOS() {
+  showScreen(mainMenu);
+  audioBtn.style.display = 'flex';
+  startupSound.play().catch(() => {});
+}
+
+function playClick() {
+  if (!musicIsPlaying) { clickSound.currentTime = 0; clickSound.play(); }
+}
+
+function playWinSound() {
+  if (!musicIsPlaying) { winSound.currentTime = 0; winSound.play(); }
+}
+
+function toggleAudio() {
+  if (bgMusic.paused) {
+    bgMusic.play().catch(() => {});
+    audioBtn.textContent = "🔊";
+    musicIsPlaying = true;
+  } else {
+    bgMusic.pause();
+    audioBtn.textContent = "🔇";
+    musicIsPlaying = false;
+  }
+}
+
+function showSection(name) {
+  switch(name) {
+    case 'main': showScreen(mainMenu); break;
+    case 'photo': showScreen(photoSection); showPhoto(); break;
+    case 'favorites': showScreen(favoritesSection); showFavorites(); break;
+    case 'notes': showScreen(notesSection); break;
+      case 'announcements': showScreen(announcementsSection); loadAnnouncements(); break;
+    case 'achievements': showScreen(achievementsSection); updateAchievements(); break;
+    case 'settings': showScreen(settingsSection); break;
+    case 'profile': showScreen(profileSection); break;
+    case 'pinSettings': showScreen(pinSettingsSection); break;
+    case 'game':
+      showScreen(gameSection);
+      gameNotice.style.display = 'block';
+      setTimeout(() => gameNotice.style.display = 'none', 5000);
+      initGame();
+      break;
+  }
+}
+function showPhoto() {
+  const photoSquare = document.getElementById("photoSquare");
+  const randomUrl = `https://picsum.photos/800?random=${Math.floor(Math.random() * 10000)}`;
+  currentPhotoUrl = randomUrl;
+  photoSquare.innerHTML = `<img src="${randomUrl}" alt="Random">`;
+  starBtn.textContent = favoritePhotos.includes(randomUrl) ? "★" : "☆";
+}
+
+function toggleFavorite() {
+  if (favoritePhotos.includes(currentPhotoUrl)) {
+    favoritePhotos = favoritePhotos.filter(url => url !== currentPhotoUrl);
+    starBtn.textContent = "☆";
+  } else {
+    favoritePhotos.push(currentPhotoUrl);
+    starBtn.textContent = "★";
+  }
+  localStorage.setItem("favoritePhotos", JSON.stringify(favoritePhotos));
+}
+
+function showFavorites() {
+  favoritesGallery.innerHTML = '';
+  if (favoritePhotos.length === 0) {
+    favoritesGallery.innerHTML = '<div style="color:white;text-align:center;">Нет избранных фото</div>';
+    return;
+  }
+  
+  favoritePhotos.forEach(url => {
+    const img = document.createElement('img');
+    img.src = url;
+    img.className = 'favorite-item';
+    img.onclick = () => {
+      currentPhotoUrl = url;
+      showSection('photo');
+    };
+    favoritesGallery.appendChild(img);
+  });
+}
+
+function initGame() {
+  if (animFrameId) cancelAnimationFrame(animFrameId);
+  
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  
+  platforms = [];
+  stars = [];
+  starsCollected = 0;
+  winScreen.style.display = 'none';
+  
+  const vSpacing = canvas.height / (TOTAL_PLATFORMS + 1);
+  let prevX = canvas.width / 2 - PLATFORM_WIDTH / 2;
+  
+  for (let i = 1; i <= TOTAL_PLATFORMS; i++) {
+    const y = canvas.height - vSpacing * i;
+    const step = (Math.random() * 2 - 1) * 80;
+    let x = prevX + step;
+    x = Math.max(10, Math.min(x, canvas.width - PLATFORM_WIDTH - 10));
+    platforms.push({ x, y, w: PLATFORM_WIDTH, h: PLATFORM_HEIGHT });
+    if (STAR_PLATFORMS.includes(i)) {
+      stars.push({ x: x + PLATFORM_WIDTH/2, y: y - STAR_RADIUS - 5, r: STAR_RADIUS, collected: false });
+    }
+    prevX = x;
+  }
+  
+  resetBall();
+  animFrameId = requestAnimationFrame(gameLoop);
+}
+
+function resetBall() {
+  const p = platforms[0];
+  ball.x = p.x + p.w / 2;
+  ball.y = p.y - ball.radius;
+  ball.vx = 0;
+  ball.vy = 0;
+}
+
+function gameLoop() {
+  updateGame();
+  drawGame();
+  animFrameId = requestAnimationFrame(gameLoop);
+}
+
+function updateGame() {
+  ball.vy += GRAVITY;
+  if (moving.left) ball.vx = -MOVE_SPEED;
+  else if (moving.right) ball.vx = MOVE_SPEED;
+  else ball.vx *= 0.8;
+  
+  ball.x += ball.vx;
+  ball.y += ball.vy;
+  
+  platforms.forEach(p => {
+    if (ball.vy > 0 && ball.y + ball.radius >= p.y && ball.y + ball.radius <= p.y + p.h && 
+        ball.x + ball.radius > p.x && ball.x - ball.radius < p.x + p.w) {
+      ball.y = p.y - ball.radius;
+      ball.vy = JUMP_VY;
+    }
+  });
+  
+  stars.forEach(s => {
+    if (!s.collected) {
+      const dx = ball.x - s.x;
+      const dy = ball.y - s.y;
+      if (Math.hypot(dx,dy) < ball.radius + s.r/2) {
+        s.collected = true;
+        starsCollected++;
+        if (starsCollected === stars.length) {
+          winScreen.style.display = 'block';
+          playWinSound();
+        }
+      }
+    }
+  });
+  
+  if (ball.y - ball.radius > canvas.height) resetBall();
+  if (ball.x < ball.radius) ball.x = ball.radius;
+  if (ball.x > canvas.width - ball.radius) ball.x = canvas.width - ball.radius;
+}
+
+function drawGame() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = 'skyblue';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  
+  ctx.fillStyle = 'white';
+  platforms.forEach(p => ctx.fillRect(p.x, p.y, p.w, p.h));
+  
+  stars.forEach(s => {
+    if (!s.collected) {
+      ctx.beginPath();
+      for (let i = 0; i < 5; i++) {
+        const ang = i * 2 * Math.PI / 5 - Math.PI/2;
+        const rad = i % 2 === 0 ? s.r : s.r/2;
+        ctx.lineTo(s.x + Math.cos(ang)*rad, s.y + Math.sin(ang)*rad);
+      }
+      ctx.closePath();
+      ctx.fillStyle = 'gold'; 
+      ctx.fill();
+    }
+  });
+  
+  ctx.beginPath();
+  ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI*2);
+  ctx.fillStyle = 'yellow';
+  ctx.fill();
+  
+  ctx.fillStyle = '#000';
+  ctx.font = '20px sans-serif';
+  ctx.fillText('Уровень: '+level, 10, 30);
+}
+
+function nextLevel() {
+  level++;
+  const milestones = [5,10,15,20,25,30,35,40,45,50,75,100];
+  if (milestones.includes(level)) {
+    const msg = `Вы прошли ${level} уровней`;
+    if (!achievements.includes(msg)) showAchievement(msg);
+  }
+  winScreen.style.display = 'none';
+  initGame();
+}
+
+window.addEventListener('keydown', e => {
+  if (e.key === 'ArrowLeft') moving.left = true;
+  if (e.key === 'ArrowRight') moving.right = true;
+});
+
+window.addEventListener('keyup', e => {
+  if (e.key === 'ArrowLeft') moving.left = false;
+  if (e.key === 'ArrowRight') moving.right = false;
+});
+
+window.addEventListener('mousedown', e => {
+  moving.left = e.clientX < canvas.width/2;
+  moving.right = !moving.left;
+});
+
+window.addEventListener('mouseup', () => { 
+  moving.left = moving.right = false; 
+});
+
+window.addEventListener('touchstart', e => {
+  const x = e.touches[0].clientX;
+  moving.left = x < canvas.width/2;
+  moving.right = !moving.left;
+});
+
+window.addEventListener('touchend', () => { 
+  moving.left = moving.right = false; 
+});
+
+function updateNotesList() {
+  notesList.innerHTML = '';
+  if (notes.length === 0) {
+    notesList.innerHTML = '<div style="color:#aaa;text-align:center;">Нет заметок</div>';
+    return;
+  }
+  
+  notes.forEach((note, index) => {
+    const noteEl = document.createElement('div');
+    noteEl.className = 'note';
+    
+    const preview = note.length > 20 ? note.substring(0, 20) + '...' : note;
+    const fullContent = note;
+    
+    noteEl.innerHTML = `
+      <div class="note-preview">${preview}</div>
+      <div class="note-content" style="display:none;">${fullContent}</div>
+      <button class="note-delete" onclick="deleteNote(${index},event)">×</button>
+    `;
+    
+    noteEl.onclick = (e) => {
+      if (e.target.classList.contains('note-delete')) return;
+      
+      const now = new Date().getTime();
+      if (now - lastClickTime < 300) {
+        editNote(index);
+      } else {
+        const preview = noteEl.querySelector('.note-preview');
+        const content = noteEl.querySelector('.note-content');
+        
+        if (preview.style.display === 'none') {
+          preview.style.display = 'block';
+          content.style.display = 'none';
+        } else {
+          preview.style.display = 'none';
+          content.style.display = 'block';
+        }
+      }
+      lastClickTime = now;
+    };
+    
+    notesList.appendChild(noteEl);
+  });
+}
+
+function createNewNote() {
+  currentNoteIndex = -1;
+  noteEditorText.value = '';
+  noteEditor.style.display = 'flex';
+  noteEditorText.focus();
+}
+
+function editNote(index) {
+  currentNoteIndex = index;
+  noteEditorText.value = notes[index];
+  noteEditor.style.display = 'flex';
+  noteEditorText.focus();
+}
+
+function saveNote() {
+  const text = noteEditorText.value.trim();
+  if (text) {
+    if (currentNoteIndex === -1) {
+      notes.push(text);
+    } else {
+      notes[currentNoteIndex] = text;
+    }
+    localStorage.setItem("notes", JSON.stringify(notes));
+    updateNotesList();
+  }
+  noteEditor.style.display = 'none';
+}
+
+function cancelEdit() {
+  noteEditor.style.display = 'none';
+}
+
+function deleteNote(index, event) {
+  event.stopPropagation();
+  if (confirm('Удалить эту заметку?')) {
+    notes.splice(index, 1);
+    localStorage.setItem("notes", JSON.stringify(notes));
+    updateNotesList();
+  }
+}
+
+// Добавлено исправление логики PIN
+function setPin() {
+  const pin = prompt("Установите 4-значный PIN:");
+  if (pin === null) return;
+  if (/^[0-9]{4}$/.test(pin)) {
+    localStorage.setItem("banka_pin", pin);
+    alert("PIN установлен");
+  } else {
+    alert("Нужно вводить ровно 4 цифры!");
+  }
+}
+function removePin() {
+  const currentPin = localStorage.getItem("banka_pin");
+  if (!currentPin) {
+    alert("PIN не установлен");
+    return;
+  }
+  const entered = prompt("Введите текущий PIN для удаления:");
+  if (entered === null) return;
+  if (entered === currentPin) {
+    localStorage.removeItem("banka_pin");
+    alert("PIN удалён");
+  } else {
+    alert("Неверный PIN. Удаление отменено.");
+  }
+}
+
+
+// Добавлено: логика изменения профиля
+function changeNameProfile() {
+  const name = prompt("Введите новое имя:");
+  if (name) {
+    localStorage.setItem("banka_name", name);
+    const userDisplay = document.getElementById("userDisplay");
+    const userDisplayProfile = document.getElementById("userDisplayProfile");
+    userDisplay.textContent = "Пользователь: " + name;
+    userDisplayProfile.textContent = "Пользователь: " + name;
+  }
+}
+function changeAvatarProfile() {
+  document.getElementById("avatarInput").click();
+}
+function resetProfile() {
+  if (confirm("Сбросить профиль? Все данные будут удалены.")) {
+    localStorage.removeItem("banka_name");
+    localStorage.removeItem("banka_avatar");
+    localStorage.removeItem("banka_pin");
+    const userDisplay = document.getElementById("userDisplay");
+    const userDisplayProfile = document.getElementById("userDisplayProfile");
+    userDisplay.textContent = "Пользователь: BANKA";
+    userDisplayProfile.textContent = "Пользователь: BANKA";
+    const avatar = document.getElementById("avatar");
+    const avatarProfile = document.getElementById("avatarProfile");
+    avatar.src = "https://files.catbox.moe/94rsda.jpg";
+    avatarProfile.src = "https://files.catbox.moe/94rsda.jpg";
+  }
+}
+
+
+// Функция загрузки объявлений из JSON-файла
+function loadAnnouncements() {
+  const container = document.getElementById('announcementsList');
+  container.innerHTML = '<div style="color:#aaa;text-align:center;">Загрузка...</div>';
+  fetch('announcements.json')
+    .then(response => {
+      if (!response.ok) throw new Error('Ошибка загрузки');
+      return response.json();
+    })
+    .then(data => {
+      container.innerHTML = '';
+      if (!Array.isArray(data) || data.length === 0) {
+        container.innerHTML = '<div style="color:#aaa;text-align:center;">Нет объявлений</div>';
+        return;
+      }
+      data.forEach(item => {
+        const el = document.createElement('div');
+        el.style.background = '#222';
+        el.style.color = 'white';
+        el.style.padding = '10px';
+        el.style.margin = '10px 0';
+        el.style.borderRadius = '8px';
+        let title = item.title || '';
+        let date = item.date ? ('<div style="font-size:0.9em;color:#888;">' + item.date + '</div>') : '';
+        let contentText = item.content || '';
+        el.innerHTML = '<div style="font-weight:bold;font-size:1.1em;">' + title + '</div>' + date + '<div style="margin-top:5px;white-space:pre-wrap;">' + contentText + '</div>';
+        container.appendChild(el);
+      });
+    })
+    .catch(err => {
+      container.innerHTML = '<div style="color:red;text-align:center;">Ошибка загрузки объявлений</div>';
+      console.error(err);
+    });
+}
+
+</script>
+</body>
+</html>
