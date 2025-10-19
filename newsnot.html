@@ -1,0 +1,90 @@
+<!DOCTYPE HTML>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <title>LostBox News</title>
+    <style>
+      .header-container {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+      }
+      body {
+        background-color: #addddd;
+        font-family: Arial, sans-serif;
+      }
+      .header-text {
+        color: #155888;   
+      }
+      .closure-notice {
+        background-color: #e0e7eb; 
+        border: 1px solid #c9d2d8; 
+        border-radius: 8px; 
+        padding: 25px; 
+        margin: 20px auto;
+        max-width: 600px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        text-align: center;
+      }
+      .closure-notice h2 {
+        color: #2c3e50; 
+        margin-top: 0;
+        font-size: 24px;
+      }
+      .closure-notice p {
+        color: #555;
+        line-height: 1.6;
+        font-size: 16px;
+        margin: 15px 0;
+      }
+      .lostboxImage {
+        image-rendering: pixelated;
+      }
+      #time-counter {
+        font-weight: bold;
+        color: #2c3e50;
+        font-size: 18px;
+        margin: 20px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header-container">
+      <img src="assets/photo_resources/brokenlostbox.png" class="lostboxImage" alt=":(" width="100px" height="100px">
+      <marquee><h1 class="header-text">Новости</h1></marquee>
+    </div>
+    <div class="closure-notice">
+      <h2>⚠️ Внимание!</h2>
+      <p>К сожалению проект временно приостанавливается. Вы можете зайти на него в любой момент, но в этот период у него не будет крупных обновлений (добавление новых инструментов, игр, и т.д. Но они появлятся будут, просто редко.).  </p><br>Мелкие улучшения будут!
+
+      <p>Спасибо за участие в моём сайте!</p>
+      
+      <div id="time-counter">Подсчет времени...</div>
+      </div>
+
+    <script>
+      function updateTimeCounter() {
+        // Дата и время закрытия проекта
+        const closureDate = new Date('2014-06-23T23:35:00');
+        const now = new Date();
+        
+        // Вычисляем разность в миллисекундах
+        const timeDiff = now.getTime() - closureDate.getTime();
+        
+        // Конвертируем в дни, часы, минуты
+        const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+        
+        // Обновляем текст
+        document.getElementById('time-counter').textContent = 
+          `С этого момента прошло ${days} дней, ${hours} часов, ${minutes} минут`;
+      }
+      
+      // Обновляем каждую минуту
+      updateTimeCounter();
+      setInterval(updateTimeCounter, 60000);
+    </script>
+  </body>
+</html>

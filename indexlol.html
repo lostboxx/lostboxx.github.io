@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LostBox</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background: #f0f4f8;
+      font-family: "Segoe UI", sans-serif;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .toolbar {
+      height: 60px;
+      background: linear-gradient(to right, #1168c2, #0d5aa6, #1168c2);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      flex-shrink: 0;
+      z-index: 100;
+    }
+
+    .toolbar-left {
+      display: flex;
+      align-items: center;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .toolbar-right {
+      display: flex;
+      align-items: center;
+    }
+
+    .toolbar img {
+      height: 40px;
+      width: 40px;
+      margin-right: 12px;
+      image-rendering: pixelated;
+      flex-shrink: 0;
+    }
+
+    .title {
+      font-size: 1.4em;
+      font-weight: bold;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      flex-shrink: 1;
+    }
+
+    .icon-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-left: 8px;
+    }
+
+    .icon-circle {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      transition: background 0.2s ease, transform 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .icon-circle img {
+      width: 16px;
+      height: 16px;
+      margin: 0;
+    }
+
+    .icon-circle:hover {
+      background: #e3f0ff;
+      transform: scale(1.1);
+    }
+
+    #newsIcon {
+      font-size: 16px;
+    }
+
+    .centered {
+      flex: 1;
+      display: flex;
+      position: relative;
+      padding: 20px;
+    }
+
+    .content-box {
+      width: 100%;
+      height: 100%;
+      background: white;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .main-menu {
+      padding: 30px;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .profile-summary {
+      display: flex;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+
+    .avatar {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: #e0e0e0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 30px;
+      margin-right: 15px;
+      background-size: cover;
+      background-position: center;
+    }
+
+    .username {
+      font-size: 1.2em;
+      font-weight: bold;
+      color: #333;
+    }
+
+    .menu-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .ripple-button {
+      position: relative;
+      overflow: hidden;
+      background: #ffffff;
+      color: #1168c2;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(17,104,194,0.3);
+      transition: background 0.3s, box-shadow 0.2s;
+      text-align: left;
+      max-width: 300px;
+    }
+
+    .ripple-button:hover {
+      background: #e3f0ff;
+    }
+
+    .ripple-button.active {
+      box-shadow: 0 0 0 3px rgba(17,104,194,0.4);
+    }
+
+    .ripple {
+      position: absolute;
+      border-radius: 50%;
+      transform: scale(0);
+      background-color: rgba(17, 104, 194, 0.4);
+      animation: ripple-animation 0.6s linear;
+      pointer-events: none;
+    }
+
+    @keyframes ripple-animation {
+      to {
+        transform: scale(4);
+        opacity: 0;
+      }
+    }
+
+    .profile-page {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      padding: 30px;
+      width: 100%;
+    }
+
+    .back-button {
+      align-self: flex-start;
+      background: none;
+      border: none;
+      font-size: 18px;
+      color: #1168c2;
+      cursor: pointer;
+      padding: 10px;
+      margin-bottom: 20px;
+    }
+
+    .avatar-large {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: #e0e0e0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 50px;
+      margin-bottom: 25px;
+      background-size: cover;
+      background-position: center;
+    }
+
+    .profile-username {
+      font-size: 1.4em;
+      margin-bottom: 30px;
+      font-weight: bold;
+      color: #333;
+    }
+
+    .profile-controls {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      width: 100%;
+      max-width: 300px;
+    }
+
+    #usernameInput {
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+
+    .repair-section {
+      margin-top: 30px;
+      align-self: flex-start;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: #1168c2;
+    }
+
+    .repair-section a {
+      color: inherit;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .repair-section a:hover {
+      text-decoration: underline;
+    }
+
+    iframe {
+      border: none;
+      width: 100%;
+      height: 100%;
+      display: none;
+      background: white;
+    }
+
+    .bottom-bar {
+      height: 60px;
+      background: linear-gradient(to right, #1168c2, #0d5aa6, #1168c2);
+      flex-shrink: 0;
+      z-index: 100;
+    }
+
+    .frame-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: none;
+      z-index: 1000;
+    }
+
+    .frame-container.tools {
+      top: 0;
+      height: 100%;
+    }
+
+    .frame-container.games {
+      top: 0;
+      height: 100%;
+    }
+
+    .frame-container.news {
+      top: 60px;
+      height: calc(100% - 120px);
+      background: white;
+    }
+
+    .frame-container.news iframe {
+      display: block;
+    }
+
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+    }
+
+    .modal-content {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      max-width: 300px;
+      width: 100%;
+      text-align: center;
+    }
+
+    .modal-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-top: 20px;
+    }
+
+    .modal-buttons button {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .modal-buttons button:first-child {
+      background: #1168c2;
+      color: white;
+    }
+
+    .modal-buttons button:last-child {
+      background: #e0e0e0;
+      color: #333;
+    }
+
+    @media (max-width: 768px) {
+      .centered { padding: 10px; }
+      .main-menu { padding: 20px; }
+      .avatar { width: 50px; height: 50px; font-size: 24px; }
+      .ripple-button { padding: 10px 20px; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Главные панели -->
+  <div class="toolbar" id="mainToolbar">
+    <div class="toolbar-left">
+      <img src="assets/photo_resources/lostboxicon.png" alt="LostBox Icon" />
+      <div class="title" id="pageTitle">LostBox</div>
+    </div>
+    <div class="toolbar-right">
+      <button id="backBtn" class="icon-btn" title="Назад" style="display: none;">
+        <div class="icon-circle">
+          <img src="assets/photo_resources/back.png" alt="Назад">
+        </div>
+      </button>
+      <button id="newsBtn" class="icon-btn" title="Новости">
+        <div class="icon-circle">
+          <span id="newsIcon">📢</span>
+        </div>
+      </button>
+      <button id="musicBtn" class="icon-btn" title="Включить музыку">
+        <div class="icon-circle">
+          <img id="musicIcon" src="assets/photo_resources/offmusic.png" alt="Music Off">
+        </div>
+      </button>
+    </div>
+  </div>
+  
+  <div class="centered">
+    <div class="content-box" id="contentBox">
+      <!-- Главное меню -->
+      <div id="mainMenu" class="main-menu">
+        <div class="profile-summary">
+          <div id="mainAvatar" class="avatar">🙂</div>
+          <div id="mainUsername" class="username">Банка</div>
+        </div>
+        <div class="menu-buttons">
+          <button class="ripple-button" onclick="loadTool('assets/custom/lolfile/LostBox_Toolslol.html', this, 'LostBox Tools', true)">LostBox Инструменты</button>
+          <button class="ripple-button" onclick="loadTool('assets/custom/lolfile/LostBox_Gameslol.html', this, 'LostBox Games', true, true)">LostBox Игры</button>
+          <button class="ripple-button" onclick="showProfile()">Профиль</button>
+        </div>
+        <p>🎉 LostBox Games уже тут! 🎉</p>
+      </div>
+
+      <!-- Страница профиля -->
+      <div id="profilePage" class="profile-page">
+        <button class="back-button" onclick="checkUnsavedChanges()">← Назад</button>
+        <div id="profileAvatar" class="avatar-large">🙂</div>
+        <div id="profileUsername" class="profile-username">Банка</div>
+        
+        <div class="profile-controls">
+          <input type="text" id="usernameInput" placeholder="Введите имя">
+          <button class="ripple-button" onclick="changeAvatar()">Изменить аватар</button>
+          <button class="ripple-button" onclick="saveProfile()">Сохранить профиль</button>
+        </div>
+        <input type="file" id="avatarInput" accept="image/*" style="display: none;">
+        
+        <div class="repair-section">
+          <span>⚙️</span>
+          <a href="#" onclick="repairLostBox()">Починить LostBox</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Модальное окно подтверждения -->
+  <div id="confirmModal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <p>Данные могут не сохраниться. Сохранить профиль?</p>
+      <div class="modal-buttons">
+        <button onclick="saveAndHideProfile()">Да</button>
+        <button onclick="hideProfile()">Нет</button>
+      </div>
+    </div>
+  </div>
+  
+  <div class="bottom-bar" id="mainBottomBar"></div>
+  
+  <!-- Контейнеры для iframe -->
+  <div class="frame-container tools" id="toolsFrameContainer">
+    <iframe id="toolsFrame"></iframe>
+  </div>
+  <div class="frame-container games" id="gamesFrameContainer">
+    <iframe id="gamesFrame"></iframe>
+  </div>
+  <div class="frame-container news" id="newsFrameContainer">
+    <iframe id="newsFrame"></iframe>
+  </div>
+  
+  <audio id="bgMusic" loop></audio>
+  
+  <script>
+    // Элементы DOM
+    const mainMenu = document.getElementById('mainMenu');
+    const profilePage = document.getElementById('profilePage');
+    const toolsFrame = document.getElementById('toolsFrame');
+    const gamesFrame = document.getElementById('gamesFrame');
+    const newsFrame = document.getElementById('newsFrame');
+    const toolsFrameContainer = document.getElementById('toolsFrameContainer');
+    const gamesFrameContainer = document.getElementById('gamesFrameContainer');
+    const newsFrameContainer = document.getElementById('newsFrameContainer');
+    const mainAvatar = document.getElementById('mainAvatar');
+    const mainUsername = document.getElementById('mainUsername');
+    const profileAvatar = document.getElementById('profileAvatar');
+    const profileUsername = document.getElementById('profileUsername');
+    const usernameInput = document.getElementById('usernameInput');
+    const avatarInput = document.getElementById('avatarInput');
+    const musicBtn = document.getElementById('musicBtn');
+    const musicIcon = document.getElementById('musicIcon');
+    const bgMusic = document.getElementById('bgMusic');
+    const mainToolbar = document.getElementById('mainToolbar');
+    const mainBottomBar = document.getElementById('mainBottomBar');
+    const contentBox = document.getElementById('contentBox');
+    const backBtn = document.getElementById('backBtn');
+    const pageTitle = document.getElementById('pageTitle');
+    const confirmModal = document.getElementById('confirmModal');
+    const newsBtn = document.getElementById('newsBtn');
+    const newsIcon = document.getElementById('newsIcon');
+
+    // Состояние приложения
+    let musicPlaying = false;
+    let iconInterval = null;
+    let currentFrame = 1;
+    let currentAvatar = null;
+    let wasMusicPlaying = false;
+    let hasUnsavedChanges = false;
+    let newsOpen = false;
+
+    // IndexedDB
+    const dbName = "LostBoxDB";
+    const storeName = "profile";
+    let db;
+
+    // Инициализация IndexedDB
+    function initDB() {
+      const request = indexedDB.open(dbName, 1);
+      
+      request.onupgradeneeded = (event) => {
+        db = event.target.result;
+        if (!db.objectStoreNames.contains(storeName)) {
+          db.createObjectStore(storeName, { keyPath: "id" });
+        }
+      };
+      
+      request.onsuccess = (event) => {
+        db = event.target.result;
+        loadProfile();
+      };
+      
+      request.onerror = (event) => {
+        console.error("Database error:", event.target.error);
+      };
+    }
+
+    // Загрузка профиля из БД
+    function loadProfile() {
+      if (!db) return;
+      
+      const transaction = db.transaction([storeName], "readonly");
+      const store = transaction.objectStore(storeName);
+      const request = store.get(1);
+      
+      request.onsuccess = (event) => {
+        const data = event.target.result;
+        if (data) {
+          mainUsername.textContent = data.username;
+          profileUsername.textContent = data.username;
+          usernameInput.value = data.username;
+          
+          if (data.avatar) {
+            mainAvatar.style.backgroundImage = `url(${data.avatar})`;
+            mainAvatar.textContent = '';
+            profileAvatar.style.backgroundImage = `url(${data.avatar})`;
+            profileAvatar.textContent = '';
+            currentAvatar = data.avatar;
+          }
+        }
+      };
+    }
+
+    // Сохранение профиля в БД
+    function saveProfile() {
+      if (!db) return;
+      
+      const username = usernameInput.value || "Банка";
+      const transaction = db.transaction([storeName], "readwrite");
+      const store = transaction.objectStore(storeName);
+      
+      store.put({
+        id: 1,
+        username: username,
+        avatar: currentAvatar
+      });
+      
+      mainUsername.textContent = username;
+      profileUsername.textContent = username;
+      hasUnsavedChanges = false;
+    }
+
+    // Смена аватара
+    function changeAvatar() {
+      avatarInput.click();
+    }
+
+    // Обработка выбора файла аватара
+    avatarInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        currentAvatar = event.target.result;
+        mainAvatar.style.backgroundImage = `url(${currentAvatar})`;
+        mainAvatar.textContent = '';
+        profileAvatar.style.backgroundImage = `url(${currentAvatar})`;
+        profileAvatar.textContent = '';
+        hasUnsavedChanges = true;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    // Показать профиль
+    function showProfile() {
+      mainMenu.style.display = 'none';
+      profilePage.style.display = 'flex';
+      hasUnsavedChanges = false;
+      newsBtn.style.display = 'none';
+    }
+
+    // Скрыть профиль
+    function hideProfile() {
+      profilePage.style.display = 'none';
+      mainMenu.style.display = 'flex';
+      confirmModal.style.display = 'none';
+      newsBtn.style.display = 'block';
+    }
+
+    // Сохранить и скрыть профиль
+    function saveAndHideProfile() {
+      saveProfile();
+      hideProfile();
+    }
+
+    // Проверка несохраненных изменений
+    function checkUnsavedChanges() {
+      const usernameChanged = usernameInput.value !== profileUsername.textContent;
+      if (hasUnsavedChanges || usernameChanged) {
+        confirmModal.style.display = 'flex';
+      } else {
+        hideProfile();
+      }
+    }
+
+    // Слушатель изменений в имени пользователя
+    usernameInput.addEventListener('input', () => {
+      hasUnsavedChanges = true;
+    });
+
+    // Починить LostBox
+    function repairLostBox() {
+      if (confirm("Вы уверены, что хотите починить LostBox? Это уничтожит весь ваш пройденный прогресс в играх, удалит профиль.")) {
+        indexedDB.deleteDatabase("LostBoxDB");
+        alert("LostBox починен, перезагрузите страницу! 😊");
+      }
+    }
+
+    // Загрузка инструмента/игры
+    function loadTool(src, btn, title = "LostBox", hidePanels = false, isGame = false) {
+      wasMusicPlaying = musicPlaying;
+      toggleMusic(false);
+      
+      pageTitle.textContent = title;
+      backBtn.style.display = 'block';
+      contentBox.style.display = 'none';
+      newsBtn.style.display = 'none';
+      
+      if (hidePanels) {
+        mainToolbar.style.display = 'none';
+        mainBottomBar.style.display = 'none';
+        
+        if (isGame) {
+          gamesFrameContainer.style.display = 'block';
+          gamesFrame.style.display = 'block';
+          gamesFrame.src = src;
+          toolsFrameContainer.style.display = 'none';
+          newsFrameContainer.style.display = 'none';
+        } else {
+          toolsFrameContainer.style.display = 'block';
+          toolsFrame.style.display = 'block';
+          toolsFrame.src = src;
+          gamesFrameContainer.style.display = 'none';
+          newsFrameContainer.style.display = 'none';
+        }
+      } else {
+        mainToolbar.style.display = 'flex';
+        mainBottomBar.style.display = 'flex';
+        gamesFrameContainer.style.display = 'block';
+        gamesFrame.style.display = 'block';
+        gamesFrame.src = src;
+        toolsFrameContainer.style.display = 'none';
+        newsFrameContainer.style.display = 'none';
+      }
+    }
+
+    // Возврат на главный экран
+    function returnToMain() {
+      toolsFrameContainer.style.display = 'none';
+      gamesFrameContainer.style.display = 'none';
+      newsFrameContainer.style.display = 'none';
+      toolsFrame.style.display = 'none';
+      gamesFrame.style.display = 'none';
+      newsFrame.style.display = 'none';
+      toolsFrame.src = '';
+      gamesFrame.src = '';
+      newsFrame.src = '';
+      
+      mainToolbar.style.display = 'flex';
+      mainBottomBar.style.display = 'flex';
+      pageTitle.textContent = "LostBox";
+      backBtn.style.display = 'none';
+      newsBtn.style.display = 'block';
+      contentBox.style.display = 'flex';
+      mainMenu.style.display = 'flex';
+      
+      if (wasMusicPlaying) {
+        toggleMusic(true);
+      }
+      
+      if (newsOpen) {
+        closeNews();
+      }
+    }
+
+    // Обработчик кнопки назад
+    backBtn.onclick = returnToMain;
+
+    // Управление музыкой
+    musicBtn.onclick = () => {
+      toggleMusic(!musicPlaying);
+    };
+
+    // Переключение музыки
+    function toggleMusic(state) {
+      musicPlaying = state;
+      
+      if (musicPlaying) {
+        // Попытка воспроизведения
+        const playPromise = bgMusic.play();
+        
+        if (playPromise !== undefined) {
+          playPromise.catch(error => {
+            console.log("Автовоспроизведение заблокировано:", error);
+            // Показываем пользователю, что нужно взаимодействие
+            alert("Для включения музыки нажмите кнопку ещё раз после жеста пользователя");
+            musicPlaying = false;
+            updateMusicIcon();
+          });
+        }
+        
+        if (musicPlaying) {
+          musicBtn.title = "Отключить музыку";
+          if (!iconInterval) {
+            iconInterval = setInterval(() => {
+              currentFrame = currentFrame === 1 ? 2 : 1;
+              musicIcon.src = `assets/photo_resources/onmusic${currentFrame}.png`;
+            }, 1000);
+          }
+        }
+      } else {
+        bgMusic.pause();
+        musicBtn.title = "Включить музыку";
+        if (iconInterval) {
+          clearInterval(iconInterval);
+          iconInterval = null;
+        }
+        musicIcon.src = "assets/photo_resources/offmusic.png";
+      }
+    }
+
+    // Обновление иконки музыки
+    function updateMusicIcon() {
+      if (musicPlaying) {
+        musicIcon.src = `assets/photo_resources/onmusic${currentFrame}.png`;
+        musicBtn.title = "Отключить музыку";
+      } else {
+        musicIcon.src = "assets/photo_resources/offmusic.png";
+        musicBtn.title = "Включить музыку";
+      }
+    }
+
+    // Обработка возврата из iframe
+    window.addEventListener('message', (e) => {
+      if (e.data === 'closeFrame') {
+        returnToMain();
+      }
+    });
+
+    // Открыть новости
+    function openNews() {
+      newsIcon.innerHTML = '<img src="assets/photo_resources/back.png" alt="Назад">';
+      newsOpen = true;
+      newsFrameContainer.style.display = 'block';
+      newsFrame.style.display = 'block';
+      newsFrame.src = 'assets/custom/lolfile/newslol.html';
+      contentBox.style.display = 'none';
+      
+      // Панели остаются видимыми
+      mainToolbar.style.display = 'flex';
+      mainBottomBar.style.display = 'flex';
+    }
+
+    // Закрыть новости
+    function closeNews() {
+      newsIcon.textContent = '📢';
+      newsOpen = false;
+      newsFrameContainer.style.display = 'none';
+      newsFrame.style.display = 'none';
+      newsFrame.src = '';
+      contentBox.style.display = 'flex';
+      mainMenu.style.display = 'flex';
+      
+      // Панели остаются видимыми
+      mainToolbar.style.display = 'flex';
+      mainBottomBar.style.display = 'flex';
+    }
+
+    // Обработчик кнопки новостей
+    newsBtn.onclick = function() {
+      if (!newsOpen) {
+        openNews();
+      } else {
+        closeNews();
+      }
+    };
+
+    // Проверка состояния музыки при загрузке
+    window.addEventListener('DOMContentLoaded', () => {
+      initDB();
+      
+      // Всегда начинаем с выключенной музыки
+      toggleMusic(false);
+      
+      newsBtn.style.display = 'block';
+      
+      // Установка источника музыки (НОВАЯ ССЫЛКА)
+      bgMusic.src = "https://files.catbox.moe/05ilqz.m4a";
+    });
+  </script>
+</body>
+</html>

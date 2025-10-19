@@ -1,0 +1,150 @@
+<!DOCTYPE HTML>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1"> 
+  <title>I'm really sorry</title>
+  <link rel="icon" type="image/png" sizes="256x256" href="/favicon.png" />
+  <style>
+    /* базовые настройки */
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      background: #f0f4f8;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      font-family: Arial, sans-serif;
+    }
+
+    /* СИНЯЯ ПАНЕЛЬ СВЕРХУ */
+    .toolbar {
+      height: 60px;
+      background: linear-gradient(to right, #1168c2, #0d5aa6, #1168c2);
+      color: white;
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      flex-shrink: 0;
+      z-index: 100;
+    }
+
+    .toolbar img {
+      height: 40px;
+      width: 40px;
+      margin-right: 12px;
+      image-rendering: pixelated;
+    }
+
+    .title {
+      font-size: 1.4em;
+      font-weight: bold;
+    }
+
+    /* ОСНОВНОЕ СОДЕРЖИМОЕ */
+    .content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+
+    /* Контейнер для кода ошибки 403 */
+    #container {
+      margin-bottom: 2vh;
+    }
+
+    .text {
+      /* Стили мерцания и обводки */
+      font-size: 10vw; /* Вернул большой размер */
+      color: #ff0000;
+      -webkit-text-stroke: 0.1vw #004d00;
+      animation: flicker 2s infinite;
+    }
+
+    @keyframes flicker {
+      0% { opacity: 0.1; filter: brightness(0.2); }
+      10% { opacity: 0.3; filter: brightness(0.4); }
+      20% { opacity: 0.8; filter: brightness(1); }
+      30% { opacity: 0.4; filter: brightness(0.5); }
+      50% { opacity: 0.9; filter: brightness(1.2); }
+      70% { opacity: 0.3; filter: brightness(0.3); }
+      90% { opacity: 0.7; filter: brightness(0.9); }
+      100% { opacity: 0.1; filter: brightness(0.2); }
+    }
+    /* Конец стилей мерцания и обводки */
+
+    #textcontainer {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 1vh;
+      color: #333;
+    }
+
+    #textcontainer h1 {
+        margin-bottom: 5px;
+        color: #1168c2;
+    }
+
+    #textcontainer h2 {
+        margin-top: 0;
+        margin-bottom: 15px;
+    }
+
+    #textcontainer a {
+      color: #1168c2;
+      text-decoration: none;
+      font-weight: bold;
+      padding: 8px 15px;
+      border: 2px solid #1168c2;
+      border-radius: 5px;
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    #textcontainer a:hover {
+        background-color: #1168c2;
+        color: white;
+    }
+    
+    /* СИНЯЯ ПАНЕЛЬ СНИЗУ */
+    .bottom-bar {
+      height: 60px;
+      background: linear-gradient(to right, #1168c2, #0d5aa6, #1168c2);
+      flex-shrink: 0;
+      z-index: 100;
+    }
+  </style>
+</head>
+<body>
+  <div class="toolbar">
+    <a href="https://lostbox1000.neocities.org">
+    <img src="assets/photo_resources/lostboxicon.png" alt="LostBox">
+    </a>
+    <div class="title">LostBox</div>
+  </div>
+
+  <div class="content">
+    <div id="container">
+      <p class="text">403</p>
+    </div>
+
+    <div id="textcontainer">
+      <h1>😊 добро пожаловать!</h1>
+      <h2>😔 к сожалению доступ запрещён...</h2> 
+          <a href="https://lostbox1000.neocities.org">🏠 на главную</a>
+    </div>
+  </div>
+
+  <div class="bottom-bar"></div>
+</body>
+</html>

@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="robots" content="noindex, follow">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LostBox Wiki</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background: #e8e8e8;
+      font-family: "Segoe UI", sans-serif;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* Стили панелей как в LostBox */
+    .toolbar {
+      height: 60px;
+      background: linear-gradient(to right, #1168c2, #0d5aa6, #1168c2);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      flex-shrink: 0;
+      z-index: 100;
+    }
+
+    .toolbar-left {
+      display: flex;
+      align-items: center;
+    }
+
+    .toolbar img {
+      height: 40px;
+      width: 40px;
+      margin-right: 12px;
+      image-rendering: pixelated;
+    }
+
+    .title {
+      font-size: 1.4em;
+      font-weight: bold;
+    }
+
+    .icon-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .icon-circle {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      transition: background 0.2s ease, transform 0.2s ease;
+    }
+
+    .icon-circle img {
+      width: 16px;
+      height: 16px;
+    }
+
+    .icon-circle:hover {
+      background: #e3f0ff;
+      transform: scale(1.1);
+    }
+
+    .centered {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      position: relative;
+      padding: 20px;
+      overflow: hidden; /* Предотвращаем прокрутку всей страницы */
+    }
+
+    .content-box {
+      width: 100%;
+      max-width: 900px;
+      height: calc(100vh - 60px); /* Высота = высота viewport - верхняя панель */
+      background: white;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    /* Стили кнопок */
+    .wiki-button {
+      position: relative;
+      overflow: hidden;
+      background: #f8f8f8;
+      color: #666;
+      padding: 18px 20px;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      transition: background 0.3s, box-shadow 0.2s, border-color 0.2s;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      min-height: 60px;
+      margin: 10px auto;
+      width: 80%;
+      max-width: 400px;
+    }
+
+    .wiki-button:hover {
+      background: #eeeeee;
+      border-color: #bbb;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+
+    .wiki-button.active {
+      box-shadow: 0 0 0 3px rgba(102,102,102,0.4);
+    }
+
+    .button-title {
+      font-size: 1.1em;
+      margin-bottom: 5px;
+    }
+
+    .ripple {
+      position: absolute;
+      border-radius: 50%;
+      transform: scale(0);
+      background-color: rgba(102, 102, 102, 0.4);
+      animation: ripple-animation 0.6s linear;
+      pointer-events: none;
+    }
+
+    @keyframes ripple-animation {
+      to {
+        transform: scale(4);
+        opacity: 0;
+      }
+    }
+
+    /* Стили для отображения Markdown */
+    #wikiContent {
+      padding: 30px;
+      overflow-y: auto; /* Прокрутка по вертикали */
+      flex: 1;
+      display: none; /* Скрыт по умолчанию */
+      scrollbar-width: thin; /* Для Firefox */
+      scrollbar-color: #1168c2 #e0e0e0; /* Цвет полосы прокрутки */
+    }
+
+    /* Стили для полосы прокрутки в WebKit-браузерах (Chrome, Safari) */
+    #wikiContent::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    #wikiContent::-webkit-scrollbar-track {
+      background: #e0e0e0;
+      border-radius: 4px;
+    }
+
+    #wikiContent::-webkit-scrollbar-thumb {
+      background: #1168c2;
+      border-radius: 4px;
+    }
+
+    #wikiContent::-webkit-scrollbar-thumb:hover {
+      background: #0d5aa6;
+    }
+
+    #wikiContent h1, #wikiContent h2, #wikiContent h3 {
+      color: #1168c2;
+      border-bottom: 1px solid #e0e0e0;
+      padding-bottom: 10px;
+    }
+
+    #wikiContent img {
+      max-width: 100%;
+      border-radius: 8px;
+      margin: 10px 0;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    #wikiContent pre {
+      background: #f5f5f5;
+      padding: 15px;
+      border-radius: 8px;
+      overflow-x: auto;
+      font-family: monospace;
+    }
+
+    #wikiContent code {
+      background: #f5f5f5;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: monospace;
+    }
+
+    #wikiContent blockquote {
+      border-left: 4px solid #1168c2;
+      padding-left: 15px;
+      margin-left: 0;
+      color: #555;
+    }
+
+    #wikiContent a {
+      color: #0d5aa6;
+      text-decoration: none;
+    }
+
+    #wikiContent a:hover {
+      text-decoration: underline;
+    }
+
+    /* Стили для кастомной страницы 404 */
+    .error-404 {
+      text-align: center;
+      padding: 40px;
+      color: #d9534f;
+    }
+
+    .error-404 h1 {
+      font-size: 3em;
+      margin-bottom: 20px;
+    }
+
+    .error-404 h2 {
+      font-size: 2em;
+      margin-bottom: 20px;
+      color: #d9534f;
+    }
+
+    .error-404 p {
+      font-size: 1.1em;
+      margin-bottom: 10px;
+    }
+
+    .error-404 .back-link {
+      display: inline-block;
+      margin-top: 20px;
+      padding: 10px 20px;
+      background: #1168c2;
+      color: white;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: bold;
+      transition: background 0.2s ease;
+    }
+
+    .error-404 .back-link:hover {
+      background: #0d5aa6;
+    }
+
+    /* Индикатор загрузки */
+    .loader {
+      display: none;
+      text-align: center;
+      padding: 20px;
+      color: #666;
+    }
+
+    .loader-spinner {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #1168c2;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 10px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .buttons-container {
+      padding: 20px;
+      text-align: center;
+      overflow-y: auto; /* Прокрутка для кнопок, если их много */
+    }
+
+    @media (max-width: 768px) {
+      .centered { padding: 10px; }
+      #wikiContent { padding: 20px; }
+      .wiki-button { width: 90%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="toolbar">
+    <div class="toolbar-left">
+      <img src="assets/photo_resources/lostboxicon.png" alt="LostBox Icon" />
+      <div class="title" id="pageTitle">LostBox Документация</div>
+    </div>
+    
+    <div class="toolbar-right">
+      <button id="backBtn" class="icon-btn" title="Назад" style="display: none;" onclick="closePage()">
+        <div class="icon-circle">
+          <img src="assets/photo_resources/back.png" alt="Назад">
+        </div>
+      </button>
+    </div>
+  </div>
+
+  <div class="centered">
+    <div class="content-box">
+      <div class="buttons-container" id="buttonsContainer">
+        <button class="wiki-button" onclick="createRipple(event, this); loadPage('lostbox.md')">
+          <div class="button-title">Что такое "LostBox"?</div>
+        </button>
+        <button class="wiki-button" onclick="createRipple(event, this); loadPage('other.md')">
+          <div class="button-title">Other Documentation</div>
+        </button>
+      </div>
+
+      <div id="wikiContent">
+        <div class="loader">
+          <div class="loader-spinner"></div>
+          Загрузка документации...
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Упрощённый парсер Markdown
+    function parseMarkdown(markdown) {
+      // Обработка заголовков
+      markdown = markdown.replace(/^# (.*$)/gim, '<h1>$1</h1>');
+      markdown = markdown.replace(/^## (.*$)/gim, '<h2>$1</h2>');
+      markdown = markdown.replace(/^### (.*$)/gim, '<h3>$1</h3>');
+      
+      // Обработка жирного текста
+      markdown = markdown.replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>');
+      
+      // Обработка курсива
+      markdown = markdown.replace(/\*(.*?)\*/gim, '<em>$1</em>');
+      
+      // Обработка ссылок
+      markdown = markdown.replace(/\[([^\[]+)\]\(([^\)]+)\)/gim, '<a href="$2">$1</a>');
+      
+      // Обработка изображений (Markdown и HTML)
+      markdown = markdown.replace(/!\[([^\]]*)\]\(([^\)]+)\)/gim, (match, alt, src) => {
+        return handleImage(src, alt);
+      });
+      
+      // Обработка HTML-тегов img
+      markdown = markdown.replace(/<img\s+src="([^"]+)"\s+alt="([^"]*)"\s*\/?>/gim, (match, src, alt) => {
+        return handleImage(src, alt);
+      });
+      
+      // Обработка блоков кода
+      markdown = markdown.replace(/```([\s\S]*?)```/gim, '<pre>$1</pre>');
+      markdown = markdown.replace(/`([^`]+)`/gim, '<code>$1</code>');
+      
+      // Обработка цитат
+      markdown = markdown.replace(/^> (.*$)/gim, '<blockquote>$1</blockquote>');
+      
+      // Обработка горизонтальных линий
+      markdown = markdown.replace(/^\-\-\-$/gim, '<hr />');
+      
+      // Обработка списков
+      markdown = markdown.replace(/^\* (.*$)/gim, '<li>$1</li>');
+      markdown = markdown.replace(/(<li>.*<\/li>)/gim, '<ul>$1</ul>'); 
+      
+      // Обработка параграфов
+      markdown = markdown.replace(/\n\n/gim, '</p><p>');
+      markdown = '<p>' + markdown + '</p>';
+      
+      // Замена переносов строк на <br>
+      markdown = markdown.replace(/\n/gim, '<br>');
+      
+      return markdown;
+    }
+
+    // Обработка изображений с кастомным путём
+    function handleImage(src, alt) {
+      // Если путь начинается с / или http(s), оставляем как есть, иначе добавляем assets-wiki/
+      const imgPath = src.startsWith('/') || src.startsWith('http') ? src : `assets-wiki/${src}`;
+      return `<img src="${imgPath}" alt="${alt}" />`;
+    }
+
+    // Эффект ripple
+    function createRipple(event, button) {
+      const ripple = document.createElement("span");
+      ripple.classList.add("ripple");
+      const rect = button.getBoundingClientRect();
+      const size = Math.max(rect.width, rect.height);
+      ripple.style.width = ripple.style.height = size + "px";
+      ripple.style.left = (event.clientX - rect.left - size/2) + "px";
+      ripple.style.top = (event.clientY - rect.top - size/2) + "px";
+      button.appendChild(ripple);
+      setTimeout(() => ripple.remove(), 600);
+    }
+
+    // Загрузка страницы
+    function loadPage(filename) {
+      const contentDiv = document.getElementById('wikiContent');
+      const loader = contentDiv.querySelector('.loader') || document.createElement('div');
+      loader.className = 'loader';
+      loader.innerHTML = '<div class="loader-spinner"></div>Загрузка документации...';
+      const buttonsContainer = document.getElementById('buttonsContainer');
+      const backBtn = document.getElementById('backBtn');
+      const pageTitle = document.getElementById('pageTitle');
+
+      // Показываем контейнер и загрузчик
+      contentDiv.style.display = 'block';
+      contentDiv.innerHTML = '';
+      loader.style.display = 'block';
+      contentDiv.appendChild(loader);
+
+      // Скрываем кнопки и показываем кнопку возврата
+      buttonsContainer.style.display = 'none';
+      backBtn.style.display = 'flex';
+
+      // Обновляем заголовок
+      pageTitle.textContent = filename;
+
+      // Загружаем Markdown-файл
+      fetch(`assets/wiki/${filename}`)
+        .then(response => {
+          if (!response.ok) throw new Error(`Ошибка ${response.status}: Файл не найден`);
+          return response.text();
+        })
+        .then(markdown => {
+          // Парсим Markdown
+          const htmlContent = parseMarkdown(markdown);
+
+          // Вставляем результат
+          contentDiv.innerHTML = htmlContent;
+
+          // Прокручиваем в начало
+          contentDiv.scrollTop = 0;
+
+          // Добавляем анимацию появления
+          contentDiv.style.opacity = '0';
+          setTimeout(() => {
+            contentDiv.style.transition = 'opacity 0.5s ease';
+            contentDiv.style.opacity = '1';
+          }, 100);
+        })
+        .catch(error => {
+          console.error(`Error loading ${filename}:`, error);
+          contentDiv.innerHTML = `
+            <div class="error-404">
+              <h1>:(</h1>
+              <h2>404 - Документация не найдена</h2>
+              <p>Файл "${filename}" не найден или недоступен.</p>
+              <p>Похоже, я не нашел эту документацию. Советую зайти на другие, либо подождать, когда документация появится.</p>
+              <a href="#" class="back-link" onclick="closePage(); return false;">Вернуться к списку</a>
+            </div>
+          `;
+        })
+        .finally(() => {
+          loader.style.display = 'none';
+        });
+    }
+
+    // Закрытие страницы и возврат к кнопкам
+    function closePage() {
+      const contentDiv = document.getElementById('wikiContent');
+      const buttonsContainer = document.getElementById('buttonsContainer');
+      const backBtn = document.getElementById('backBtn');
+      const pageTitle = document.getElementById('pageTitle');
+
+      // Скрываем контент и очищаем его
+      contentDiv.style.display = 'none';
+      contentDiv.innerHTML = `
+        <div class="loader" style="display: none;">
+          <div class="loader-spinner"></div>
+          Загрузка документации...
+        </div>
+      `;
+
+      // Показываем кнопки и скрываем кнопку возврата
+      buttonsContainer.style.display = 'block';
+      backBtn.style.display = 'none';
+
+      // Восстанавливаем заголовок
+      pageTitle.textContent = "LostBox Wiki";
+
+      // Сбрасываем анимацию и прокрутку
+      contentDiv.style.opacity = '1';
+      contentDiv.style.transition = '';
+      contentDiv.scrollTop = 0;
+    }
+
+    // Инициализация при загрузке страницы
+    document.addEventListener('DOMContentLoaded', function() {
+      // Анимация появления кнопок
+      const buttons = document.querySelectorAll('.wiki-button');
+      buttons.forEach((button, index) => {
+        button.style.opacity = '0';
+        button.style.transform = 'translateY(20px)';
+        
+        setTimeout(() => {
+          button.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+          button.style.opacity = '1';
+          button.style.transform = 'translateY(0)';
+        }, index * 100);
+      });
+    });
+  </script>
+</body>
+</html>

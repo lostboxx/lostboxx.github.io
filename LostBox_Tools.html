@@ -1,0 +1,620 @@
+<!DOCTYPE html>  
+<html lang="ru">  
+<head>  
+  <meta charset="UTF-8">  
+  <meta name="robots" content="noindex, nofollow">  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+  <meta name="theme-color" content="#0a0f1a" />
+  <title>LostBox Tools</title> 
+  <link rel="icon" type="image/png" sizes="256x256" href="/favicon.png" />
+  <style>  
+    * { box-sizing: border-box; }  
+    html, body {  
+      margin: 0;  
+      padding: 0;  
+      height: 100%;  
+      background: #f0f4f8;  
+      font-family: "Segoe UI", sans-serif;  
+      display: flex;  
+      flex-direction: column;  
+      overflow: hidden;  
+    }  
+  
+    .toolbar {  
+      height: 60px;  
+      background: linear-gradient(to right, #1168c2, #0d5aa6, #1168c2);  
+      color: white;  
+      display: flex;  
+      align-items: center;  
+      justify-content: space-between;  
+      padding: 0 20px;  
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);  
+      flex-shrink: 0;  
+      transition: transform 0.3s ease;  
+      position: relative;  
+      z-index: 100;  
+    }  
+  
+    .toolbar-left {  
+      display: flex;  
+      align-items: center;  
+    }  
+  
+    .toolbar img {  
+      height: 40px;  
+      width: 40px;  
+      margin-right: 12px;  
+      image-rendering: pixelated;  
+    }  
+  
+    .title {  
+      font-size: 1.4em;  
+      font-weight: bold;  
+    }  
+  
+    .icon-btn {  
+      background: none;  
+      border: none;  
+      cursor: pointer;  
+      padding: 6px;  
+      display: flex;  
+      align-items: center;  
+      justify-content: center;  
+    }  
+  
+    .icon-circle {  
+      width: 32px;  
+      height: 32px;  
+      border-radius: 50%;  
+      background: white;  
+      display: flex;  
+      align-items: center;  
+      justify-content: center;  
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);  
+      transition: background 0.2s ease, transform 0.2s ease;  
+    }  
+  
+    .icon-circle img {  
+      width: 16px;  
+      height: 16px;  
+    }  
+  
+    .icon-circle:hover {  
+      background: #e3f0ff;  
+      transform: scale(1.1);  
+    }  
+  
+    .arrow-left {  
+      display: inline-block;  
+      width: 0;  
+      height: 0;  
+      border-top: 7px solid transparent;  
+      border-bottom: 7px solid transparent;  
+      border-right: 10px solid #1168c2;  
+      margin-left: 2px;  
+    }  
+  
+    .centered {  
+      flex: 1;  
+      display: flex;  
+      justify-content: center;  
+      align-items: stretch;  
+      position: relative;  
+      transition: all 0.3s ease;  
+      min-height: 0;  
+    }  
+  
+    .content-box {  
+      width: 100%;  
+      height: 100%;  
+      background: white;  
+      display: flex;  
+      flex-direction: column;  
+      position: relative;  
+      transition: all 0.3s ease;  
+    }  
+  
+    iframe {  
+      border: none;  
+      width: 100%;  
+      height: 100%;  
+      flex: 1;  
+      display: none;  
+    }  
+  
+    .placeholder-text {  
+      position: absolute;  
+      top: 50%;  
+      left: 50%;  
+      transform: translate(-50%, -50%);  
+      color: #333;  
+      font-size: 18px;  
+      text-align: center;  
+      padding: 20px;  
+    }  
+  
+    .bottom-bar {  
+      height: 60px;  
+      background: linear-gradient(to right, #1168c2, #0d5aa6, #1168c2);  
+      display: flex;  
+      align-items: center;  
+      overflow-x: auto;  
+      white-space: nowrap;  
+      padding: 0 10px;  
+      scrollbar-width: none;  
+      -ms-overflow-style: none;  
+      flex-shrink: 0;  
+      transition: transform 0.3s ease;  
+      position: relative;  
+      z-index: 100;  
+    }  
+  
+    .bottom-bar::-webkit-scrollbar {  
+      display: none;  
+    }  
+  
+    .ripple-button {  
+      position: relative;  
+      overflow: hidden;  
+      background: #ffffff;  
+      color: #1168c2;  
+      padding: 8px 16px;  
+      border: none;  
+      border-radius: 8px;  
+      font-size: 14px;  
+      font-weight: bold;  
+      cursor: pointer;  
+      margin-right: 10px;  
+      box-shadow: 0 2px 6px rgba(17,104,194,0.3);  
+      transition: background 0.3s, box-shadow 0.2s;  
+      white-space: nowrap;  
+      flex-shrink: 0;  
+    }  
+  
+    .ripple-button:hover {  
+      background: #e3f0ff;  
+    }  
+  
+    .ripple-button.active {  
+      box-shadow: 0 0 0 3px rgba(17,104,194,0.4);  
+    }  
+  
+    .ripple {  
+      position: absolute;  
+      border-radius: 50%;  
+      transform: scale(0);  
+      background-color: rgba(17, 104, 194, 0.4);  
+      animation: ripple-animation 0.6s linear;  
+      pointer-events: none;  
+    }  
+  
+    @keyframes ripple-animation {  
+      to {  
+        transform: scale(4);  
+        opacity: 0;  
+      }  
+    }  
+  
+    /* Стили для кнопки переключения панелей */  
+    #togglePanelsButton {  
+      position: fixed;  
+      top: 70px;  
+      right: 10px;  
+      width: 24px;  
+      height: 24px;  
+      background: #1168c2;  
+      color: white;  
+      border: none;  
+      border-radius: 3px;  
+      cursor: pointer;  
+      z-index: 1000;  
+      font-size: 14px;  
+      display: flex;  
+      align-items: center;  
+      justify-content: center;  
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);  
+      transition: all 0.3s ease;  
+    }  
+  
+    #togglePanelsButton:hover {  
+      background: #0d5aa6;  
+    }  
+  
+    /* Стили для скрытого состояния панелей */  
+    .panels-hidden .toolbar {  
+      transform: translateY(-100%);  
+    }  
+  
+    .panels-hidden .bottom-bar {  
+      transform: translateY(100%);  
+      position: fixed;  
+      bottom: 0;  
+      left: 0;  
+      right: 0;  
+    }  
+  
+    .panels-hidden .centered {  
+      position: fixed;  
+      top: 0;  
+      left: 0;  
+      right: 0;  
+      bottom: 0;  
+      max-width: none;  
+      align-items: stretch;  
+    }  
+  
+    .panels-hidden .content-box {  
+      max-width: none;  
+      width: 100%;  
+      height: 100%;  
+      box-shadow: none;  
+    }  
+  
+    .panels-hidden #togglePanelsButton {  
+      top: 10px;  
+      opacity: 0.5;  
+    }
+
+    /* Стили для обучающего сообщения */
+    .tutorial-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      z-index: 2000;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding-top: 80px;
+    }
+    
+    .tutorial-message {
+      background-color: #1168c2;
+      color: white;
+      padding: 15px 20px;
+      border-radius: 8px;
+      max-width: 300px;
+      text-align: center;
+      position: relative;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      animation: fadeIn 0.3s ease;
+    }
+    
+    .tutorial-message:after {
+      content: '';
+      position: absolute;
+      top: -10px;
+      right: 20px;
+      width: 0;
+      height: 0;
+      border-left: 10px solid transparent;
+      border-right: 10px solid transparent;
+      border-bottom: 10px solid #1168c2;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>  
+</head>  
+<body>  
+  <!-- Кнопка переключения видимости панелей -->  
+  <button id="togglePanelsButton" title="Скрыть/показать панели">↑</button>  
+  
+  <div class="toolbar">  
+    <div class="toolbar-left">  
+        
+      <a href="https://lostbox1000.neocities.org">  
+        <img src="assets/photo_resources/lostboxicon.png" alt="LostBox" />  
+      </a>  
+        
+      <div class="title">LostBox Tools</div>  
+    </div>  
+  
+    <button id="musicBtn" class="icon-btn" title="Включить музыку">  
+      <div class="icon-circle">  
+        <img id="musicIcon" src="assets/photo_resources/offmusic.png" alt="Music Off">  
+      </div>  
+    </button>  
+  
+    <button id="tutorialBtn" class="icon-btn" title="Обучение">  
+      <div class="icon-circle"><span class="i-icon">i</span></div>  
+    </button>  
+  </div>  
+  
+  <div class="centered">  
+    <div class="content-box">  
+      <div class="placeholder-text" id="placeholder">  
+        Пожалуйста, выберите инструмент.<br>Они находятся снизу, в синей полосе.  
+      </div>  
+      <iframe id="toolFrame"></iframe>  
+    </div>  
+  </div>  
+  
+  <div class="bottom-bar" id="bottomBar">  
+    <button class="ripple-button" onclick="loadTool(event, 'assets/tools/hextool.html', this)">  
+      HEX Редактор  
+    </button>  
+    <button class="ripple-button" onclick="loadTool(event, 'assets/tools/siperbase64.html', this)">  
+      Массовый BASE-64  
+    </button>  
+    <button class="ripple-button" onclick="loadTool(event, 'assets/tools/info64.html', this)">  
+      Информатор  
+    </button>  
+    <button class="ripple-button" onclick="loadTool(event, 'assets/tools/write64.html', this)">  
+      Быстрый BASE-64  
+    </button>  
+    <button class="ripple-button" onclick="loadTool(event, 'assets/tools/masstxt.html', this)">  
+      Массовый TXT  
+    </button>  
+    <button class="ripple-button" onclick="loadTool(event, 'assets/tools/valid_invalid-json.html', this)">  
+      Проверка JOHN  
+    </button>  
+    <button class="ripple-button" onclick="loadTool(event, 'assets/tools/pictures.html', this)">  
+      Фото на выбор  
+    </button>  
+    <button class="ripple-button" onclick="loadTool(event, 'assets/tools/camera-low-resolution.html', this)">  
+      Камера 2009  
+    </button>  
+    <button class="ripple-button" onclick="loadTool(event, 'assets/tools/datecalcul.html', this)">  
+      Прошло времени:  
+    </button>  
+    <button class="ripple-button" onclick="loadTool(event, 'assets/tools/htmlredactor.html', this)">  
+      Редактор  
+    </button>  
+    <button class="ripple-button" onclick="loadTool(event, 'assets/tools/translator.html', this)">  
+      Переводчик  
+    </button>  
+    <button class="ripple-button" onclick="loadTool(event, 'assets/tools/ckleivanie.html', this)">  
+      Склейка фото  
+    </button>  
+    <button class="ripple-button" onclick="loadTool(event, 'assets/tools/deshifrator.html', this)">  
+      Дешифратор  
+    </button>  
+    <button class="ripple-button" onclick="loadTool(event, 'assets/tools/piximage.html', this)">  
+      Пикселизация  
+    </button>  
+    <button class="ripple-button" onclick="loadTool(event, 'assets/tools/razdavilka.html', this)">  
+      Раздавилка  
+    </button>  
+    <button class="ripple-button" onclick="loadTool(event, 'assets/tools/csvparser.html', this)">  
+      CSV Парсер  
+    </button>      
+    <button class="ripple-button" onclick="loadTool(event, 'assets/tools/soundgenerate.html', this)">  
+      Генератор звуков  
+    </button>     
+    <button class="ripple-button" onclick="loadTool(event, 'assets/tools/spectr.html', this)">  
+      Звуковая спектограмма  
+    </button>     
+   <button class="ripple-button" onclick="loadTool(event, 'assets/tools/svgpalette.html', this)">  
+      SVG Рисовалка  
+    </button>  
+<button class="ripple-button" onclick="loadTool(event, 'assets/tools/rimparse.html', this)">  
+      Парсер римских/арабских цифр  
+    </button>
+<button class="ripple-button" onclick="loadTool(event, 'assets/tools/svgconverte.html', this)">  
+    SVG Конвертер 
+    </button> 
+<button class="ripple-button" onclick="loadTool(event, 'assets/tools/exifparse.html', this)">  
+    Проверка EXIF и удаление
+    </button> 
+<button class="ripple-button" onclick="loadTool(event, 'assets/tools/svgviewer.html', this)">  
+    SVG в реальном времени
+    </button> 
+<button class="ripple-button" onclick="loadTool(event, 'assets/tools/jsonformatter.html', this)">  
+    Форматирование JOHN 
+    </button> 
+<button class="ripple-button" onclick="loadTool(event, 'assets/tools/commentclear.html', this)">  
+    Зачистка комментариев
+    </button> 
+<button class="ripple-button" onclick="loadTool(event, 'assets/tools/pixelartredactor.html', this)">  
+    Пиксель - арт редактор.
+    </button> 
+  </div>  
+  
+<audio id="bgMusic" loop></audio>  
+  
+  <script>  
+    const toolFrame   = document.getElementById("toolFrame");  
+    const placeholder = document.getElementById("placeholder");  
+    const bottomBar   = document.getElementById("bottomBar");  
+    const tutorialBtn = document.getElementById("tutorialBtn");  
+    const musicBtn    = document.getElementById("musicBtn");  
+    const musicIcon   = document.getElementById("musicIcon");  
+    const bgMusic     = document.getElementById("bgMusic");  
+    const togglePanelsButton = document.getElementById("togglePanelsButton");  
+  
+    let musicPlaying  = false;  
+    let iconInterval  = null;  
+    let currentFrame  = 1;  
+    let inTutorial    = false;  
+    let panelsHidden  = false;  
+  
+    // Установка прямой ссылки на музыку  
+    bgMusic.src = "https://files.catbox.moe/b9sxyl.mp3";  
+  
+    // Функция для переключения видимости панелей  
+    function togglePanels() {  
+      panelsHidden = !panelsHidden;  
+        
+      if (panelsHidden) {  
+        document.body.classList.add('panels-hidden');  
+        togglePanelsButton.textContent = '↓';  
+        togglePanelsButton.style.opacity = '0.5';  
+        togglePanelsButton.style.top = '10px';  
+      } else {  
+        document.body.classList.remove('panels-hidden');  
+        togglePanelsButton.textContent = '↑';  
+        togglePanelsButton.style.opacity = '1';  
+        togglePanelsButton.style.top = '70px';  
+      }  
+    }  
+  
+    // Обработчик клика по кнопке переключения панелей  
+    togglePanelsButton.addEventListener('click', togglePanels);  
+  
+    musicBtn.onclick = () => {  
+      musicPlaying = !musicPlaying;  
+      if (musicPlaying) {  
+        bgMusic.play();  
+        musicBtn.title = "Отключить музыку";  
+        iconInterval = setInterval(() => {  
+          currentFrame = currentFrame === 1 ? 2 : 1;  
+          musicIcon.src = `assets/photo_resources/onmusic${currentFrame}.png`;  
+        }, 1000);  
+      } else {  
+        bgMusic.pause();  
+        bgMusic.currentTime = 0;  
+        musicBtn.title = "Включить музыку";  
+        clearInterval(iconInterval);  
+        iconInterval = null;  
+        currentFrame = 1;  
+        musicIcon.src = "assets/photo_resources/offmusic.png";  
+      }  
+    };  
+  
+    function loadTool(e, src, btn) {  
+      const ripple = document.createElement("span");  
+      ripple.classList.add("ripple");  
+      const rect = btn.getBoundingClientRect();  
+      const size = Math.max(rect.width, rect.height);  
+      ripple.style.width = ripple.style.height = size + "px";  
+      ripple.style.left = (e.clientX - rect.left - size/2) + "px";  
+      ripple.style.top  = (e.clientY - rect.top  - size/2) + "px";  
+      btn.appendChild(ripple);  
+      setTimeout(() => ripple.remove(), 600);  
+  
+      document.querySelectorAll('.ripple-button').forEach(b => b.classList.remove('active'));  
+      btn.classList.add('active');  
+  
+      placeholder.style.display = "none";  
+      toolFrame.style.display = "block";  
+      toolFrame.src = src;  
+    }  
+  
+    tutorialBtn.onclick = () => {  
+      inTutorial = !inTutorial;  
+      if (inTutorial) {  
+        toolFrame.src = "tutorlostboxT.html";  
+        toolFrame.style.display = "block";  
+        placeholder.style.display = "none";  
+        bottomBar.style.display = "none";  
+        tutorialBtn.innerHTML = '<div class="icon-circle"><div class="arrow-left"></div></div>';  
+        tutorialBtn.title = "Назад";  
+      } else {  
+        toolFrame.style.display = "none";  
+        toolFrame.src = "";  
+        placeholder.style.display = "block";  
+        bottomBar.style.display = "flex";  
+        tutorialBtn.innerHTML = '<div class="icon-circle"><span class="i-icon">i</span></div>';  
+        tutorialBtn.title = "Обучение";  
+      }  
+    };
+
+    // Работа с IndexedDB для хранения счетчика показов
+    const DB_NAME = 'LostBoxToolsDB';
+    const DB_VERSION = 1;
+    const STORE_NAME = 'tutorialViews';
+    const TUTORIAL_KEY = 'tutorialHintCount';
+
+    // Открытие базы данных
+    function openDB() {
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
+        
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => resolve(request.result);
+        
+        request.onupgradeneeded = (event) => {
+          const db = event.target.result;
+          if (!db.objectStoreNames.contains(STORE_NAME)) {
+            db.createObjectStore(STORE_NAME);
+          }
+        };
+      });
+    }
+
+    // Получение значения из базы данных
+    function getFromDB(key) {
+      return new Promise(async (resolve, reject) => {
+        try {
+          const db = await openDB();
+          const transaction = db.transaction([STORE_NAME], 'readonly');
+          const store = transaction.objectStore(STORE_NAME);
+          const request = store.get(key);
+          
+          request.onerror = () => reject(request.error);
+          request.onsuccess = () => resolve(request.result || 0);
+        } catch (error) {
+          reject(error);
+        }
+      });
+    }
+
+    // Сохранение значения в базу данных
+    function saveToDB(key, value) {
+      return new Promise(async (resolve, reject) => {
+        try {
+          const db = await openDB();
+          const transaction = db.transaction([STORE_NAME], 'readwrite');
+          const store = transaction.objectStore(STORE_NAME);
+          const request = store.put(value, key);
+          
+          request.onerror = () => reject(request.error);
+          request.onsuccess = () => resolve();
+        } catch (error) {
+          reject(error);
+        }
+      });
+    }
+
+    // Показать обучающее сообщение
+    function showTutorialHint() {
+      // Создаем затемняющий оверлей
+      const overlay = document.createElement('div');
+      overlay.className = 'tutorial-overlay';
+      
+      // Создаем сообщение
+      const message = document.createElement('div');
+      message.className = 'tutorial-message';
+      message.textContent = 'В этой кнопке находятся подсказки по пользованию инструментам (кнопка "¡")';
+      
+      overlay.appendChild(message);
+      document.body.appendChild(overlay);
+      
+      // Функция для скрытия сообщения
+      const hideMessage = () => {
+        document.body.removeChild(overlay);
+        // Сохраняем увеличенный счетчик просмотров
+        getFromDB(TUTORIAL_KEY).then(count => {
+          saveToDB(TUTORIAL_KEY, count + 1);
+        });
+      };
+      
+      // Скрытие по клику в любое место
+      overlay.addEventListener('click', hideMessage);
+      
+      // Автоматическое скрытие через 10 секунд
+      setTimeout(hideMessage, 10000);
+    }
+
+    // Проверяем, нужно ли показать обучающее сообщение
+    document.addEventListener('DOMContentLoaded', async () => {
+      try {
+        const viewCount = await getFromDB(TUTORIAL_KEY);
+        
+        if (viewCount < 5) {
+   setTimeout(showTutorialHint);
+        }
+      } catch (error) {
+        console.error('Ошибка при работе с IndexedDB:', error);
+        // В случае ошибки показываем сообщение один раз
+        setTimeout(showTutorialHint);
+      }
+    });
+  </script>  
+</body>  
+</html>

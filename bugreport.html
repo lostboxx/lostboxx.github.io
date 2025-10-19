@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Сообщить о баге - LostBox</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      height: 100%;
+      background: #f0f4f8;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .toolbar {
+      height: 60px;
+      background: linear-gradient(to right, #1168c2, #0d5aa6, #1168c2);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      flex-shrink: 0;
+      z-index: 100;
+    }
+
+    .toolbar-left {
+      display: flex;
+      align-items: center;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .toolbar-right {
+      display: flex;
+      align-items: center;
+    }
+
+    .toolbar img {
+      height: 40px;
+      width: 40px;
+      margin-right: 12px;
+      image-rendering: pixelated;
+      flex-shrink: 0;
+    }
+
+    .title {
+      font-size: 1.4em;
+      font-weight: bold;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      flex-shrink: 1;
+    }
+
+    .icon-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-left: 8px;
+    }
+
+    .icon-circle {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      transition: background 0.2s ease, transform 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .icon-circle img {
+      width: 16px;
+      height: 16px;
+      margin: 0;
+    }
+
+    .icon-circle:hover {
+      background: #e3f0ff;
+      transform: scale(1.1);
+    }
+
+    .centered-content {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: #999999;
+      overflow-y: auto;
+    }
+
+    .bug-container {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      padding: 25px;
+      max-width: 450px;
+      width: 100%;
+      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+    }
+
+    .bug-header {
+      text-align: center;
+    }
+
+    .bug-title {
+      font-size: 26px;
+      color: #333;
+      margin-bottom: 8px;
+      font-weight: 300;
+    }
+
+    .bug-subtitle {
+      color: #666;
+      font-size: 15px;
+      font-weight: 300;
+      margin-bottom: 15px;
+    }
+
+    .form-group {
+      margin-bottom: 10px;
+    }
+
+    .form-label {
+      display: block;
+      margin-bottom: 6px;
+      color: #555;
+      font-weight: 500;
+      font-size: 10px;
+    }
+
+    .form-input, .form-select, .form-textarea {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid #e1e5e9;
+      font-size: 15px;
+      transition: all 0.3s ease;
+      background: white;
+      border-radius: 4px;
+    }
+
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.15);
+    }
+
+    .form-textarea {
+      resize: vertical;
+      min-height: 100px;
+      font-family: inherit;
+    }
+
+    .submit-btn {
+      width: 100%;
+      background: #667eea;
+      color: white;
+      border: none;
+      padding: 14px;
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-top: 10px;
+      border-radius: 4px;
+    }
+
+    .submit-btn:hover {
+      background: #5563c1;
+      transform: translateY(-1px);
+      box-shadow: 0 8px 15px rgba(102, 126, 234, 0.2);
+    }
+
+    .submit-btn:active {
+      transform: translateY(0);
+      background: #4a54a0;
+    }
+
+    .bug-footer {
+      text-align: center;
+      margin-top: 15px;
+      color: #888;
+      font-size: 13px;
+    }
+
+    .emoji {
+      font-size: 22px;
+      margin-right: 6px;
+    }
+
+    .bottom-bar {
+      height: 60px;
+      background: linear-gradient(to right, #1168c2, #0d5aa6, #1168c2);
+      flex-shrink: 0;
+      z-index: 100;
+    }
+
+    /* Адаптивность */
+    @media (max-width: 500px) {
+      .bug-container {
+        padding: 15px;
+        margin: 10px;
+        max-width: 95%;
+      }
+      
+      .bug-title {
+        font-size: 22px;
+      }
+      
+      .centered-content {
+        padding: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Верхняя синяя панель -->
+  <div class="toolbar">
+    <div class="toolbar-left">
+      <img src="assets/photo_resources/lostboxicon.png" alt="LostBox Logo">
+      <div class="title">LostBox</div>
+    </div>
+    <div class="toolbar-right">
+      <!-- Кнопка назад -->
+      <button class="icon-btn" onclick="goBack()" title="Вернуться на главную">
+        <div class="icon-circle">
+          <img src="assets/photo_resources/back.png" alt="Назад">
+        </div>
+      </button>
+      
+      <!-- Кнопка музыки -->
+      <button class="icon-btn" id="musicBtn" title="Включить музыку">
+        <div class="icon-circle">
+          <img id="musicIcon" src="assets/photo_resources/offmusic.png" alt="Музыка">
+        </div>
+      </button>
+    </div>
+  </div>
+
+  <!-- Основной контент -->
+  <div class="centered-content">
+    <div class="bug-container">
+      <div class="bug-header">
+        <h1 class="bug-title"><span class="emoji">🐛</span>Нашли баг?</h1>
+        <p class="bug-subtitle">Помогите сделать LostBox лучше!</p>
+      </div>
+
+      <form id="bugForm">
+        <div class="form-group">
+          <label class="form-label" for="userName">Как к вам обращаться?</label>
+          <input type="text" id="userName" class="form-input" placeholder="Можно анонимно 😊">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="bugType">Тип обращения</label>
+          <select id="bugType" class="form-select">
+            <option value="bug">🚨 Критический баг</option>
+            <option value="feature">💡 Идея для улучшения</option>
+            <option value="question">❓ Вопрос по работе</option>
+            <option value="other">✨ Просто хочу сказать спасибо!</option>
+            <option value="etc">💻 Другой вопрос</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="bugDescription">Опишите подробно</label>
+          <textarea id="bugDescription" class="form-textarea" placeholder="Что произошло? Как воспроизвести? Какий результат ожидали? 🧐"></textarea>
+        </div>
+
+        <button type="button" class="submit-btn" onclick="sendBugReport()">
+          📨 Отправить отчет
+        </button>
+      </form>
+
+      <div class="bug-footer">
+        <p>LostBox всегда FoundBox! 🎯</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Нижняя синяя панель -->
+  <div class="bottom-bar"></div>
+
+  <!-- Аудио для музыки -->
+  <audio id="bgMusic" loop>
+    <source src="https://files.catbox.moe/b9sxyl.mp3" type="audio/mpeg">
+    Ваш браузер не поддерживает аудио элемент.
+  </audio>
+
+  <script>
+    // Элементы для музыки
+    const musicBtn = document.getElementById('musicBtn');
+    const musicIcon = document.getElementById('musicIcon');
+    const bgMusic = document.getElementById('bgMusic');
+
+    // Состояние музыки
+    let musicPlaying = false;
+    let iconInterval = null;
+    let currentFrame = 1;
+
+    // Функция для перехода назад
+    function goBack() {
+      window.location.href = "index.html";
+    }
+
+    // Управление музыкой
+    musicBtn.onclick = () => {
+      toggleMusic(!musicPlaying);
+    };
+
+    // Переключение музыки
+    function toggleMusic(state) {
+      musicPlaying = state;
+      
+      if (musicPlaying) {
+        bgMusic.play().catch(e => {
+          console.log("Автовоспроизведение заблокировано. Нажмите на кнопку музыки для включения.");
+        });
+        musicBtn.title = "Отключить музыку";
+        if (!iconInterval) {
+          iconInterval = setInterval(() => {
+            currentFrame = currentFrame === 1 ? 2 : 1;
+            musicIcon.src = `assets/photo_resources/onmusic${currentFrame}.png`;
+          }, 1000);
+        }
+      } else {
+        bgMusic.pause();
+        musicBtn.title = "Включить музыку";
+        if (iconInterval) {
+          clearInterval(iconInterval);
+          iconInterval = null;
+        }
+        musicIcon.src = "assets/photo_resources/offmusic.png";
+      }
+      
+      localStorage.setItem('musicPlaying', musicPlaying);
+    }
+
+    // Проверка состояния музыки при загрузке
+    window.addEventListener('DOMContentLoaded', () => {
+      const savedMusicState = localStorage.getItem('musicPlaying') === 'true';
+      toggleMusic(savedMusicState);
+      
+      // Плавное появление
+      document.body.style.opacity = '1';
+    });
+
+    // Функция для определения имени и версии браузера, и более понятной платформы
+    function getBrowserInfo() {
+      const userAgent = navigator.userAgent;
+      let browserName = "Неизвестен";
+      let browserVersion = "N/A";
+      let osPlatform = navigator.platform || 'Неизвестная ОС';
+
+      // 1. Определение браузера
+      if (userAgent.indexOf("Chrome") > -1 && userAgent.indexOf("Edg") === -1 && userAgent.indexOf("OPR") === -1) {
+        browserName = "Chrome";
+        const matches = userAgent.match(/Chrome\/(\d+\.\d+)/);
+        if (matches) browserVersion = matches[1];
+      } else if (userAgent.indexOf("Firefox") > -1) {
+        browserName = "Firefox";
+        const matches = userAgent.match(/Firefox\/(\d+\.\d+)/);
+        if (matches) browserVersion = matches[1];
+      } else if (userAgent.indexOf("Edg") > -1) {
+        browserName = "Edge";
+        const matches = userAgent.match(/Edg\/(\d+\.\d+)/);
+        if (matches) browserVersion = matches[1];
+      } else if (userAgent.indexOf("Safari") > -1 && userAgent.indexOf("Chrome") === -1 && userAgent.indexOf("Edg") === -1) {
+        browserName = "Safari";
+        const matches = userAgent.match(/Version\/(\d+\.\d+)/);
+        if (matches) browserVersion = matches[1];
+      } else if (userAgent.indexOf("OPR") > -1 || userAgent.indexOf("Opera") > -1) {
+        browserName = "Opera";
+        const matches = userAgent.match(/(OPR|Opera)\/(\d+\.\d+)/);
+        if (matches) browserVersion = matches[2] || 'N/A';
+      }
+      
+      // 2. Улучшенное определение ОС/Платформы
+      if (osPlatform.includes("Win")) {
+        osPlatform = "Windows";
+      } else if (osPlatform.includes("Mac")) {
+        osPlatform = "macOS";
+      } else if (userAgent.includes("Android")) {
+        const matches = userAgent.match(/Android (\d+)/);
+        osPlatform = matches ? `Android ${matches[1]}` : "Android";
+      } else if (userAgent.includes("Linux")) {
+        osPlatform = "Linux";
+      } else if (/iPad|iPhone|iPod/.test(userAgent)) {
+        osPlatform = "iOS/iPadOS";
+      }
+
+      return {
+        browser: `${browserName} v${browserVersion}`,
+        platform: osPlatform,
+        fullAgent: userAgent 
+      };
+    }
+
+    function sendBugReport() {
+      const name = document.getElementById('userName').value || 'Анонимный пользователь';
+      const type = document.getElementById('bugType').value;
+      const description = document.getElementById('bugDescription').value;
+      
+      // Получаем чистую информацию о браузере и платформе
+      const info = getBrowserInfo(); 
+
+      const typeEmojis = {
+        'bug': '🚨',
+        'feature': '💡', 
+        'question': '❓',
+        'other': '✨',  
+        'etc': '💻'
+      };
+
+      const typeTitles = {
+        'bug': 'КРИТИЧЕСКИЙ БАГ',
+        'feature': 'ИДЕЯ ДЛЯ УЛУЧШЕНИЯ',
+        'question': 'ВОПРОС',
+        'other': 'ОБРАЩЕНИЕ',
+        'etc': 'ДРУГОЙ ВОПРОС'
+      };
+
+      const subject = `${typeEmojis[type]} ${typeTitles[type]} от ${name}`;
+      
+      // Формируем чистый и понятный текст письма
+      const body = `👤 Имя: ${name}
+🎯 Тип: ${typeTitles[type]}
+📝 Описание: ${description}
+
+🔧 Техническая информация:
+- Браузер: ${info.browser} 
+- Платформа: ${info.platform} 
+- Время: ${new Date().toLocaleString('ru-RU')}
+- User-Agent (полный): ${info.fullAgent} 
+
+---
+LostBox всегда FoundBox! 🎯
+💌 Спасибо за вашу помощь!`;
+
+      // Проверка на пустое описание
+      if(description.trim() === '' && type !== 'other') { 
+        alert('📝 Пожалуйста, опишите проблему или предложение!');
+        return;
+      }
+
+      if(confirm('📨 Открыть почтовый клиент для отправки?')) {
+        window.location.href = `mailto:lostbox.help@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      const bugTypeSelect = document.getElementById('bugType');
+      const bugDescriptionTextarea = document.getElementById('bugDescription');
+
+      // Инициализация плейсхолдера при загрузке
+      updatePlaceholder(bugTypeSelect.value); 
+
+      // Добавление слушателя для изменения плейсхолдера
+      bugTypeSelect.addEventListener('change', function() {
+        updatePlaceholder(this.value);
+      });
+
+      function updatePlaceholder(typeValue) {
+        let newPlaceholder = '';
+        switch(typeValue) {
+          case 'bug':
+            newPlaceholder = 'В какой части сайта произошёл критический баг? 🤔';
+            break;
+          case 'feature':
+            newPlaceholder = 'Что вы бы могли предложить для сайта? 🤔';
+            break;
+          case 'question':
+            newPlaceholder = 'Какой вы бы вопрос хотели задать? 🤔';
+            break;
+          case 'other':
+            newPlaceholder = 'Спасибо вам за нахождение на моем сайте! ☺️';
+            break;
+            case 'etc':
+              newPlaceholder = 'Хочу задать другой вопрос 🤔';
+              break;
+          default:
+            newPlaceholder = 'Что произошло? Как воспроизвести? Какий результат ожидали? 🧐';
+        }
+        bugDescriptionTextarea.placeholder = newPlaceholder;
+      }
+    });
+  </script>
+</body>
+</html>

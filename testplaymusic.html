@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+     <meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">  <title>Музыкальный плеер с pdefb</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #121212;
+      font-family: Arial, sans-serif;
+      overflow: hidden;
+    }
+    #music-button {
+      width: 300px;
+      height: 300px;
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    #music-button:hover {
+      transform: scale(1.05);
+    }
+    #music-button:active {
+      transform: scale(0.95);
+    }
+  </style>
+</head>
+<body>
+  <div id="music-button" style="background-image: url('assets/photo_resources/offmusic.png')"></div>
+
+  <audio id="audio-player"></audio>
+
+  <script>
+    // Загрузка словаря pdefb
+    let pdefbDict = {};
+    let reverseDict = {};
+    let animationFrames = [
+      'assets/photo_resources/onmusic1.png',
+      'assets/photo_resources/onmusic2.png',
+      'assets/photo_resources/onmusic1.png'
+    ];
+    let currentFrame = 0;
+    let animationInterval = null;
+    let audioContext = null;
+    let audioBuffer = null;
+    let isPlaying = false;
+
+    // Загрузка словаря
+    async function loadDictionary() {
+      try {
+        const response = await fetch('assets/tools/tools_help/pdefbs.json');
+        if (!response.ok) throw new Error('Не удалось загрузить словарь');
+        pdefbDict = await response.json();
+        
+        // Создаем обратный словарь
+        for (const [key, value] of Object.entries(pdefbDict)) {
+          reverseDict[value] = key;
+        }
+        
+        console.log('Словарь pdefb загружен');
+      } catch (error) {
+        console.error('Ошибка загрузки словаря:', error);
+      }
+    }
+
+    // Расшифровка pdefb
+    function decryptPdefb(encrypted) {
+      let decrypted = '';
+      for (let i = 0; i < encrypted.length;) {
+        const chunk = encrypted.slice(i, i + 5);
+        if (reverseDict[chunk]) {
+          decrypted += reverseDict[chunk];
+          i += 5;
+        } else {
+          decrypted += encrypted[i];
+          i += 1;
+        }
+      }
+      return decrypted;
+    }
+
+    // Загрузка и декодирование аудио
+    async function loadAndPlayAudio() {
+      try {
+        // Загрузка зашифрованного аудио
+        const response = await fetch('assets/audio_resources/banka.music.universal.pdefb');
+        if (!response.ok) throw new Error('Не удалось загрузить аудио');
+        const encryptedData = await response.text();
+        
+        // Расшифровка
+        const base64Data = decryptPdefb(encryptedData);
+        
+        // Декодирование Base64 в бинарные данные
+        const binaryString = atob(base64Data);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        
+        // Декодирование аудио
+        if (!audioContext) {
+          audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        
+        audioContext.decodeAudioData(bytes.buffer)
+          .then(buffer => {
+            audioBuffer = buffer;
+            playAudio();
+          })
+          .catch(error => console.error('Ошибка декодирования аудио:', error));
+        
+      } catch (error) {
+        console.error('Ошибка загрузки аудио:', error);
+      }
+    }
+
+    // Воспроизведение аудио
+    function playAudio() {
+      if (!audioBuffer || !audioContext) return;
+      
+      const source = audioContext.createBufferSource();
+      source.buffer = audioBuffer;
+      source.connect(audioContext.destination);
+      source.start(0);
+      
+      // Анимация воспроизведения
+      startAnimation();
+      
+      source.onended = () => {
+        stopAnimation();
+        isPlaying = false;
+        document.getElementById('music-button').style.backgroundImage = "url('assets/photo_resources/offmusic.png')";
+      };
+      
+      isPlaying = true;
+    }
+
+    // Анимация кнопки
+    function startAnimation() {
+      if (animationInterval) clearInterval(animationInterval);
+      animationInterval = setInterval(() => {
+        currentFrame = (currentFrame + 1) % animationFrames.length;
+        document.getElementById('music-button').style.backgroundImage = `url('${animationFrames[currentFrame]}')`;
+      }, 1000);
+    }
+
+    function stopAnimation() {
+      if (animationInterval) {
+        clearInterval(animationInterval);
+        animationInterval = null;
+      }
+      currentFrame = 0;
+    }
+
+    // Обработчик клика
+    document.getElementById('music-button').addEventListener('click', () => {
+      if (isPlaying) return;
+      
+      if (audioBuffer) {
+        playAudio();
+      } else {
+        loadAndPlayAudio();
+      }
+    });
+
+    // Инициализация
+    window.addEventListener('load', () => {
+      loadDictionary();
+    });
+  </script>
+</body>
+</html>

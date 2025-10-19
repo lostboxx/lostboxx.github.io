@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Личная папка</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: black;
+            color: white;
+        }
+        .screen {
+            display: none;
+            background: #1a1a1a;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(255,255,255,0.1);
+            border: 1px solid #333;
+        }
+        .active {
+            display: block;
+        }
+        input, button {
+            padding: 10px;
+            margin: 5px 0;
+            width: 100%;
+            box-sizing: border-box;
+            border-radius: 4px;
+            border: 1px solid #555;
+        }
+        input {
+            background-color: #2a2a2a;
+            color: white;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .file-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #333;
+        }
+        .file-actions {
+            display: flex;
+            gap: 10px;
+        }
+        .add-file-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .error {
+            color: #ff6b6b;
+            margin-top: 5px;
+        }
+        .loading {
+            color: #4CAF50;
+            text-align: center;
+            margin: 10px 0;
+        }
+        .logout-btn {
+            background-color: #f44336;
+            margin-top: 10px;
+        }
+        .logout-btn:hover {
+            background-color: #d32f2f;
+        }
+    </style>
+</head>
+<body>
+    <!-- Экран приветствия -->
+    <div id="welcome-screen" class="screen active">
+        <h1>Личная папка</h1>
+        <p>Добро пожаловать в личную папку! <br> Вы тут можете сохранить свои файлы, и они будут зашифрованы. <br> Не ставьте легкий пароль, если не хотите, чтобы файлы были взломаны. <br> Не очищайте данные сайта "lostbox1000.neocities.org", это может удалить ваши файлы в личной папке. <br> Личная папка не гарантирует 100% безопасность.  <br><br> Шифрование (создание пароля, или загрузка файла) может длится долго, из-за мощного шифрования. Зато никто точно не украдёт фото кота! 😃 Удачи!</p>
+        <button id="continue-btn">Продолжить</button>
+    </div>
+
+    <!-- Экран создания пароля -->
+    <div id="create-password-screen" class="screen">
+        <h2>Создайте пароль</h2>
+        <input type="password" id="new-password" placeholder="Новый пароль (макс. 16 символов)" maxlength="16">
+        <input type="password" id="confirm-password" placeholder="Подтвердите пароль" maxlength="16">
+        <div id="password-error" class="error"></div>
+        <div id="password-loading" class="loading" style="display: none;">Генерация ключей безопасности... Это может занять несколько секунд.</div>
+        <button id="set-password-btn">Установить пароль</button>
+    </div>
+
+    <!-- Экран ввода пароля -->
+    <div id="login-screen" class="screen">
+        <h2>Введите пароль</h2>
+        <input type="password" id="password" placeholder="Пароль">
+        <div id="login-error" class="error"></div>
+        <div id="login-loading" class="loading" style="display: none;">Проверка пароля и генерация ключей... Это может занять несколько секунд.</div>
+        <button id="login-btn">Войти</button>
+    </div>
+
+    <!-- Экран файлов -->
+    <div id="files-screen" class="screen">
+        <h2>Ваши файлы</h2>
+        <div id="file-list"></div>
+        <div id="upload-loading" class="loading" style="display: none;">Шифрование и сохранение файла... Это может занять некоторое время.</div>
+        <button id="add-file-btn" class="add-file-btn">+</button>
+        <button id="logout-btn" class="logout-btn">Выйти</button>
+    </div>
+
+    <!-- Скрытый input для загрузки файлов -->
+    <input type="file" id="file-input" style="display: none;">
+
+    <script>
+        // Инкапсуляция всего кода в IIFE для защиты от доступа через консоль
+        (function() {
+            // Элементы DOM
+            const screens = document.querySelectorAll('.screen');
+            const welcomeScreen = document.getElementById('welcome-screen');
+            const createPasswordScreen = document.getElementById('create-password-screen');
+            const loginScreen = document.getElementById('login-screen');
+            const filesScreen = document.getElementById('files-screen');
+            const continueBtn = document.getElementById('continue-btn');
+            const setPasswordBtn = document.getElementById('set-password-btn');
+            const loginBtn = document.getElementById('login-btn');
+            const addFileBtn = document.getElementById('add-file-btn');
+            const logoutBtn = document.getElementById('logout-btn');
+            const fileInput = document.getElementById('file-input');
+            const fileList = document.getElementById('file-list');
+            const passwordError = document.getElementById('password-error');
+            const loginError = document.getElementById('login-error');
+            const passwordLoading = document.getElementById('password-loading');
+            const loginLoading = document.getElementById('login-loading');
+            const uploadLoading = document.getElementById('upload-loading');
+
+            // Константы для IndexedDB
+            const DB_NAME = 'SecureFileStorage';
+            const DB_VERSION = 2; // Увеличили версию для новой структуры данных
+            const STORE_PASSWORD = 'password';
+            const STORE_FILES = 'files';
+
+            // Глобальные переменные (инкапсулированы в IIFE)
+            let db = null;
+            let encryptionKey = null;
+            let inactivityTimer = null;
+            const INACTIVITY_TIMEOUT = 15 * 60 * 1000; // 15 минут
+
+            // Инициализация при загрузке
+            document.addEventListener('DOMContentLoaded', init);
+
+            function init() {
+                // Открываем или создаем базу данных
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+                
+                request.onerror = (event) => {
+                    console.error('Ошибка IndexedDB:', event.target.error);
+                };
+                
+                request.onsuccess = (event) => {
+                    db = event.target.result;
+                    checkIfPasswordExists();
+                };
+                
+                request.onupgradeneeded = (event) => {
+                    const db = event.target.result;
+                    
+                    // Создаем хранилище для пароля, если его нет
+                    if (!db.objectStoreNames.contains(STORE_PASSWORD)) {
+                        db.createObjectStore(STORE_PASSWORD, { keyPath: 'id' });
+                    }
+                    
+                    // Создаем хранилище для файлов, если его нет
+                    if (!db.objectStoreNames.contains(STORE_FILES)) {
+                        const store = db.createObjectStore(STORE_FILES, { keyPath: 'id', autoIncrement: true });
+                        // Создаем индекс для поиска по имени файла (зашифрованному)
+                        store.createIndex('name', 'name', { unique: false });
+                    }
+                };
+                
+                // Обработчики событий
+                continueBtn.addEventListener('click', onContinue);
+                setPasswordBtn.addEventListener('click', setPassword);
+                loginBtn.addEventListener('click', login);
+                addFileBtn.addEventListener('click', () => fileInput.click());
+                fileInput.addEventListener('change', handleFileUpload);
+                logoutBtn.addEventListener('click', logout);
+                
+                // Сброс таймера неактивности при действиях пользователя
+                document.addEventListener('click', resetInactivityTimer);
+                document.addEventListener('keypress', resetInactivityTimer);
+                document.addEventListener('mousemove', resetInactivityTimer);
+            }
+
+            // Проверяем, установлен ли уже пароль
+            function checkIfPasswordExists() {
+                const transaction = db.transaction([STORE_PASSWORD], 'readonly');
+                const store = transaction.objectStore(STORE_PASSWORD);
+                const request = store.get(1);
+                
+                request.onsuccess = (event) => {
+                    const result = event.target.result;
+                    if (result) {
+                        // Пароль существует, показываем экран входа
+                        showScreen(loginScreen);
+                    } else {
+                        // Пароля нет, остаемся на экране приветствия
+                        showScreen(welcomeScreen);
+                    }
+                };
+                
+                request.onerror = (event) => {
+                    console.error('Ошибка при проверке пароля:', event.target.error);
+                };
+            }
+
+            // Обработка нажатия "Продолжить"
+            function onContinue() {
+                const transaction = db.transaction([STORE_PASSWORD], 'readonly');
+                const store = transaction.objectStore(STORE_PASSWORD);
+                const request = store.get(1);
+                
+                request.onsuccess = (event) => {
+                    const result = event.target.result;
+                    if (result) {
+                        // Пароль существует, показываем экран входа
+                        showScreen(loginScreen);
+                    } else {
+                        // Пароля нет, показываем экран создания пароля
+                        showScreen(createPasswordScreen);
+                    }
+                };
+            }
+
+            // Установка нового пароля
+            async function setPassword() {
+                const newPassword = document.getElementById('new-password').value;
+                const confirmPassword = document.getElementById('confirm-password').value;
+                
+                // Валидация
+                if (!newPassword) {
+                    passwordError.textContent = 'Введите пароль';
+                    return;
+                }
+                
+                if (newPassword !== confirmPassword) {
+                    passwordError.textContent = 'Пароли не совпадают';
+                    return;
+                }
+                
+                passwordError.textContent = '';
+                passwordLoading.style.display = 'block';
+                setPasswordBtn.disabled = true;
+                
+                try {
+                    // Генерируем соль
+                    const salt = crypto.getRandomValues(new Uint8Array(16));
+                    
+                    // Генерируем ключ для шифрования из пароля с использованием PBKDF2
+                    const keyMaterial = await getKeyMaterial(newPassword);
+                    encryptionKey = await deriveEncryptionKey(keyMaterial, salt);
+                    
+                    // Генерируем хеш пароля с солью для хранения с использованием PBKDF2
+                    const hashBuffer = await hashPassword(newPassword, salt);
+                    
+                    // Конвертируем хеш и соль в строки для хранения
+                    const hashArray = Array.from(new Uint8Array(hashBuffer));
+                    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+                    const saltHex = Array.from(salt).map(b => b.toString(16).padStart(2, '0')).join('');
+                    
+                    // Сохраняем хеш и соль в базе данных
+                    const transaction = db.transaction([STORE_PASSWORD], 'readwrite');
+                    const store = transaction.objectStore(STORE_PASSWORD);
+                    
+                    store.put({
+                        id: 1,
+                        hash: hashHex,
+                        salt: saltHex
+                    });
+                    
+                    transaction.oncomplete = () => {
+                        // Переходим к экрану файлов
+                        showScreen(filesScreen);
+                        loadFiles();
+                        resetInactivityTimer(); // Запускаем таймер неактивности
+                    };
+                    
+                } catch (error) {
+                    console.error('Ошибка при установке пароля:', error);
+                    passwordError.textContent = 'Ошибка при установке пароля';
+                } finally {
+                    passwordLoading.style.display = 'none';
+                    setPasswordBtn.disabled = false;
+                }
+            }
+
+            // Вход с паролем
+            async function login() {
+                const password = document.getElementById('password').value;
+                
+                if (!password) {
+                    loginError.textContent = 'Введите пароль';
+                    return;
+                }
+                
+                loginError.textContent = '';
+                loginLoading.style.display = 'block';
+                loginBtn.disabled = true;
+                
+                try {
+                    // Получаем хеш и соль из базы данных
+                    const transaction = db.transaction([STORE_PASSWORD], 'readonly');
+                    const store = transaction.objectStore(STORE_PASSWORD);
+                    const request = store.get(1);
+                    
+                    request.onsuccess = async (event) => {
+                        try {
+                            const result = event.target.result;
+                            if (!result) {
+                                loginError.textContent = 'Пароль не установлен';
+                                return;
+                            }
+                            
+                            // Конвертируем hex строки обратно в массивы байтов
+                            const storedHash = new Uint8Array(result.hash.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+                            const salt = new Uint8Array(result.salt.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+                            
+                            // Хешируем введенный пароль с той же солью
+                            const hashBuffer = await hashPassword(password, salt);
+                            const enteredHash = new Uint8Array(hashBuffer);
+                            
+                            // Сравниваем хеши с защитой от атак по времени
+                            if (enteredHash.length !== storedHash.length) {
+                                loginError.textContent = 'Неверный пароль';
+                                return;
+                            }
+                            
+                            let equal = true;
+                            for (let i = 0; i < enteredHash.length; i++) {
+                                if (enteredHash[i] !== storedHash[i]) {
+                                    equal = false;
+                                    break;
+                                }
+                            }
+                            
+                            if (equal) {
+                                // Генерируем ключ для шифрования из пароля
+                                const keyMaterial = await getKeyMaterial(password);
+                                encryptionKey = await deriveEncryptionKey(keyMaterial, salt);
+                                
+                                // Переходим к экрану файлов
+                                showScreen(filesScreen);
+                                loadFiles();
+                                resetInactivityTimer(); // Запускаем таймер неактивности
+                            } else {
+                                loginError.textContent = 'Неверный пароль';
+                            }
+                        } catch (error) {
+                            console.error('Ошибка при проверке пароля:', error);
+                            loginError.textContent = 'Ошибка при проверке пароля';
+                        } finally {
+                            loginLoading.style.display = 'none';
+                            loginBtn.disabled = false;
+                        }
+                    };
+                    
+                } catch (error) {
+                    console.error('Ошибка при входе:', error);
+                    loginError.textContent = 'Ошибка при входе';
+                    loginLoading.style.display = 'none';
+                    loginBtn.disabled = false;
+                }
+            }
+
+            // Получение ключевого материала из пароля
+            async function getKeyMaterial(password) {
+                const encoder = new TextEncoder();
+                return await crypto.subtle.importKey(
+                    'raw',
+                    encoder.encode(password),
+                    'PBKDF2',
+                    false,
+                    ['deriveBits', 'deriveKey']
+                );
+            }
+
+            // Производный ключ шифрования с использованием PBKDF2
+            async function deriveEncryptionKey(keyMaterial, salt) {
+                return await crypto.subtle.deriveKey(
+                    {
+                        name: 'PBKDF2',
+                        salt: salt,
+                        iterations: 500000,
+                        hash: 'SHA-256'
+                    },
+                    keyMaterial,
+                    {
+                        name: 'AES-GCM',
+                        length: 256
+                    },
+                    false,
+                    ['encrypt', 'decrypt']
+                );
+            }
+
+            // Хеширование пароля с солью с использованием PBKDF2
+            async function hashPassword(password, salt) {
+                const encoder = new TextEncoder();
+                const keyMaterial = await getKeyMaterial(password);
+                
+                // Используем PBKDF2 для создания хеша пароля
+                return await crypto.subtle.deriveBits(
+                    {
+                        name: 'PBKDF2',
+                        salt: salt,
+                        iterations: 100000,
+                        hash: 'SHA-256'
+                    },
+                    keyMaterial,
+                    256 // 256 бит = 32 байта
+                );
+            }
+
+            // Загрузка файлов из базы данных
+            async function loadFiles() {
+                if (!db) return;
+                
+                const transaction = db.transaction([STORE_FILES], 'readonly');
+                const store = transaction.objectStore(STORE_FILES);
+                const request = store.getAll();
+                
+                request.onsuccess = async (event) => {
+                    const files = event.target.result;
+                    fileList.innerHTML = '';
+                    
+                    if (files.length === 0) {
+                        fileList.innerHTML = '<p>Файлов нет</p>';
+                        return;
+                    }
+                    
+                    for (const file of files) {
+                        await displayFile(file);
+                    }
+                };
+                
+                request.onerror = (event) => {
+                    console.error('Ошибка при загрузке файлов:', event.target.error);
+                };
+            }
+
+            // Отображение файла в списке
+            async function displayFile(file) {
+                const fileItem = document.createElement('div');
+                fileItem.className = 'file-item';
+                
+                const fileName = document.createElement('span');
+                
+                try {
+                    // Расшифровываем имя файла
+                    const nameBuffer = await crypto.subtle.decrypt(
+                        {
+                            name: 'AES-GCM',
+                            iv: new Uint8Array(file.nameIv)
+                        },
+                        encryptionKey,
+                        file.encryptedName
+                    );
+                    const name = new TextDecoder().decode(nameBuffer);
+                    fileName.textContent = name;
+                } catch (error) {
+                    console.error('Ошибка при расшифровке имени файла:', error);
+                    fileName.textContent = 'Неизвестный файл (ошибка)';
+                }
+                
+                fileName.style.cursor = 'pointer';
+                fileName.addEventListener('click', () => previewFile(file));
+                
+                const actions = document.createElement('div');
+                actions.className = 'file-actions';
+                
+                const downloadBtn = document.createElement('button');
+                downloadBtn.textContent = '⏬';
+                downloadBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    downloadFile(file);
+                });
+                
+                const deleteBtn = document.createElement('button');
+                deleteBtn.textContent = '🗑️';
+                deleteBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    deleteFile(file.id);
+                });
+                
+                actions.appendChild(downloadBtn);
+                actions.appendChild(deleteBtn);
+                
+                fileItem.appendChild(fileName);
+                fileItem.appendChild(actions);
+                
+                fileList.appendChild(fileItem);
+            }
+
+            // Обработка загрузки файла
+            async function handleFileUpload(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+                
+                uploadLoading.style.display = 'block';
+                
+                try {
+                    // Читаем файл как ArrayBuffer
+                    const arrayBuffer = await readFileAsArrayBuffer(file);
+                    
+                    // Генерируем IV для шифрования данных файла
+                    const fileIv = crypto.getRandomValues(new Uint8Array(12));
+                    
+                    // Шифруем данные файла
+                    const encryptedData = await crypto.subtle.encrypt(
+                        {
+                            name: 'AES-GCM',
+                            iv: fileIv
+                        },
+                        encryptionKey,
+                        arrayBuffer
+                    );
+                    
+                    // Шифруем имя файла
+                    const nameIv = crypto.getRandomValues(new Uint8Array(12));
+                    const nameBuffer = new TextEncoder().encode(file.name);
+                    const encryptedName = await crypto.subtle.encrypt(
+                        {
+                            name: 'AES-GCM',
+                            iv: nameIv
+                        },
+                        encryptionKey,
+                        nameBuffer
+                    );
+                    
+                    // Сохраняем файл в базе данных
+                    const transaction = db.transaction([STORE_FILES], 'readwrite');
+                    const store = transaction.objectStore(STORE_FILES);
+                    
+                    store.put({
+                        encryptedName: encryptedName,
+                        nameIv: Array.from(nameIv),
+                        type: file.type,
+                        size: file.size,
+                        data: encryptedData,
+                        iv: Array.from(fileIv)
+                    });
+                    
+                    transaction.oncomplete = () => {
+                        // Перезагружаем список файлов
+                        loadFiles();
+                        // Сбрасываем input
+                        fileInput.value = '';
+                        uploadLoading.style.display = 'none';
+                    };
+                    
+                } catch (error) {
+                    console.error('Ошибка при загрузке файла:', error);
+                    alert('Ошибка при загрузке файла');
+                    uploadLoading.style.display = 'none';
+                }
+            }
+
+            // Чтение файла как ArrayBuffer
+            function readFileAsArrayBuffer(file) {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(reader.result);
+                    reader.onerror = reject;
+                    reader.readAsArrayBuffer(file);
+                });
+            }
+
+            // Скачивание файла
+            async function downloadFile(file) {
+                try {
+                    // Расшифровываем имя файла
+                    const nameBuffer = await crypto.subtle.decrypt(
+                        {
+                            name: 'AES-GCM',
+                            iv: new Uint8Array(file.nameIv)
+                        },
+                        encryptionKey,
+                        file.encryptedName
+                    );
+                    const fileName = new TextDecoder().decode(nameBuffer);
+                    
+                    // Расшифровываем данные файла
+                    const decryptedData = await crypto.subtle.decrypt(
+                        {
+                            name: 'AES-GCM',
+                            iv: new Uint8Array(file.iv)
+                        },
+                        encryptionKey,
+                        file.data
+                    );
+                    
+                    // Создаем Blob из расшифрованных данных
+                    const blob = new Blob([decryptedData], { type: file.type });
+                    
+                    // Создаем ссылку для скачивания
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = fileName;
+                    document.body.appendChild(a);
+                    a.click();
+                    
+                    // Очищаем
+                    setTimeout(() => {
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                    }, 100);
+                    
+                } catch (error) {
+                    console.error('Ошибка при скачивании файла:', error);
+                    alert('Ошибка при скачивании файла. Возможно, файл поврежден.');
+                }
+            }
+
+            // Предпросмотр файла
+            async function previewFile(file) {
+                try {
+                    // Расшифровываем данные файла
+                    const decryptedData = await crypto.subtle.decrypt(
+                        {
+                            name: 'AES-GCM',
+                            iv: new Uint8Array(file.iv)
+                        },
+                        encryptionKey,
+                        file.data
+                    );
+                    
+                    // Создаем Blob из расшифрованных данных
+                    const blob = new Blob([decryptedData], { type: file.type });
+                    const url = URL.createObjectURL(blob);
+                    
+                    // Открываем в новом окне
+                    const newWindow = window.open(url, '_blank');
+                    
+                    // Очищаем память после загрузки
+                    if (newWindow) {
+                        newWindow.onload = () => URL.revokeObjectURL(url);
+                    } else {
+                        setTimeout(() => URL.revokeObjectURL(url), 100);
+                    }
+                    
+                } catch (error) {
+                    console.error('Ошибка при предпросмотре файла:', error);
+                    alert('Ошибка при предпросмотре файла. Возможно, файл поврежден.');
+                }
+            }
+
+            // Удаление файла
+            function deleteFile(id) {
+                if (!confirm('Удалить файл?')) return;
+                
+                const transaction = db.transaction([STORE_FILES], 'readwrite');
+                const store = transaction.objectStore(STORE_FILES);
+                store.delete(id);
+                
+                transaction.oncomplete = () => {
+                    loadFiles();
+                };
+                
+                transaction.onerror = (event) => {
+                    console.error('Ошибка при удалении файла:', event.target.error);
+                    alert('Ошибка при удалении файла');
+                };
+            }
+
+            // Выход из системы
+            function logout() {
+                // Очищаем ключ шифрования
+                encryptionKey = null;
+                
+                // Очищаем таймер неактивности
+                if (inactivityTimer) {
+                    clearTimeout(inactivityTimer);
+                    inactivityTimer = null;
+                }
+                
+                // Показываем экран входа
+                showScreen(loginScreen);
+                
+                // Очищаем поля ввода
+                document.getElementById('password').value = '';
+                loginError.textContent = '';
+                
+                // Очищаем список файлов
+                fileList.innerHTML = '';
+            }
+
+            // Сброс таймера неактивности
+            function resetInactivityTimer() {
+                if (inactivityTimer) {
+                    clearTimeout(inactivityTimer);
+                }
+                
+                // Устанавливаем таймер только если пользователь вошел в систему
+                if (encryptionKey) {
+                    inactivityTimer = setTimeout(logout, INACTIVITY_TIMEOUT);
+                }
+            }
+
+            // Показать определенный экран
+            function showScreen(screen) {
+                screens.forEach(s => s.classList.remove('active'));
+                screen.classList.add('active');
+            }
+        })();
+    </script>
+</body>
+</html>

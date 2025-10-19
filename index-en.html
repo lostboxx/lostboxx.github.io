@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="description" content="LostBox — a website with tools and games. HEX editor, converters, retro camera, tic-tac-toe, platformer and much more. I'll be happy to welcome every user!" />
+<meta name="google-site-verification" content="RY2tJNeS-1MA2Vr9Y9wVoWzJuFe9iEvIV7LVhs8Awfs" />
+<meta property="og:title" content="LostBox" />
+<meta property="og:description" content="LostBox — a website with tools and games. HEX editor, converters, retro camera, tic-tac-toe, platformer and much more. I'll be happy to welcome every user!" />
+<meta property="og:image" content="https://lostbox1000.neocities.org/thumbnail.png" />
+<meta property="og:type" content="website" />
+<meta name="theme-color" content="#1168c2" />
+<meta name="keywords" content="LostBox, HEX editor, tools, games, programming, converters" />
+<title>LostBox</title>
+<link rel="icon" type="image/png" sizes="256x256" href="/favicon.png" />
+<link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+  <div class="toolbar" id="mainToolbar">
+    <div class="toolbar-left">
+        <img src="assets/photo_resources/lostboxicon.png" alt="LostBox" id="lostboxpolicy" />
+      <div class="title" id="pageTitle">LostBox</div>
+    </div>
+    <div class="toolbar-right">
+      <button id="backBtn" class="icon-btn" title="Back" style="display: none;">
+        <div class="icon-circle">
+          <img src="assets/photo_resources/back.png" alt="Back">
+        </div>
+      </button>
+      <button id="newsBtn" class="icon-btn" title="News">
+        <div class="icon-circle">
+          <span id="newsIcon">📢</span>
+        </div>
+      </button>
+      <button id="musicBtn" class="icon-btn" title="Turn on music">
+        <div class="icon-circle">
+          <img id="musicIcon" src="assets/photo_resources/offmusic.png" alt="Music Off">
+        </div>
+      </button>
+    </div>
+  </div>
+
+  <div class="centered">
+    <div class="content-box" id="contentBox">
+      <div id="mainMenu" class="main-menu">
+        <div class="profile-summary">
+          <div id="mainAvatar" class="avatar">🫙</div>
+          <div id="mainUsername" class="username">Jar</div>
+        </div>
+        <div class="menu-buttons">
+        
+          <p id="welcomeinlostbox">Welcome to LostBox! 😃</p>
+          <button class="ripple-button" data-src="LostBox_Tools.html" data-title="LostBox Tools" data-hide="true">Tools 🛠️📕📂📖🖼️</button>
+  
+          <button class="ripple-button" data-src="LostBox_Games.html" data-title="LostBox Games" data-hide="true" data-game="true">Games 🕶️♟️🏀🎮👾</button>
+    
+          <button class="ripple-button" id="profileBtn" data-profile="true">Profile 🙋👤🫵</button>
+          
+        </div>
+        <p id="byjar">© LostBox 2025. by Jar</p>
+      </div>
+
+      <div id="profilePage" class="profile-page">
+        <button class="profile-private-btn" id="profilePrivateBtn">Private Folder</button>
+        
+        <button class="back-button" id="profileBackBtn">← Back</button>
+        <div id="profileAvatar" class="avatar-large">🫙</div>
+        <div id="profileUsername" class="profile-username">Jar</div>
+        
+        <div class="profile-controls">
+          <input type="text" id="usernameInput" placeholder="Enter name">
+          <button class="ripple-button" id="changeAvatarBtn">Change avatar</button>
+          <button class="ripple-button" id="saveProfileBtn">Save profile</button>
+          <p>GIFs supported!</p>
+        </div>
+        <input type="file" id="avatarInput" accept="image/*" style="display: none;">
+        
+        <div class="repair-section">
+          <span>⚙️</span>
+          <a href="#" id="repairBtn">Repair LostBox</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="privateFolderFullscreen" class="private-folder-fullscreen">
+    <iframe id="privateFolderFrame" src="private_folder.html"></iframe>
+  </div>
+
+  <div id="confirmModal"></div>
+
+  <div class="bottom-bar" id="mainBottomBar"></div>
+
+  <div class="frame-container tools" id="toolsFrameContainer">
+    <iframe id="toolsFrame"></iframe>
+  </div>
+  <div class="frame-container games" id="gamesFrameContainer">
+    <iframe id="gamesFrame"></iframe>
+  </div>
+  <div class="frame-container news" id="newsFrameContainer">
+    <iframe id="newsFrame"></iframe>
+  </div>
+  <div class="frame-container guestbook" id="guestbookFrameContainer">
+    <iframe id="guestbookFrame"></iframe>
+  </div>
+
+  <audio id="bgMusic" loop src="https://files.catbox.moe/b9sxyl.mp3"></audio>
+  
+  <script src="assets/languages/en/script-en.js"></script>
+</body>
+</html>

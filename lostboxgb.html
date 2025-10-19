@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Гостевая книга LostBox</title>
+<style>
+  body {
+    margin: 0;
+    padding: 20px;
+    font-family: "Segoe UI", sans-serif;
+    background: #fff;
+    color: #000;
+    display: flex; /* Используем flexbox для центрирования контента */
+    flex-direction: column;
+    align-items: center; /* Центрируем по горизонтали */
+    justify-content: flex-start; /* Начинаем контент сверху */
+    min-height: 100vh; /* Позволяем странице прокручиваться, если нужно */
+  }
+  #container {
+    max-width: 600px; /* Ограничиваем максимальную ширину для больших экранов */
+    width: 100%; /* Занимаем всю доступную ширину */
+    padding: 10px;
+    box-sizing: border-box; /* Учитываем padding в общей ширине */
+  }
+  #text {
+    font-size: 16px; /* Немного уменьшил размер шрифта */
+    line-height: 1.5;
+    white-space: pre-wrap;
+  }
+  #continue-container {
+    margin-top: 20px;
+    opacity: 0;
+    transition: opacity 0.5s, transform 0.5s;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    transform: translateY(20px);
+  }
+  #continue-container.show {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  #continue-btn {
+    background-color: grey;
+    color: white;
+    border: none;
+    padding: 10px 10px;
+    font-size: 14px; /* Немного уменьшил размер шрифта кнопки */
+    cursor: not-allowed;
+  }
+  #continue-btn.active {
+    background-color: green;
+    cursor: pointer;
+  }
+  #timer {
+    margin-top: 5px;
+    font-size: 10px;
+  }
+  
+  @media (max-width: 768px) {
+    body {
+      padding: 10px;
+    }
+    #text {
+      font-size: 14px;
+    }
+    #continue-btn {
+      padding: 8px 8px;
+      font-size: 12px;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div id="container">
+  <div id="text"></div>
+  <div id="continue-container">
+    <button id="continue-btn" disabled>Продолжить</button>
+    <div id="timer">3</div>
+  </div>
+</div>
+
+<script>
+const textContent = `Привет! Это гостевая книга LostBox.
+
+Тут вы можете оставить свое впечатление о сайте, показать свой, общаться с другими людьми, и читать чужие посты.
+
+Правила:
+
+Разрешено:
+• Общаться с другими
+• Рекламировать свой сайт
+• Писать нейтральные комментарии
+• Оценивать сайт
+
+Запрещено:
+• Навязчивая реклама (пример: "БЫСТРО ЗАХОДИ НА МОЙ САЙТ!!!!")
+• Политика (даже если поддержка, гостевая книга не для этого)
+• Темные темы
+• Маты/оскорбления в сторону других людей/автора
+`;
+
+const textEl = document.getElementById('text');
+const container = document.getElementById('container');
+let i = 0;
+
+function typeWriter() {
+  if(i < textContent.length){
+    const char = textContent.charAt(i);
+    if(char === '\n'){
+      textEl.innerHTML += '<br>';
+    } else {
+      textEl.innerHTML += char;
+    }
+    i++;
+    
+    // Смещение контейнера теперь не нужно, так как страница будет прокручиваться автоматически
+    
+    setTimeout(typeWriter, 20);
+  } else {
+    showContinue();
+  }
+}
+typeWriter();
+
+function showContinue() {
+  const containerBtn = document.getElementById('continue-container');
+  containerBtn.classList.add('show');
+  let counter = 3;
+  const timerEl = document.getElementById('timer');
+  const btn = document.getElementById('continue-btn');
+  const interval = setInterval(() => {
+    counter--;
+    if(counter <= 0){
+      clearInterval(interval);
+      timerEl.style.display = 'none';
+      btn.classList.add('active');
+      btn.disabled = false;
+      btn.style.cursor = 'pointer';
+    } else {
+      timerEl.textContent = counter;
+    }
+  }, 1000);
+
+  btn.addEventListener('click', () => {
+    window.location.href = "https://lostboxgb100.atabook.org";
+  });
+}
+</script>
+
+</body>
+</html>
