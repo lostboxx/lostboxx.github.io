@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<!-- © LostBox 2025. Создано Jar с помощью силы энтузиазма. И помните: LostBox всегда FoundBox! 😊-->
+<!-- поверед би хтпт течнологи, лостбокс солоратион -->
+<html lang="ru">
+<head>
+<!-- чтобы сайт не был странными кракозябрами -->
+  <meta charset="UTF-8" />
+  <!-- для поддержки -->
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<!-- для поисковых работяг -->
+<meta name="description" content="LostBox — это сайт с набором инструментов и играми. HEX-редактор, конвертеры, ретро-камера, крестики нолики, попрыгунчик и многое другое. Буду рад каждому пользователю!" />
+
+<!-- гугл верификейшен -->
+<meta name="google-site-verification" content="RY2tJNeS-1MA2Vr9Y9wVoWzJuFe9iEvIV7LVhs8Awfs" />
+
+<!-- опен граф для соцсетей -->
+<meta property="og:title" content="LostBox" />
+<meta property="og:description" content="LostBox — это сайт с набором инструментов и играми. HEX-редактор, конвертеры, ретро-камера, крестики нолики, попрыгунчик и многое другое. Буду рад каждому пользователю!" />
+<meta property="og:image" content="https://lostbox1000.neocities.org/thumbnail.png" />
+<meta property="og:type" content="website" />
+
+<!-- тземе колор 😂😂😂-->
+<meta name="theme-color" content="#0a0f1a" />
+
+<!-- ключевые слова -->
+<meta name="keywords" content="LostBox, HEX редактор, инструменты, игры, программирование, конвертеры" />
+
+<!-- а вот уже мордочка моего сайта -->
+<title>LostBox</title>
+
+
+<!-- коробка теперь и в адресной строке -->
+<link rel="icon" type="image/png" sizes="256x256" href="/favicon.png" />
+
+<!-- чтобы страница не выглядела мертвой-->
+<link rel="stylesheet" href="style.css" />
+
+<!-- лостбокс теперь как приложение ✨ -->
+<link rel="manifest" href="manifest.json">
+</head>
+
+<body>
+<!-- а вот тут содержимое сайта -->
+  <div class="toolbar" id="mainToolbar">
+    <div class="toolbar-left">
+        <img src="assets/photo_resources/lostboxicon.png" alt="LostBox" id="lostboxpolicy" />
+      <div class="title" id="pageTitle">LostBox</div>
+    </div>
+    <div class="toolbar-right">
+      <button id="backBtn" class="icon-btn" title="Назад" style="display: none;">
+        <div class="icon-circle">
+          <img src="assets/photo_resources/back.png" alt="Назад">
+        </div>
+      </button>
+      <button id="newsBtn" class="icon-btn" title="Новости">
+        <div class="icon-circle">
+          <span id="newsIcon">📢</span>
+        </div>
+      </button>
+      <button id="musicBtn" class="icon-btn" title="Включить музыку">
+        <div class="icon-circle">
+          <img id="musicIcon" src="assets/photo_resources/offmusic.png" alt="Music Off">
+        </div>
+      </button>
+    </div>
+  </div>
+  <div class="centered">
+    <div class="content-box" id="contentBox">
+      <div id="mainMenu" class="main-menu">
+        <div class="profile-summary">
+          <div id="mainAvatar" class="avatar">🫙</div>
+          <div id="mainUsername" class="username">Банка</div>
+        </div>
+     <div class="menu-buttons">  
+     <p id="welcomeinlostbox">Добро пожаловать в LostBox! 😃</p> 
+     <p id="facts">Факт дня: </p>
+          <button class="ripple-button" data-src="LostBox_Tools.html" data-title="LostBox Tools" data-hide="true">Инструменты 🛠️📕📂📖🖼<br>⚡ HEX редактор, SVG, EXIF, CSV, JSON Парсер, BASE 64, Пиксель арт!️</button>
+  
+          <button class="ripple-button" data-src="LostBox_Games.html" data-title="LostBox Games" data-hide="true" data-game="true">Игры 🕶️♟️🏀🎮👾<br>✨ Попрыгунчик, Крестики нолики, Тренажерки, Шашки, Ловля, Порыв!</button>
+    
+          <button class="ripple-button" id="profileBtn" data-profile="true">Профиль 🙋👤🫵</button>
+          
+        </div>
+        <h6 id="byjar">© LostBox 2025. by Jar</h6>
+      </div>
+
+      <div id="profilePage" class="profile-page">
+        <!-- Кнопка "Личная папка" в правом верхнем углу профиля -->
+        <button class="profile-private-btn" id="profilePrivateBtn">Личная папка 🛡️</button>
+        <br>
+        <a id="bugreport" href="bugreport.html">Нашли баги? 🐛</a>
+        
+        <button class="back-button" id="profileBackBtn">← Назад</button>
+        <div id="profileAvatar" class="avatar-large">🫙</div>
+        <div id="profileUsername" class="profile-username">Банка</div>
+        
+        <div class="profile-controls">
+          <input type="text" id="usernameInput" placeholder="Введите имя">
+          <button class="ripple-button" id="changeAvatarBtn">Изменить аватар</button>
+          <button class="ripple-button" id="saveProfileBtn">Сохранить профиль</button>
+          <p>Поддерживаются GIF!</p>
+        </div>
+        <input type="file" id="avatarInput" accept="image/*" style="display: none;">
+        
+        <div class="repair-section">
+          <span>⚙️</span>
+          <a href="#" id="repairBtn">Починить LostBox</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- контейнер для полноэкранной личной папки -->
+  <div id="privateFolderFullscreen" class="private-folder-fullscreen">
+    <iframe id="privateFolderFrame" src="private_folder.html"></iframe>
+  </div>
+
+  <!-- пустой div для той самой таблички 🫩 -->
+  <div id="confirmModal"></div>
+
+  <div class="bottom-bar" id="mainBottomBar">
+ <p id="clock"></p> 
+  </div>
+
+  <div class="frame-container tools" id="toolsFrameContainer">
+    <iframe id="toolsFrame"></iframe>
+  </div>
+  <div class="frame-container games" id="gamesFrameContainer">
+    <iframe id="gamesFrame"></iframe>
+  </div>
+  <div class="frame-container news" id="newsFrameContainer">
+    <iframe id="newsFrame"></iframe>
+  </div>
+  <div class="frame-container guestbook" id="guestbookFrameContainer">
+    <iframe id="guestbookFrame"></iframe>
+  </div>
+
+  <!-- та самая музыка -->
+  <audio id="bgMusic" loop src="https://files.catbox.moe/b9sxyl.mp3"></audio>
+  
+  <!-- тут скрипты 😏-->
+  <script src="script.js"></script>
+</body>
+</html>
+<!-- конец страницы 😭-->
