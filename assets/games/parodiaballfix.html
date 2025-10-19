@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="robots" content="noindex, follow">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Прыгающий Жёлтый Мячик</title>
+  <style>
+    * { 
+      margin: 0; 
+      padding: 0; 
+      box-sizing: border-box; 
+      touch-action: none; 
+    }
+    html, body { 
+      width: 100%; 
+      height: 100%; 
+      overflow: hidden; 
+      background: transparent;
+    }
+    canvas { 
+      display: block; 
+      background: linear-gradient(to bottom, #87CEEB, #E0F7FA);
+      width: 100%;
+      height: 100%;
+    }
+    #ui { 
+      position: absolute; 
+      top: 10px; 
+      left: 10px; 
+      color: #333; 
+      font-family: "Segoe UI", sans-serif; 
+      font-size: 12px; 
+      text-shadow: 1px 1px 2px white; 
+      z-index: 10; 
+      background: rgba(255, 255, 255, 0.7);
+      padding: 4px 8px;
+      border-radius: 15px;
+      font-weight: bold;
+    }
+    #win-screen { 
+      position: absolute; 
+      top: 50%; 
+      left: 50%; 
+      transform: translate(-50%, -50%); 
+      background: rgba(255,255,255,0.95); 
+      padding: 15px; 
+      border-radius: 10px; 
+      box-shadow: 0 3px 10px rgba(0,0,0,0.2); 
+      display: none; 
+      text-align: center; 
+      z-index: 20; 
+      width: 80%; 
+      max-width: 200px; 
+      border: 2px solid #4CAF50;
+    }
+    #win-screen div { 
+      font-size: 16px; 
+      color: #2E7D32; 
+      margin-bottom: 12px; 
+      font-weight: bold;
+    }
+    #win-screen button { 
+      padding: 8px 12px; 
+      font-size: 12px; 
+      border: none; 
+      border-radius: 20px; 
+      background: linear-gradient(to right, #4CAF50, #2E7D32);
+      color: white; 
+      cursor: pointer; 
+      width: 100%; 
+      font-weight: bold;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+  </style>
+</head>
+<body>
+  <div id="ui">Уровень: <span id="level">1</span></div>
+  <div id="win-screen">
+    <div>Победа! 🏆</div>
+    <button id="btn-next">Следующий уровень</button>
+  </div>
+  <canvas id="game"></canvas>
+  
+  <script>
+    // Константы с уменьшенными значениями для встраивания
+    const TOTAL_PLATFORMS = 28;
+    const STAR_PLATFORMS = [4, 8, 12, 16, 20, 24, 28];
+    const GRAVITY = 0.25;
+    const JUMP_VY = -5.5;
+    const MOVE_SPEED = 2.2;
+    // Вот это я увеличил для большего разброса, как ты и хотел!
+    const MAX_X_STEP = 150; 
+    const PLATFORM_WIDTH = 60;
+    const PLATFORM_HEIGHT = 5;
+    const STAR_RADIUS = 8;
+    
+    // Элементы
+    const canvas = document.getElementById('game');
+    const ctx = canvas.getContext('2d');
+    const uiLevel = document.getElementById('level');
+    const winScreen = document.getElementById('win-screen');
+    const btnNext = document.getElementById('btn-next');
+
+    let level = 1;
+    let starsCollected = 0;
+    let platforms = [];
+    let stars = [];
+    let ball = { x: 0, y: 0, radius: 7, vx: 0, vy: 0, lastY: 0 };
+    let moving = { left: false, right: false };
+    let totalLevelsCompleted = 0;
+
+    // Инициализация и ресайз
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      initLevel();
+      resetBall();
+    }
+    window.addEventListener('resize', resize);
+
+    // Уровень (Откаченный и упрощенный код)
+function initLevel() {
+  platforms = [];
+  stars = [];
+  starsCollected = 0;
+  winScreen.style.display = 'none';
+
+  const vSpacing = canvas.height / (TOTAL_PLATFORMS + 1);
+  let prevX = canvas.width / 2 - PLATFORM_WIDTH / 2;
+  
+  // Здесь я убрал нахуй всю твою логику с проверкой каждой 3-й плиты.
+  // Теперь все плиты генерируются с большим разбросом (MAX_X_STEP = 150),
+  // как ты и просил.
+  for (let i = 1; i <= TOTAL_PLATFORMS; i++) {
+    const y = canvas.height - vSpacing * i;
+    
+    let x, step;
+    let validPosition = false;
+    let attempts = 0;
+
+    while (!validPosition && attempts < 20) {
+      // Генерация большого шага (до 150 в любую сторону)
+      step = (Math.random() * 2 - 1) * MAX_X_STEP;
+      x = prevX + step;
+      
+      // Ограничение границ экрана
+      x = Math.max(15, Math.min(x, canvas.width - PLATFORM_WIDTH - 15));
+      attempts++;
+
+      // Проверка, что плита не *слишком* близко к предыдущей. 
+      // Это стандартная, старая проверка.
+      validPosition = Math.abs(x - prevX) >= 15;
+    }
+    
+    platforms.push({ x, y, w: PLATFORM_WIDTH, h: PLATFORM_HEIGHT });
+    
+    if (STAR_PLATFORMS.includes(i)) {
+      stars.push({ 
+        x: x + PLATFORM_WIDTH/2, 
+        y: y - STAR_RADIUS - 6, 
+        r: STAR_RADIUS, 
+        collected: false
+      });
+    }
+    prevX = x;
+  }
+}
+
+    // Сброс мяча
+    function resetBall() {
+      const p = platforms[0];
+      ball.x = p.x + p.w / 2;
+      ball.y = p.y - ball.radius - 1;
+      ball.vx = 0;
+      ball.vy = 0;
+      ball.lastY = ball.y;
+    }
+
+    // Рисование красивой звезды
+    function drawStar(x, y, radius) {
+      ctx.save();
+      ctx.translate(x, y);
+      
+      // Основное тело звезды
+      ctx.beginPath();
+      for (let i = 0; i < 5; i++) {
+        const outerAng = i * 2 * Math.PI / 5 - Math.PI/2;
+        const innerAng = outerAng + Math.PI / 5;
+        
+        const outerX = Math.cos(outerAng) * radius;
+        const outerY = Math.sin(outerAng) * radius;
+        const innerX = Math.cos(innerAng) * (radius * 0.4);
+        const innerY = Math.sin(innerAng) * (radius * 0.4);
+        
+        if (i === 0) {
+          ctx.moveTo(outerX, outerY);
+        } else {
+          ctx.lineTo(outerX, outerY);
+        }
+        ctx.lineTo(innerX, innerY);
+      }
+      ctx.closePath();
+      
+      // Градиент для звезды
+      const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, radius);
+      gradient.addColorStop(0, '#FFF9C4');
+      gradient.addColorStop(0.7, '#FFEB3B');
+      gradient.addColorStop(1, '#FFC107');
+      
+      ctx.fillStyle = gradient;
+      ctx.fill();
+      
+      // Блик на звезде
+      ctx.beginPath();
+      ctx.arc(-radius*0.3, -radius*0.3, radius*0.2, 0, Math.PI*2);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+      ctx.fill();
+      
+      // Контур звезды
+      ctx.strokeStyle = '#FF9800';
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
+      
+      ctx.restore();
+    }
+
+    // Рисование
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      // Фон
+      const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+      gradient.addColorStop(0, '#87CEEB');
+      gradient.addColorStop(1, '#E0F7FA');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Платформы
+      platforms.forEach(p => {
+        // Основная платформа
+        ctx.fillStyle = '#5D4037';
+        ctx.fillRect(p.x, p.y, p.w, p.h);
+        
+        // Верх платформы
+        ctx.fillStyle = '#8D6E63';
+        ctx.fillRect(p.x, p.y, p.w, 1.5);
+      });
+
+      // Звёзды
+      stars.forEach(s => {
+        if (!s.collected) {
+          drawStar(s.x, s.y, s.r);
+        }
+      });
+
+      // Мяч
+      ctx.beginPath();
+      ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI*2);
+      ctx.fillStyle = '#FFEB3B';
+      ctx.fill();
+      
+      ctx.strokeStyle = '#F57F17';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // Блик на мяче
+      ctx.beginPath();
+      ctx.arc(
+        ball.x - ball.radius/3, 
+        ball.y - ball.radius/3, 
+        ball.radius/3, 
+        0, 
+        Math.PI*2
+      );
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+      ctx.fill();
+    }
+
+    // Улучшенная проверка коллизий
+    function checkCollision() {
+      const nextY = ball.y + ball.vy;
+      
+      for (const p of platforms) {
+        // Проверка по X
+        const withinX = ball.x + ball.radius > p.x && 
+                       ball.x - ball.radius < p.x + p.w;
+        
+        // Проверка по Y
+        const wasAbove = ball.lastY + ball.radius <= p.y;
+        const nowInside = nextY + ball.radius >= p.y && 
+                         nextY + ball.radius <= p.y + p.h;
+        
+        // Коллизия сверху
+        if (ball.vy > 0 && wasAbove && nowInside && withinX) {
+          ball.y = p.y - ball.radius - 0.5;
+          ball.vy = JUMP_VY;
+          return;
+        }
+      }
+    }
+
+    // Обновление физики
+    function update() {
+      ball.lastY = ball.y;
+      
+      // Применяем гравитацию
+      ball.vy += GRAVITY;
+      
+      // Управление движением
+      if (moving.left) ball.vx = -MOVE_SPEED;
+      else if (moving.right) ball.vx = MOVE_SPEED;
+      else ball.vx *= 0.85;
+
+      // Обновление позиции
+      ball.x += ball.vx;
+      ball.y += ball.vy;
+      
+      // Проверка коллизий
+      checkCollision();
+
+      // Сбор звёзд
+      stars.forEach(s => {
+        if (!s.collected) {
+          const dx = ball.x - s.x;
+          const dy = ball.y - s.y;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+          
+          if (distance < ball.radius + s.r * 0.6) {
+            s.collected = true;
+            starsCollected++;
+            
+            if (starsCollected === stars.length) {
+              winScreen.style.display = 'block';
+            }
+          }
+        }
+      });
+
+      // Падение
+      if (ball.y - ball.radius > canvas.height + 50) resetBall();
+      
+      // Границы экрана
+      if (ball.x < ball.radius) ball.x = ball.radius;
+      if (ball.x > canvas.width - ball.radius) ball.x = canvas.width - ball.radius;
+    }
+
+    // Игровой цикл
+    function loop() {
+      update();
+      draw();
+      requestAnimationFrame(loop);
+    }
+
+    // Управление
+    function startMove(isLeft) {
+      moving.left = isLeft;
+      moving.right = !isLeft;
+    }
+    
+    function endMove() {
+      moving.left = moving.right = false;
+    }
+
+    // События мыши
+    canvas.addEventListener('mousedown', e => {
+      startMove(e.clientX < canvas.width/2);
+    });
+    
+    canvas.addEventListener('mouseup', endMove);
+    canvas.addEventListener('mouseleave', endMove);
+    
+    // События касания
+    canvas.addEventListener('touchstart', e => {
+      e.preventDefault();
+      const x = e.touches[0].clientX;
+      startMove(x < canvas.width/2);
+    });
+    
+    canvas.addEventListener('touchend', endMove);
+    canvas.addEventListener('touchcancel', endMove);
+    
+    // Блокировка масштабирования
+    document.addEventListener('gesturestart', e => e.preventDefault());
+    document.addEventListener('touchmove', e => {
+      if (e.scale !== 1) e.preventDefault();
+    }, { passive: false });
+
+    // Кнопка следующего уровня
+    btnNext.addEventListener('click', () => {
+      level++;
+      uiLevel.textContent = level;
+      saveProgress();
+      initLevel();
+      resetBall();
+    });
+
+    // ============== IndexedDB для сохранения прогресса ==============
+    
+    // Инициализация базы данных
+    function initDB() {
+      const request = indexedDB.open('BallGameDB', 1);
+      
+      request.onerror = function(event) {
+        console.log('Ошибка при открытии базы данных:', event.target.error);
+      };
+      
+      request.onupgradeneeded = function(event) {
+        const db = event.target.result;
+        if (!db.objectStoreNames.contains('progress')) {
+          db.createObjectStore('progress', { keyPath: 'id' });
+        }
+      };
+      
+      request.onsuccess = function(event) {
+        const db = event.target.result;
+        loadProgress(db);
+      };
+    }
+    
+    // Загрузка сохраненного прогресса
+    function loadProgress(db) {
+      const transaction = db.transaction(['progress'], 'readonly');
+      const store = transaction.objectStore('progress');
+      const request = store.get('gameProgress');
+      
+      request.onsuccess = function(event) {
+        const data = event.target.result;
+        if (data) {
+          level = data.level || 1;
+          totalLevelsCompleted = data.totalLevelsCompleted || 0;
+          
+          uiLevel.textContent = level;
+        }
+        
+        // Инициализация уровня после загрузки данных
+        resize();
+        loop();
+      };
+      
+      request.onerror = function(event) {
+        console.log('Ошибка при загрузке прогресса:', event.target.error);
+        resize();
+        loop();
+      };
+    }
+    
+    // Сохранение прогресса
+    function saveProgress() {
+      const request = indexedDB.open('BallGameDB', 1);
+      
+      request.onsuccess = function(event) {
+        const db = event.target.result;
+        const transaction = db.transaction(['progress'], 'readwrite');
+        const store = transaction.objectStore('progress');
+        
+        store.put({ 
+          id: 'gameProgress', 
+          level: level,
+          totalLevelsCompleted: totalLevelsCompleted 
+        });
+      };
+      
+      request.onerror = function(event) {
+        console.log('Ошибка при сохранении прогресса:', event.target.error);
+      };
+    }
+    
+    // ============== Запуск игры ==============
+    
+    // Инициализация базы данных
+    initDB();
+  </script>
+</body>
+</html>

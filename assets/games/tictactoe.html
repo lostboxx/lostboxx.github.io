@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Крестики-нолики</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            padding: 20px;
+            max-width: 400px;
+            width: 100%;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        
+        h1 {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .difficulty-control {
+            margin: 10px 0;
+        }
+        
+        #difficultyBtn {
+            background: #e0e0e0;
+            border: 1px solid #ccc;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        #difficultyBtn:disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            background: #f0f0f0;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 15px 0;
+        }
+        
+        .stat-item {
+            text-align: center;
+            font-size: 14px;
+        }
+        
+        .stat-value {
+            font-weight: bold;
+            font-size: 18px;
+        }
+        
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-gap: 5px;
+            margin: 0 auto;
+            background: #ddd;
+            padding: 5px;
+            border-radius: 4px;
+        }
+        
+        .cell {
+            background-color: #eee;
+            border-radius: 4px;
+            height: 80px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 40px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .cell.filled {
+            background-color: #ddd;
+            cursor: default;
+        }
+        
+        .cell.x {
+            color: #e74c3c;
+        }
+        
+        .cell.o {
+            color: #3498db;
+        }
+        
+        .cell.winning {
+            background-color: #c0ffc0;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            margin-top: 15px;
+            gap: 10px;
+        }
+        
+        #newGameBtn {
+            background: #2ecc71;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            font-size: 14px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        #clearStatsBtn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            font-size: 12px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            opacity: 0;
+            visibility: hidden;
+        }
+        
+        .modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            max-width: 300px;
+            width: 90%;
+        }
+        
+        .result-emoji {
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+        
+        .result-text {
+            font-size: 20px;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        .modal button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            font-size: 14px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 15px;
+            color: #777;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Крестики-нолики</h1>
+            <div class="difficulty-control">
+                <button id="difficultyBtn">Сложность: Легкий</button>
+            </div>
+        </header>
+        
+        <div class="stats">
+            <div class="stat-item">
+                <div>Победы</div>
+                <div id="wins" class="stat-value">0</div>
+            </div>
+            <div class="stat-item">
+                <div>Поражения</div>
+                <div id="losses" class="stat-value">0</div>
+            </div>
+            <div class="stat-item">
+                <div>Ничьи</div>
+                <div id="draws" class="stat-value">0</div>
+            </div>
+        </div>
+        
+        <div class="board" id="board">
+            <div class="cell" data-index="0"></div>
+            <div class="cell" data-index="1"></div>
+            <div class="cell" data-index="2"></div>
+            <div class="cell" data-index="3"></div>
+            <div class="cell" data-index="4"></div>
+            <div class="cell" data-index="5"></div>
+            <div class="cell" data-index="6"></div>
+            <div class="cell" data-index="7"></div>
+            <div class="cell" data-index="8"></div>
+        </div>
+        
+        <div class="controls">
+            <button id="newGameBtn">Новая игра</button>
+            <button id="clearStatsBtn">Очистить статистику</button>
+        </div>
+        
+        <footer>
+            <span id="playerInfo">Игрок: <strong>X</strong> | Бот: <strong>O</strong></span>
+        </footer>
+    </div>
+    
+    <div class="modal" id="resultModal">
+        <div class="modal-content">
+            <div class="result-emoji" id="resultEmoji">😎</div>
+            <div class="result-text" id="resultText">Вы победили!</div>
+            <button id="closeModal">Играть снова</button>
+        </div>
+    </div>
+
+    <script>
+        // Состояние игры
+        const gameState = {
+            board: Array(9).fill(''),
+            currentPlayer: 'X',
+            gameActive: true,
+            difficulty: 'easy', // easy, medium, hard, twoPlayers
+            movesCount: 0,
+            wins: 0,
+            losses: 0,
+            draws: 0
+        };
+
+        // Элементы DOM
+        const boardElement = document.getElementById('board');
+        const cells = document.querySelectorAll('.cell');
+        const difficultyBtn = document.getElementById('difficultyBtn');
+        const newGameBtn = document.getElementById('newGameBtn');
+        const clearStatsBtn = document.getElementById('clearStatsBtn');
+        const resultModal = document.getElementById('resultModal');
+        const resultEmoji = document.getElementById('resultEmoji');
+        const resultText = document.getElementById('resultText');
+        const closeModal = document.getElementById('closeModal');
+        const winsElement = document.getElementById('wins');
+        const lossesElement = document.getElementById('losses');
+        const drawsElement = document.getElementById('draws');
+        const playerInfo = document.getElementById('playerInfo');
+
+        // Менеджер IndexedDB
+        const DBManager = {
+            dbName: 'TicTacToeDB',
+            dbVersion: 1,
+            storeName: 'stats',
+            
+            // Открытие базы данных
+            openDB: function() {
+                return new Promise((resolve, reject) => {
+                    if (!window.indexedDB) {
+                        reject(new Error('IndexedDB не поддерживается'));
+                        return;
+                    }
+
+                    const request = indexedDB.open(this.dbName, this.dbVersion);
+                    
+                    request.onerror = () => reject(request.error);
+                    request.onsuccess = () => resolve(request.result);
+                    
+                    request.onupgradeneeded = (event) => {
+                        const db = event.target.result;
+                        
+                        // Удаляем старую хранилище если существует
+                        if (db.objectStoreNames.contains(this.storeName)) {
+                            db.deleteObjectStore(this.storeName);
+                        }
+                        
+                        // Создаем новое хранилище
+                        const store = db.createObjectStore(this.storeName, { keyPath: 'id' });
+                        console.log('Хранилище создано:', this.storeName);
+                    };
+                });
+            },
+            
+            // Сохранение статистики
+            saveStats: async function() {
+                try {
+                    const db = await this.openDB();
+                    const transaction = db.transaction([this.storeName], 'readwrite');
+                    const store = transaction.objectStore(this.storeName);
+                    
+                    const statsData = {
+                        id: 'currentStats',
+                        wins: gameState.wins,
+                        losses: gameState.losses,
+                        draws: gameState.draws,
+                        lastUpdated: new Date().toISOString()
+                    };
+                    
+                    return new Promise((resolve, reject) => {
+                        const request = store.put(statsData);
+                        request.onsuccess = () => {
+                            db.close();
+                            resolve();
+                            console.log('Статистика сохранена:', statsData);
+                        };
+                        request.onerror = () => {
+                            db.close();
+                            reject(request.error);
+                        };
+                    });
+                } catch (error) {
+                    console.error('Ошибка при сохранении статистики:', error);
+                }
+            },
+            
+            // Загрузка статистики
+            loadStats: async function() {
+                try {
+                    const db = await this.openDB();
+                    const transaction = db.transaction([this.storeName], 'readonly');
+                    const store = transaction.objectStore(this.storeName);
+                    
+                    return new Promise((resolve, reject) => {
+                        const request = store.get('currentStats');
+                        
+                        request.onsuccess = () => {
+                            db.close();
+                            const stats = request.result;
+                            if (stats) {
+                                gameState.wins = stats.wins || 0;
+                                gameState.losses = stats.losses || 0;
+                                gameState.draws = stats.draws || 0;
+                                console.log('Статистика загружена:', stats);
+                            }
+                            resolve();
+                        };
+                        
+                        request.onerror = () => {
+                            db.close();
+                            reject(request.error);
+                        };
+                    });
+                } catch (error) {
+                    console.error('Ошибка при загрузке статистики:', error);
+                    // Устанавливаем значения по умолчанию при ошибке
+                    gameState.wins = 0;
+                    gameState.losses = 0;
+                    gameState.draws = 0;
+                }
+            },
+            
+            // Очистка статистики
+            clearStats: async function() {
+                try {
+                    const db = await this.openDB();
+                    const transaction = db.transaction([this.storeName], 'readwrite');
+                    const store = transaction.objectStore(this.storeName);
+                    
+                    return new Promise((resolve, reject) => {
+                        const request = store.delete('currentStats');
+                        
+                        request.onsuccess = () => {
+                            db.close();
+                            gameState.wins = 0;
+                            gameState.losses = 0;
+                            gameState.draws = 0;
+                            updateStatsDisplay();
+                            console.log('Статистика очищена');
+                            resolve();
+                        };
+                        
+                        request.onerror = () => {
+                            db.close();
+                            reject(request.error);
+                        };
+                    });
+                } catch (error) {
+                    console.error('Ошибка при очистке статистики:', error);
+                }
+            }
+        };
+
+        // Инициализация игры
+        function initGame() {
+            // Сброс состояния игры
+            gameState.board = Array(9).fill('');
+            gameState.currentPlayer = 'X';
+            gameState.gameActive = true;
+            gameState.movesCount = 0;
+            
+            // Очистка доски
+            cells.forEach(cell => {
+                cell.textContent = '';
+                cell.classList.remove('x', 'o', 'winning', 'filled');
+            });
+            
+            // Обновление статистики
+            updateStatsDisplay();
+            
+            // Обновление информации об игроках
+            updatePlayerInfo();
+            
+            // Разблокировка кнопки сложности при новой игре
+            difficultyBtn.disabled = false;
+            updateDifficultyButton();
+        }
+
+        // Обновление отображения кнопки сложности
+        function updateDifficultyButton() {
+            const difficultyNames = {
+                easy: 'Легкий',
+                medium: 'Средний',
+                hard: 'Тяжелый',
+                twoPlayers: 'Два игрока'
+            };
+            
+            difficultyBtn.textContent = `Сложность: ${difficultyNames[gameState.difficulty]}`;
+        }
+
+        // Обновление информации об игроках в футере
+        function updatePlayerInfo() {
+            if (gameState.difficulty === 'twoPlayers') {
+                playerInfo.innerHTML = 'Игрок 1: <strong>X</strong> | Игрок 2: <strong>O</strong>';
+            } else {
+                playerInfo.innerHTML = 'Игрок: <strong>X</strong> | Бот: <strong>O</strong>';
+            }
+        }
+
+        // Обновление отображения статистики
+        function updateStatsDisplay() {
+            winsElement.textContent = gameState.wins;
+            lossesElement.textContent = gameState.losses;
+            drawsElement.textContent = gameState.draws;
+        }
+
+        // Проверка победы
+        function checkWin() {
+            const winPatterns = [
+                [0, 1, 2], [3, 4, 5], [6, 7, 8], // Горизонтальные
+                [0, 3, 6], [1, 4, 7], [2, 5, 8], // Вертикальные
+                [0, 4, 8], [2, 4, 6]             // Диагональные
+            ];
+
+            for (const pattern of winPatterns) {
+                const [a, b, c] = pattern;
+                if (gameState.board[a] && 
+                    gameState.board[a] === gameState.board[b] && 
+                    gameState.board[a] === gameState.board[c]) {
+                    
+                    // Подсветка победных клеток
+                    cells[a].classList.add('winning');
+                    cells[b].classList.add('winning');
+                    cells[c].classList.add('winning');
+                    
+                    return gameState.board[a];
+                }
+            }
+            
+            return null;
+        }
+
+        // Проверка ничьей
+        function checkDraw() {
+            return gameState.movesCount === 9 && !checkWin();
+        }
+
+        // Обработка результата игры
+        function handleGameResult(winner) {
+            gameState.gameActive = false;
+            
+            if (gameState.difficulty === 'twoPlayers') {
+                // Режим двух игроков
+                if (winner === 'X') {
+                    // Победа игрока 1
+                    gameState.wins++;
+                    showResultModal('😎', 'Игрок 1 победил!');
+                } else if (winner === 'O') {
+                    // Победа игрока 2
+                    gameState.losses++;
+                    showResultModal('😵', 'Игрок 2 победил!');
+                } else {
+                    // Ничья
+                    gameState.draws++;
+                    showResultModal('😐', 'Ничья!');
+                }
+            } else {
+                // Режим против бота
+                if (winner === 'X') {
+                    // Победа игрока
+                    gameState.wins++;
+                    showResultModal('😎', 'Вы победили!');
+                } else if (winner === 'O') {
+                    // Победа бота
+                    gameState.losses++;
+                    showResultModal('😵', 'Вы проиграли!');
+                } else {
+                    // Ничья
+                    gameState.draws++;
+                    showResultModal('😐', 'Ничья!');
+                }
+            }
+            
+            // Сохранение статистики
+            DBManager.saveStats();
+            updateStatsDisplay();
+        }
+
+        // Отображение модального окна с результатом
+        function showResultModal(emoji, text) {
+            resultEmoji.textContent = emoji;
+            resultText.textContent = text;
+            resultModal.classList.add('active');
+        }
+
+        // Ход игрока
+        function playerMove(index) {
+            if (!gameState.gameActive || gameState.board[index] !== '') {
+                return;
+            }
+            
+            // Выполнение хода
+            gameState.board[index] = gameState.currentPlayer;
+            cells[index].textContent = gameState.currentPlayer;
+            cells[index].classList.add(gameState.currentPlayer === 'X' ? 'x' : 'o', 'filled');
+            gameState.movesCount++;
+            
+            // Проверка результата после хода
+            const winner = checkWin();
+            if (winner) {
+                handleGameResult(winner);
+                return;
+            } else if (checkDraw()) {
+                handleGameResult(null);
+                return;
+            }
+            
+            // Переход хода
+            gameState.currentPlayer = gameState.currentPlayer === 'X' ? 'O' : 'X';
+            
+            // Блокировка кнопки сложности после первого хода в режиме против бота
+            if (gameState.movesCount === 1 && gameState.difficulty !== 'twoPlayers') {
+                difficultyBtn.disabled = true;
+            }
+            
+            // Ход бота, если не режим двух игроков
+            if (gameState.difficulty !== 'twoPlayers' && gameState.currentPlayer === 'O') {
+                // Задержка перед ходом бота
+                setTimeout(botMove, 600 + Math.random() * 400);
+            }
+        }
+
+        // Ход бота
+        function botMove() {
+            if (!gameState.gameActive || gameState.currentPlayer !== 'O') {
+                return;
+            }
+            
+            let moveIndex;
+            
+            // Выбор стратегии в зависимости от уровня сложности
+            switch (gameState.difficulty) {
+                case 'easy':
+                    moveIndex = getRandomMove();
+                    break;
+                case 'medium':
+                    moveIndex = getMediumMove();
+                    break;
+                case 'hard':
+                    moveIndex = getHardMove();
+                    break;
+            }
+            
+            // Выполнение хода
+            gameState.board[moveIndex] = 'O';
+            cells[moveIndex].textContent = 'O';
+            cells[moveIndex].classList.add('o', 'filled');
+            gameState.movesCount++;
+            
+            // Проверка результата после хода бота
+            const winner = checkWin();
+            if (winner) {
+                handleGameResult(winner);
+                return;
+            } else if (checkDraw()) {
+                handleGameResult(null);
+                return;
+            }
+            
+            // Переход хода к игроку
+            gameState.currentPlayer = 'X';
+        }
+
+        // Случайный ход (легкий уровень)
+        function getRandomMove() {
+            const emptyCells = [];
+            gameState.board.forEach((cell, index) => {
+                if (cell === '') emptyCells.push(index);
+            });
+            
+            return emptyCells[Math.floor(Math.random() * emptyCells.length)];
+        }
+
+        // Ход средней сложности
+        function getMediumMove() {
+            // 1. Попытка выиграть
+            for (let i = 0; i < 9; i++) {
+                if (gameState.board[i] === '') {
+                    gameState.board[i] = 'O';
+                    if (checkWin() === 'O') {
+                        gameState.board[i] = '';
+                        return i;
+                    }
+                    gameState.board[i] = '';
+                }
+            }
+            
+            // 2. Блокировка игрока
+            for (let i = 0; i < 9; i++) {
+                if (gameState.board[i] === '') {
+                    gameState.board[i] = 'X';
+                    if (checkWin() === 'X') {
+                        gameState.board[i] = '';
+                        return i;
+                    }
+                    gameState.board[i] = '';
+                }
+            }
+            
+            // 3. Занять центр, если свободен
+            if (gameState.board[4] === '') {
+                return 4;
+            }
+            
+            // 4. Случайный ход
+            return getRandomMove();
+        }
+
+        // Ход высокой сложности
+        function getHardMove() {
+            // 1. Попытка выиграть
+            for (let i = 0; i < 9; i++) {
+                if (gameState.board[i] === '') {
+                    gameState.board[i] = 'O';
+                    if (checkWin() === 'O') {
+                        gameState.board[i] = '';
+                        return i;
+                    }
+                    gameState.board[i] = '';
+                }
+            }
+            
+            // 2. Блокировка игрока
+            for (let i = 0; i < 9; i++) {
+                if (gameState.board[i] === '') {
+                    gameState.board[i] = 'X';
+                    if (checkWin() === 'X') {
+                        gameState.board[i] = '';
+                        return i;
+                    }
+                    gameState.board[i] = '';
+                }
+            }
+            
+            // 3. Занять центр, если свободен
+            if (gameState.board[4] === '') {
+                return 4;
+            }
+            
+            // 4. Занять углы
+            const corners = [0, 2, 6, 8];
+            const emptyCorners = corners.filter(index => gameState.board[index] === '');
+            if (emptyCorners.length > 0) {
+                return emptyCorners[Math.floor(Math.random() * emptyCorners.length)];
+            }
+            
+            // 5. Случайный ход
+            return getRandomMove();
+        }
+
+        // Обработчики событий
+        cells.forEach(cell => {
+            cell.addEventListener('click', () => {
+                const index = parseInt(cell.getAttribute('data-index'));
+                playerMove(index);
+            });
+        });
+
+        newGameBtn.addEventListener('click', initGame);
+
+        clearStatsBtn.addEventListener('click', () => {
+            if (confirm('Вы уверены, что хотите очистить статистику?')) {
+                DBManager.clearStats();
+            }
+        });
+
+        closeModal.addEventListener('click', () => {
+            resultModal.classList.remove('active');
+            initGame();
+        });
+
+        difficultyBtn.addEventListener('click', () => {
+            const difficulties = ['easy', 'medium', 'hard', 'twoPlayers'];
+            const currentIndex = difficulties.indexOf(gameState.difficulty);
+            gameState.difficulty = difficulties[(currentIndex + 1) % difficulties.length];
+            updateDifficultyButton();
+            updatePlayerInfo();
+        });
+
+        // Инициализация при загрузке страницы
+        window.addEventListener('DOMContentLoaded', async () => {
+            // Загрузка статистики перед инициализацией игры
+            await DBManager.loadStats();
+            updateStatsDisplay();
+            initGame();
+        });
+    </script>
+</body>
+</html>

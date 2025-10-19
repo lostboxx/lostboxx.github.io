@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <met name="robots" content="noindex, nofollow">
+    <title>Ловля</title>
+    <style>
+        * {
+            -webkit-tap-highlight-color: transparent;
+            tap-highlight-color: transparent;
+        }
+        
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, 
+                #00ff00 0%,    /* Зеленый */
+                #ffa500 25%,   /* Оранжевый */
+                #0000ff 50%,   /* Синий */
+                #ff0000 75%,   /* Красный */
+                #ffff00 100%   /* Желтый */
+            );
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-size: 400% 400%;
+            animation: gradientShift 10s ease infinite;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .game-container {
+            width: 90%;
+            max-width: 400px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+
+        .target-area {
+            position: relative;
+            width: 300px;
+            height: 80px;
+            background: #f8f9fa;
+            border: 3px solid #dee2e6;
+            border-radius: 15px;
+            margin: 0 auto 40px;
+            overflow: hidden;
+        }
+
+        .gray-zone {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 15px;
+            height: 60px;
+            background: #6c757d;
+            border-radius: 4px;
+            z-index: 1;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .red-slider {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 8px;
+            height: 60px;
+            background: #ff6b6b;
+            border-radius: 4px;
+            z-index: 2;
+            transition: left 0.03s linear;
+            box-shadow: 0 0 10px rgba(255, 107, 107, 0.5);
+        }
+
+        .catch-button {
+            width: 200px;
+            padding: 18px 30px;
+            font-size: 20px;
+            font-weight: bold;
+            background: linear-gradient(135deg, #4ecdc4, #44a08d);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            box-shadow: 0 6px 0 #3a9c94, 
+                        0 8px 15px rgba(0,0,0,0.2);
+            margin-bottom: 10px;
+            outline: none !important;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .save-button {
+            width: 200px;
+            padding: 12px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            background: linear-gradient(135deg, #ffc107, #ff9800);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 0 #e68900, 0 6px 10px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+            outline: none !important;
+            user-select: none;
+        }
+
+        .save-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 0 #e68900, 0 8px 15px rgba(0,0,0,0.3);
+        }
+
+        .save-button.pressed {
+            transform: translateY(4px) scale(0.95);
+            box-shadow: 0 1px 0 #e68900, 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .catch-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 0 #3a9c94, 
+                        0 10px 20px rgba(0,0,0,0.3);
+        }
+
+        .catch-button.pressed {
+            transform: translateY(6px) scale(0.95);
+            box-shadow: 0 1px 0 #3a9c94, 
+                        0 2px 5px rgba(0,0,0,0.2);
+            background: linear-gradient(135deg, #44a08d, #3a9c94);
+        }
+
+        .catch-button:focus {
+            outline: none !important;
+            box-shadow: 0 6px 0 #3a9c94, 
+                        0 8px 15px rgba(0,0,0,0.2);
+        }
+
+        .score {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .result {
+            font-size: 18px;
+            margin-top: 15px;
+            min-height: 27px;
+            font-weight: bold;
+        }
+
+        .success { 
+            color: #4ecdc4;
+            text-shadow: 0 0 10px rgba(78, 205, 196, 0.3);
+        }
+        .fail { 
+            color: #ff6b6b;
+            text-shadow: 0 0 10px rgba(255, 107, 107, 0.3);
+        }
+
+        .instructions {
+            color: #666;
+            font-size: 14px;
+            margin-top: 25px;
+            line-height: 1.4;
+        }
+
+        @media (max-width: 480px) {
+            .game-container {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 24px;
+            }
+            
+            .target-area {
+                width: 250px;
+                height: 70px;
+            }
+            
+            .catch-button, .save-button {
+                width: 180px;
+                padding: 16px 25px;
+                font-size: 18px;
+            }
+            
+            .save-button {
+                padding: 12px 20px;
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>🎯 Ловля</h1>
+        
+        <div class="score">Очки: <span id="score">0</span></div>
+        
+        <div class="target-area">
+            <div class="gray-zone"></div>
+            <div class="red-slider" id="redSlider"></div>
+        </div>
+
+        <button class="catch-button" id="catchButton">СЛОВИТЬ!</button>
+        <button class="save-button" id="saveButton">Сохранить счёт</button>
+        
+        <div class="result" id="result"></div>
+        
+        <div class="instructions">
+            Поймай красную полоску в серой зоне!<br>
+            Попадание: +1 очко | Промах: -1 очко
+        </div>
+    </div>
+
+    <script>
+        const redSlider = document.getElementById('redSlider');
+        const catchButton = document.getElementById('catchButton');
+        const saveButton = document.getElementById('saveButton');
+        const scoreElement = document.getElementById('score');
+        const resultElement = document.getElementById('result');
+        const targetArea = document.querySelector('.target-area');
+
+        let score = 0;
+        let sliderPosition = 0;
+        let sliderSpeed = 1;
+        let direction = 1;
+        let sliderWidth;
+        let gameAreaWidth;
+        let isAnimating = true;
+        let isProcessing = false;
+
+        let db;
+
+        // Инициализация IndexedDB
+        async function initDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open('CatchGameDB', 2);
+
+                request.onerror = () => reject(request.error);
+                request.onsuccess = () => {
+                    db = request.result;
+                    db.onerror = (e) => {
+                        console.error('Database error:', e.target.error);
+                    };
+                    resolve(db);
+                };
+
+                request.onupgradeneeded = (e) => {
+                    const thisDB = e.target.result;
+                    if (e.oldVersion < 2 && thisDB.objectStoreNames.contains('gameData')) {
+                        thisDB.deleteObjectStore('gameData');
+                    }
+                    if (!thisDB.objectStoreNames.contains('gameData')) {
+                        thisDB.createObjectStore('gameData');
+                    }
+                };
+            });
+        }
+
+        // Сохранение счёта
+        async function saveScore() {
+            if (!db) {
+                throw new Error('Database not initialized');
+            }
+
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction(['gameData'], 'readwrite');
+                const store = transaction.objectStore('gameData');
+                const request = store.put(score, 'currentScore');
+
+                transaction.oncomplete = () => {
+                    console.log('Счёт сохранён:', score);
+                    resolve();
+                };
+
+                transaction.onerror = (e) => {
+                    console.error('Transaction error:', transaction.error.name, transaction.error.code, transaction.error.message);
+                    reject(transaction.error);
+                };
+
+                request.onsuccess = () => {
+                    console.log('Put request succeeded');
+                };
+
+                request.onerror = (e) => {
+                    console.error('Request error:', request.error.name, request.error.code, request.error.message);
+                    reject(request.error);
+                };
+            });
+        }
+
+        // Загрузка счёта
+        async function loadScore() {
+            if (!db) {
+                return;
+            }
+
+            return new Promise((resolve) => {
+                const transaction = db.transaction(['gameData'], 'readonly');
+                const store = transaction.objectStore('gameData');
+                const request = store.get('currentScore');
+
+                transaction.oncomplete = () => {
+                    resolve();
+                };
+
+                transaction.onerror = () => {
+                    console.error('Load transaction error:', transaction.error);
+                    resolve();
+                };
+
+                request.onsuccess = () => {
+                    if (request.result !== undefined) {
+                        score = request.result;
+                        scoreElement.textContent = score;
+                        console.log('Счёт загружен:', score);
+                    }
+                };
+
+                request.onerror = () => {
+                    console.error('Load request error:', request.error);
+                    resolve();
+                };
+            });
+        }
+
+        // Эффект вдавливания кнопки
+        function pressButton(button) {
+            button.classList.add('pressed');
+            setTimeout(() => {
+                button.classList.remove('pressed');
+            }, 300);
+        }
+
+        function updateSlider() {
+            if (!isAnimating) return;
+
+            sliderPosition += sliderSpeed * direction;
+            
+            if (sliderPosition <= 0) {
+                sliderPosition = 0;
+                direction = 1;
+            } else if (sliderPosition >= gameAreaWidth - sliderWidth) {
+                sliderPosition = gameAreaWidth - sliderWidth;
+                direction = -1;
+            }
+
+            redSlider.style.left = sliderPosition + 'px';
+            requestAnimationFrame(updateSlider);
+        }
+
+        async function checkCatch() {
+            if (isProcessing) return;
+            isProcessing = true;
+
+            pressButton(catchButton);
+
+            const sliderRect = redSlider.getBoundingClientRect();
+            const grayZoneRect = document.querySelector('.gray-zone').getBoundingClientRect();
+            
+            const isFullyInside = sliderRect.left >= grayZoneRect.left && sliderRect.right <= grayZoneRect.right;
+
+            console.log('Проверка вхождения:', isFullyInside);
+            console.log('Красная полоска:', sliderRect.left.toFixed(1), '-', sliderRect.right.toFixed(1));
+            console.log('Серая зона:', grayZoneRect.left.toFixed(1), '-', grayZoneRect.right.toFixed(1));
+
+            if (isFullyInside) {
+                // Успех!
+                score++;
+                scoreElement.textContent = score;
+                resultElement.textContent = '✅ Отлично! +1';
+                resultElement.className = 'result success';
+                
+                sliderSpeed += 0.1;
+                
+                catchButton.style.background = 'linear-gradient(135deg, #4ecdc4, #44a08d)';
+                console.log('Попадание! Счет:', score);
+            } else {
+                // Промах
+                score = Math.max(0, score - 1);
+                scoreElement.textContent = score;
+                resultElement.textContent = '❌ Промах! -1';
+                resultElement.className = 'result fail';
+                
+                catchButton.style.background = 'linear-gradient(135deg, #ff6b6b, #ff8e8e)';
+                setTimeout(() => {
+                    catchButton.style.background = 'linear-gradient(135deg, #4ecdc4, #44a08d)';
+                }, 300);
+                console.log('Промах! Счет:', score);
+            }
+
+            // Разблокируем кнопку
+            setTimeout(() => {
+                isProcessing = false;
+            }, 300);
+        }
+
+        // Обработчики событий для кнопки ловли
+        catchButton.addEventListener('click', checkCatch);
+        
+        // Обработчики для анимации кнопки ловли
+        catchButton.addEventListener('mousedown', () => pressButton(catchButton));
+        catchButton.addEventListener('touchstart', (e) => {
+            pressButton(catchButton);
+        });
+
+        catchButton.addEventListener('mouseup', function() {
+            this.style.transform = 'translateY(-2px)';
+            this.style.boxShadow = '0 8px 0 #3a9c94, 0 10px 20px rgba(0,0,0,0.3)';
+        });
+        
+        catchButton.addEventListener('touchend', function() {
+            this.style.transform = 'translateY(-2px)';
+            this.style.boxShadow = '0 8px 0 #3a9c94, 0 10px 20px rgba(0,0,0,0.3)';
+        });
+
+        catchButton.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+            this.style.boxShadow = '0 6px 0 #3a9c94, 0 8px 15px rgba(0,0,0,0.2)';
+            this.classList.remove('pressed');
+        });
+
+        catchButton.addEventListener('focus', function() {
+            this.blur();
+        });
+
+        // Обработчики для кнопки сохранения
+        saveButton.addEventListener('click', async () => {
+            pressButton(saveButton);
+            try {
+                await saveScore();
+                resultElement.textContent = '💾 Счёт сохранён!';
+                resultElement.className = 'result success';
+                setTimeout(() => {
+                    resultElement.textContent = '';
+                }, 2000);
+            } catch (error) {
+                console.error('Ошибка сохранения:', error.name, error.code, error.message);
+                let errorMsg = '❌ Ошибка сохранения!';
+                if (error.name === 'SecurityError' || error.name === 'InvalidStateError') {
+                    errorMsg = '❌ Сохранение недоступно (приватный режим или небезопасный контекст)!';
+                } else if (error.name === 'DataError') {
+                    errorMsg = '❌ Ошибка данных при сохранении!';
+                }
+                resultElement.textContent = errorMsg;
+                resultElement.className = 'result fail';
+                setTimeout(() => {
+                    resultElement.textContent = '';
+                }, 3000);
+            }
+        });
+
+        saveButton.addEventListener('mousedown', () => pressButton(saveButton));
+        saveButton.addEventListener('touchstart', () => pressButton(saveButton));
+
+        saveButton.addEventListener('mouseup', function() {
+            this.style.transform = 'translateY(-2px)';
+            this.style.boxShadow = '0 6px 0 #e68900, 0 8px 15px rgba(0,0,0,0.3)';
+        });
+        
+        saveButton.addEventListener('touchend', function() {
+            this.style.transform = 'translateY(-2px)';
+            this.style.boxShadow = '0 6px 0 #e68900, 0 8px 15px rgba(0,0,0,0.3)';
+        });
+
+        saveButton.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+            this.style.boxShadow = '0 4px 0 #e68900, 0 6px 10px rgba(0,0,0,0.2)';
+            this.classList.remove('pressed');
+        });
+
+        saveButton.addEventListener('focus', function() {
+            this.blur();
+        });
+
+        // Инициализация игры
+        async function initGame() {
+            try {
+                await initDB();
+                await loadScore();
+            } catch (error) {
+                console.error('Инициализация БД:', error.name, error.code, error.message);
+            }
+            sliderWidth = redSlider.offsetWidth;
+            gameAreaWidth = targetArea.offsetWidth;
+            updateSlider();
+            console.log('Игра запущена');
+        }
+
+        // Запуск игры
+        initGame();
+    </script>
+</body>
+</html>

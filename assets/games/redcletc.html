@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Реакция-тренажёр</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1cb2bc, #0a0f1a);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            padding: 20px;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+            font-size: 2em;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .score {
+            font-size: 3em;
+            font-weight: bold;
+            margin: 20px 0;
+            text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+        }
+
+        .high-score {
+            font-size: 1.2em;
+            margin-bottom: 10px;
+            color: #ffcc00;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: repeat(4, 1fr);
+            gap: 1px;
+            margin: 30px 0;
+            aspect-ratio: 1;
+        }
+
+        .cell {
+            background: #2a2a2a;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            user-select: none;
+        }
+
+        .cell:hover {
+            background: #3a3a3a;
+        }
+
+        .cell.red {
+            background: #ff4444;
+            box-shadow: 0 0 20px #ff4444;
+            animation: pulse 0.5s infinite;
+        }
+
+        .cell.green {
+            background: #44ff44;
+            box-shadow: 0 0 20px #44ff44;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 20px;
+            flex-wrap: nowrap;
+        }
+
+        button {
+            background: #1168c2;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            background: #0d5aa6;
+            transform: scale(1.05);
+        }
+
+        .reset-btn {
+            background: #ff4444;
+        }
+
+        .reset-btn:hover {
+            background: #cc3333;
+        }
+
+        .message {
+            height: 30px;
+            margin: 10px 0;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .message.show {
+            opacity: 1;
+        }
+
+        .message.success {
+            color: #44ff44;
+        }
+
+        .message.error {
+            color: #ff4444;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.6s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container fade-in">
+        <h1>🎮 Реакция-тренажёр</h1>
+        <div class="high-score">Рекорд: <span id="highScore">0</span></div>
+        <div class="score" id="score">0</div>
+        
+        <div class="message" id="message"></div>
+        
+        <div class="grid" id="grid">
+            <!-- Клетки будут созданы через JavaScript -->
+        </div>
+        
+        <div class="controls">
+            <button onclick="startGame()">▶️ Старт</button>
+            <button onclick="resetGame()">🔄 Сброс счёта</button>
+            <button class="reset-btn" onclick="resetAllData()">🗑️ Сброс рекорда</button>
+        </div>
+    </div>
+
+    <script>
+        let score = 0;
+        let highScore = 0;
+        let gameActive = false;
+        let currentRedCell = null;
+        let timer = null;
+
+        const scoreElement = document.getElementById('score');
+        const highScoreElement = document.getElementById('highScore');
+        const messageElement = document.getElementById('message');
+        const gridElement = document.getElementById('grid');
+
+        // IndexedDB функции
+        async function openDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open('ReactionGameDB', 1);
+                
+                request.onerror = () => reject(request.error);
+                request.onsuccess = () => resolve(request.result);
+                
+                request.onupgradeneeded = (event) => {
+                    const db = event.target.result;
+                    if (!db.objectStoreNames.contains('gameData')) {
+                        db.createObjectStore('gameData');
+                    }
+                };
+            });
+        }
+
+        async function saveToDB(key, value) {
+            try {
+                const db = await openDB();
+                const transaction = db.transaction(['gameData'], 'readwrite');
+                const store = transaction.objectStore('gameData');
+                store.put(value, key);
+            } catch (error) {
+                console.log('Ошибка сохранения:', error);
+            }
+        }
+
+        async function getFromDB(key) {
+            try {
+                const db = await openDB();
+                return new Promise((resolve, reject) => {
+                    const transaction = db.transaction(['gameData'], 'readonly');
+                    const store = transaction.objectStore('gameData');
+                    const request = store.get(key);
+                    
+                    request.onerror = () => reject(request.error);
+                    request.onsuccess = () => resolve(request.result);
+                });
+            } catch (error) {
+                console.log('Ошибка загрузки:', error);
+                return null;
+            }
+        }
+
+        // Загрузка сохранённых данных
+        async function loadGameData() {
+            const savedScore = await getFromDB('currentScore');
+            const savedHighScore = await getFromDB('highScore');
+            
+            if (savedScore !== undefined) score = savedScore;
+            if (savedHighScore !== undefined) highScore = savedHighScore;
+            
+            updateScore();
+            updateHighScore();
+        }
+
+        // Сохранение данных
+        async function saveGameData() {
+            await saveToDB('currentScore', score);
+            if (score > highScore) {
+                highScore = score;
+                await saveToDB('highScore', highScore);
+                updateHighScore();
+            }
+        }
+
+        // Создаем сетку 4x4
+        function createGrid() {
+            gridElement.innerHTML = '';
+            for (let i = 0; i < 16; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'cell';
+                cell.dataset.index = i;
+                cell.addEventListener('click', () => handleCellClick(i));
+                gridElement.appendChild(cell);
+            }
+        }
+
+        // Запуск игры
+        function startGame() {
+            if (gameActive) return;
+            
+            gameActive = true;
+            score = 0;
+            updateScore();
+            showMessage('Игра началась! Лови красные клетки!', 'success');
+            
+            // Первая красная клетка через 1 секунду
+            setTimeout(() => {
+                activateRandomCell();
+            }, 1000);
+        }
+
+        // Сброс игры (только счёт)
+        function resetGame() {
+            gameActive = false;
+            score = 0;
+            updateScore();
+            saveGameData();
+            clearTimeout(timer);
+            hideMessage();
+            resetAllCells();
+            showMessage('Счёт сброшен!', 'success');
+        }
+
+        // Полный сброс всех данных
+        async function resetAllData() {
+            gameActive = false;
+            score = 0;
+            highScore = 0;
+            updateScore();
+            updateHighScore();
+            clearTimeout(timer);
+            hideMessage();
+            resetAllCells();
+            
+            try {
+                const db = await openDB();
+                const transaction = db.transaction(['gameData'], 'readwrite');
+                const store = transaction.objectStore('gameData');
+                store.clear();
+                showMessage('Все данные сброшены!', 'success');
+            } catch (error) {
+                console.log('Ошибка сброса данных:', error);
+            }
+        }
+
+        // Активация случайной клетки
+        function activateRandomCell() {
+            if (!gameActive) return;
+            
+            // Сбрасываем предыдущую красную клетку
+            resetAllCells();
+            
+            // Выбираем случайную клетку
+            const cells = document.querySelectorAll('.cell');
+            const randomIndex = Math.floor(Math.random() * 16);
+            currentRedCell = randomIndex;
+            
+            cells[randomIndex].classList.add('red');
+            
+            // Через секунды, если не нажали - штраф
+            timer = setTimeout(() => {
+                if (gameActive && cells[randomIndex].classList.contains('red')) {
+                    score--;
+                    updateScore();
+                    saveGameData();
+                    showMessage('Не успел! -1 очко', 'error');
+                    activateRandomCell();
+                }
+            }, 700);
+        }
+
+        // Обработка клика по клетке
+        function handleCellClick(index) {
+            if (!gameActive) return;
+            
+            const cells = document.querySelectorAll('.cell');
+            const clickedCell = cells[index];
+            
+            if (clickedCell.classList.contains('red')) {
+                // Попал по красной клетке
+                score++;
+                updateScore();
+                saveGameData();
+                showMessage('Отлично! +1 очко', 'success');
+                
+                // Подсвечиваем зелёным
+                clickedCell.classList.remove('red');
+                clickedCell.classList.add('green');
+                
+                // Через 0.5 секунды активируем следующую клетку
+                clearTimeout(timer);
+                setTimeout(() => {
+                    if (gameActive) {
+                        activateRandomCell();
+                    }
+                }, 500);
+                
+            } else if (!clickedCell.classList.contains('green')) {
+                // Попал не по той клетке
+                score--;
+                updateScore();
+                saveGameData();
+                showMessage('Мимо! -1 очко', 'error');
+            }
+        }
+
+        // Сброс всех клеток
+        function resetAllCells() {
+            const cells = document.querySelectorAll('.cell');
+            cells.forEach(cell => {
+                cell.classList.remove('red', 'green');
+            });
+        }
+
+        // Обновление счёта
+        function updateScore() {
+            scoreElement.textContent = score;
+            scoreElement.style.color = score >= 0 ? '#44ff44' : '#ff4444';
+        }
+
+        // Обновление рекорда
+        function updateHighScore() {
+            highScoreElement.textContent = highScore;
+        }
+
+        // Показать сообщение
+        function showMessage(text, type) {
+            messageElement.textContent = text;
+            messageElement.className = `message show ${type}`;
+            
+            setTimeout(() => {
+                hideMessage();
+            }, 1500);
+        }
+
+        // Скрыть сообщение
+        function hideMessage() {
+            messageElement.classList.remove('show');
+        }
+
+        // Инициализация при загрузке
+        document.addEventListener('DOMContentLoaded', async () => {
+            createGrid();
+            await loadGameData();
+            showMessage('Данные загружены! Готов к игре!', 'success');
+        });
+
+        // Сохраняем при закрытии страницы
+        window.addEventListener('beforeunload', () => {
+            if (gameActive) {
+                saveGameData();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Порыв</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            touch-action: manipulation;
+            font-family: 'Arial Rounded MT Bold', 'Arial', sans-serif;
+            background-color: #70c5ce;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        #game-container {
+            position: relative;
+            width: 100%;
+            max-width: 400px;
+            height: 600px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        #game-canvas {
+            background-color: #70c5ce;
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+        
+        #score {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 40px;
+            font-weight: bold;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            z-index: 10;
+        }
+        
+        #start-screen, #game-over {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            z-index: 20;
+            text-align: center;
+        }
+        
+        #game-over {
+            display: none;
+        }
+        
+        h1 {
+            font-size: 36px;
+            margin-bottom: 20px;
+            color: #f1c40f;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        
+        p {
+            font-size: 18px;
+            margin: 10px 20px;
+            line-height: 1.4;
+        }
+        
+        button {
+            padding: 15px 30px;
+            font-size: 20px;
+            background-color: #f1c40f;
+            border: none;
+            border-radius: 50px;
+            margin-top: 20px;
+            cursor: pointer;
+            color: #2c3e50;
+            font-weight: bold;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            transition: transform 0.1s;
+        }
+        
+        button:active {
+            transform: scale(0.95);
+        }
+        
+        .score-board {
+            margin-top: 20px;
+            text-align: center;
+            background-color: rgba(255, 255, 255, 0.2);
+            padding: 10px 20px;
+            border-radius: 20px;
+        }
+        
+        .score-board h3 {
+            margin-bottom: 10px;
+            font-size: 20px;
+        }
+        
+        #high-score, #best-score, #final-score {
+            font-size: 24px;
+            color: #f1c40f;
+            font-weight: bold;
+        }
+        
+        .instructions {
+            margin-top: 20px;
+            font-size: 16px;
+            color: #ddd;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="game-canvas"></canvas>
+        <div id="score">0</div>
+        
+        <div id="start-screen">
+            <h1>Порыв</h1>
+            <p>Нажимайте на экран, чтобы прыгать и избегать препятствий</p>
+            <button id="start-button">Начать игру</button>
+            <div class="score-board">
+                <h3>Лучший результат:</h3>
+                <div id="high-score">0</div>
+            </div>
+            <div class="instructions">
+                Нажимайте в любом месте экрана, чтобы прыгать
+            </div>
+        </div>
+        
+        <div id="game-over">
+            <h1>Игра окончена!</h1>
+            <p>Ваш счет: <span id="final-score">0</span></p>
+            <p>Лучший результат: <span id="best-score">0</span></p>
+            <button id="restart-button">Играть снова</button>
+        </div>
+    </div>
+
+    <script>
+        // Получаем элементы DOM
+        const canvas = document.getElementById('game-canvas');
+        const ctx = canvas.getContext('2d');
+        const scoreElement = document.getElementById('score');
+        const startScreen = document.getElementById('start-screen');
+        const gameOverScreen = document.getElementById('game-over');
+        const startButton = document.getElementById('start-button');
+        const restartButton = document.getElementById('restart-button');
+        const finalScoreElement = document.getElementById('final-score');
+        const bestScoreElement = document.getElementById('best-score');
+        const highScoreElement = document.getElementById('high-score');
+        
+        // Устанавливаем размеры canvas
+        canvas.width = canvas.offsetWidth;
+        canvas.height = canvas.offsetHeight;
+        
+        // Игровые переменные
+        let gameRunning = false;
+        let score = 0;
+        let highScore = 0;
+        let gameSpeed = 2;
+        let gravity = 0.5;
+        
+        // Облака для фона
+        const clouds = [
+            { x: 100, y: 80, width: 100, speed: 0.3 },
+            { x: 300, y: 120, width: 120, speed: 0.5 },
+            { x: 50, y: 180, width: 80, speed: 0.2 }
+        ];
+        
+        // Мячик
+        const ball = {
+            x: canvas.width / 4,
+            y: canvas.height / 2,
+            radius: 20,
+            velocity: 0,
+            jump: -10,
+            color: '#e74c3c',
+            // Для уменьшения чувствительности столкновений
+            collisionRadius: 16,
+            
+            draw() {
+                // Рисуем тень
+                ctx.beginPath();
+                ctx.arc(this.x, this.y + 3, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+                ctx.fill();
+                ctx.closePath();
+                
+                // Рисуем мячик
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+                ctx.closePath();
+                
+                // Добавляем блик для объема
+                ctx.beginPath();
+                ctx.arc(this.x - this.radius/3, this.y - this.radius/3, this.radius/3, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+                ctx.fill();
+                ctx.closePath();
+                
+                // Отладочная визуализация коллизии
+                if (debugMode) {
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.collisionRadius, 0, Math.PI * 2);
+                    ctx.strokeStyle = 'red';
+                    ctx.stroke();
+                    ctx.closePath();
+                }
+            },
+            
+            update() {
+                this.velocity += gravity;
+                this.y += this.velocity;
+                
+                // Проверка столкновения с землей
+                if (this.y + this.collisionRadius > canvas.height - 40) {
+                    this.y = canvas.height - 40 - this.collisionRadius;
+                    if (gameRunning) {
+                        gameOver();
+                    }
+                }
+                
+                // Проверка столкновения с потолком
+                if (this.y - this.collisionRadius < 0) {
+                    this.y = this.collisionRadius;
+                    this.velocity = 0;
+                }
+            },
+            
+            flap() {
+                this.velocity = this.jump;
+            }
+        };
+        
+        // Платформа (земля)
+        const ground = {
+            height: 40,
+            color: '#e67e22',
+            
+            draw() {
+                // Тень
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+                ctx.fillRect(0, canvas.height - this.height + 3, canvas.width, this.height);
+                
+                // Земля
+                ctx.fillStyle = this.color;
+                ctx.fillRect(0, canvas.height - this.height, canvas.width, this.height);
+                
+                // Добавляем текстуру травы
+                ctx.fillStyle = '#27ae60';
+                ctx.fillRect(0, canvas.height - this.height, canvas.width, 5);
+                
+                // Добавляем текстуру
+                for (let i = 0; i < canvas.width; i += 15) {
+                    ctx.fillRect(i, canvas.height - this.height + 5, 10, 3);
+                }
+            }
+        };
+        
+        // Препятствия (трубы)
+        const pipes = {
+            list: [],
+            width: 70,
+            gap: 200,  // Увеличили зазор для облегчения игры
+            maxYPos: 150,
+            color: '#2ecc71',
+            
+            draw() {
+                this.list.forEach(pipe => {
+                    // Тени для труб
+                    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+                    ctx.fillRect(pipe.x + 3, 0 + 3, this.width, pipe.y + 3);
+                    ctx.fillRect(pipe.x + 3, pipe.y + this.gap + 3, this.width, canvas.height - pipe.y - this.gap + 3);
+                    
+                    // Верхняя труба
+                    ctx.fillStyle = this.color;
+                    ctx.fillRect(pipe.x, 0, this.width, pipe.y);
+                    
+                    // Нижняя труба
+                    ctx.fillRect(pipe.x, pipe.y + this.gap, this.width, canvas.height - pipe.y - this.gap);
+                    
+                    // Добавляем детали к трубам
+                    ctx.fillStyle = '#27ae60';
+                    ctx.fillRect(pipe.x - 3, pipe.y - 15, this.width + 6, 15);
+                    ctx.fillRect(pipe.x - 3, pipe.y + this.gap, this.width + 6, 15);
+                    
+                    // Отладочная визуализация коллизии
+                    if (debugMode) {
+                        ctx.strokeStyle = 'red';
+                        ctx.strokeRect(pipe.x, 0, this.width, pipe.y);
+                        ctx.strokeRect(pipe.x, pipe.y + this.gap, this.width, canvas.height - pipe.y - this.gap);
+                    }
+                });
+            },
+            
+            update() {
+                if (gameRunning) {
+                    // Генерируем новые трубы
+                    if (this.list.length === 0 || canvas.width - this.list[this.list.length - 1].x > 250) {
+                        this.list.push({
+                            x: canvas.width,
+                            y: this.maxYPos + Math.random() * (canvas.height - this.gap - this.maxYPos - 40 - this.maxYPos),
+                            passed: false
+                        });
+                    }
+                    
+                    // Двигаем трубы и удаляем те, что за экраном
+                    this.list.forEach(pipe => {
+                        pipe.x -= gameSpeed;
+                    });
+                    
+                    this.list = this.list.filter(pipe => pipe.x + this.width > 0);
+                    
+                    // Проверяем столкновения и пройденные препятствия
+                    this.list.forEach(pipe => {
+                        if (pipe.x + this.width < ball.x - ball.radius && !pipe.passed) {
+                            pipe.passed = true;
+                            score++;
+                            scoreElement.textContent = score;
+                        }
+                        
+                        // Проверка столкновения с верхней трубой - с уменьшенной областью столкновения
+                        if (ball.x + ball.collisionRadius > pipe.x + 5 && 
+                            ball.x - ball.collisionRadius < pipe.x + this.width - 5 &&
+                            ball.y - ball.collisionRadius < pipe.y - 5) {
+                            gameOver();
+                        }
+                        
+                        // Проверка столкновения с нижней трубой - с уменьшенной областью столкновения
+                        if (ball.x + ball.collisionRadius > pipe.x + 5 && 
+                            ball.x - ball.collisionRadius < pipe.x + this.width - 5 &&
+                            ball.y + ball.collisionRadius > pipe.y + this.gap + 5) {
+                            gameOver();
+                        }
+                    });
+                }
+            }
+        };
+        
+        // Фон
+        function drawBackground() {
+            // Небо с градиентом
+            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, '#70c5ce');
+            gradient.addColorStop(1, '#4aa4bf');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Рисуем облака
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            clouds.forEach(cloud => {
+                drawCloud(cloud.x, cloud.y, cloud.width);
+            });
+        }
+        
+        // Функция для рисования облаков
+        function drawCloud(x, y, width) {
+            const height = width * 0.6;
+            
+            ctx.beginPath();
+            ctx.arc(x, y, width * 0.3, 0, Math.PI * 2);
+            ctx.arc(x + width * 0.3, y - height * 0.1, width * 0.3, 0, Math.PI * 2);
+            ctx.arc(x + width * 0.6, y, width * 0.3, 0, Math.PI * 2);
+            ctx.arc(x + width * 0.2, y + height * 0.1, width * 0.3, 0, Math.PI * 2);
+            ctx.arc(x + width * 0.5, y + height * 0.1, width * 0.3, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        
+        // Обновляем положение облаков
+        function updateClouds() {
+            clouds.forEach(cloud => {
+                cloud.x -= cloud.speed;
+                if (cloud.x + cloud.width < 0) {
+                    cloud.x = canvas.width + cloud.width;
+                    cloud.y = 50 + Math.random() * 150;
+                }
+            });
+        }
+        
+        // Функции игры
+        function gameOver() {
+            gameRunning = false;
+            finalScoreElement.textContent = score;
+            updateHighScore();
+            bestScoreElement.textContent = highScore;
+            gameOverScreen.style.display = 'flex';
+        }
+        
+        function startGame() {
+            gameRunning = true;
+            score = 0;
+            scoreElement.textContent = score;
+            ball.y = canvas.height / 2;
+            ball.velocity = 0;
+            pipes.list = [];
+            startScreen.style.display = 'none';
+            gameOverScreen.style.display = 'none';
+        }
+        
+        function updateHighScore() {
+            if (score > highScore) {
+                highScore = score;
+                bestScoreElement.textContent = highScore;
+                highScoreElement.textContent = highScore;
+                saveHighScore();
+            }
+        }
+        
+        // IndexedDB для сохранения рекорда
+        let db;
+        const dbName = "FlappyBallDB";
+        const storeName = "HighScores";
+        
+        function initDB() {
+            const request = indexedDB.open(dbName, 1);
+            
+            request.onerror = function(event) {
+                console.log("Ошибка при открытии БД");
+            };
+            
+            request.onupgradeneeded = function(event) {
+                db = event.target.result;
+                if (!db.objectStoreNames.contains(storeName)) {
+                    db.createObjectStore(storeName);
+                }
+            };
+            
+            request.onsuccess = function(event) {
+                db = event.target.result;
+                loadHighScore();
+            };
+        }
+        
+        function saveHighScore() {
+            if (!db) return;
+            
+            const transaction = db.transaction([storeName], "readwrite");
+            const store = transaction.objectStore(storeName);
+            store.put(highScore, "highScore");
+        }
+        
+        function loadHighScore() {
+            if (!db) return;
+            
+            const transaction = db.transaction([storeName], "readonly");
+            const store = transaction.objectStore(storeName);
+            const request = store.get("highScore");
+            
+            request.onsuccess = function() {
+                if (request.result) {
+                    highScore = request.result;
+                    highScoreElement.textContent = highScore;
+                    bestScoreElement.textContent = highScore;
+                }
+            };
+        }
+        
+        // Переменная для отладки (можно включить через консоль)
+        let debugMode = false;
+        
+        // Игровой цикл
+        function gameLoop() {
+            // Очищаем canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Рисуем элементы игры
+            drawBackground();
+            pipes.draw();
+            ground.draw();
+            ball.draw();
+            
+            // Обновляем состояние игры
+            if (gameRunning) {
+                ball.update();
+                pipes.update();
+                updateClouds();
+                
+                // Постепенно увеличиваем сложность
+                if (score > 0 && score % 5 === 0) {
+                    gameSpeed = 2 + Math.floor(score / 5) * 0.2;
+                }
+            }
+            
+            // Запрашиваем следующий кадр
+            requestAnimationFrame(gameLoop);
+        }
+        
+        // Обработчики событий
+        startButton.addEventListener('click', startGame);
+        restartButton.addEventListener('click', startGame);
+        
+        canvas.addEventListener('click', function() {
+            if (gameRunning) {
+                ball.flap();
+            } else if (startScreen.style.display !== 'none') {
+                startGame();
+            }
+        });
+        
+        // Поддержка сенсорных устройств
+        canvas.addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            if (gameRunning) {
+                ball.flap();
+            } else if (startScreen.style.display !== 'none') {
+                startGame();
+            }
+        });
+        
+        // Инициализация
+        window.addEventListener('load', function() {
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+            initDB();
+            gameLoop();
+        });
+        
+        // Респонсив при изменении размера окна
+        window.addEventListener('resize', function() {
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+        });
+    </script>
+</body>
+</html>

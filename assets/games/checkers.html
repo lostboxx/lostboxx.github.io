@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Шашки</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background-color: #f0f0f0;
+            padding: 10px;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            font-size: 16px;
+            margin-bottom: 15px;
+            background-color: #fff;
+            padding: 10px 15px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+        
+        .stat-item {
+            margin: 5px 10px;
+            min-width: 90px;
+            text-align: center;
+        }
+        
+        .message {
+            font-size: 18px;
+            margin: 10px 0;
+            height: 30px;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        .board-container {
+            position: relative;
+            max-width: 100%;
+            overflow: auto;
+        }
+        
+        .board {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            grid-template-rows: repeat(8, 1fr);
+            border: 2px solid #333;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            width: min(90vw, 400px);
+            height: min(90vw, 400px);
+            max-width: 400px;
+            max-height: 400px;
+        }
+        
+        .cell {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .light {
+            background-color: #e0e0e0;
+        }
+        
+        .dark {
+            background-color: #40e0d0; /* бирюзовый */
+        }
+        
+        .piece {
+            width: 80%;
+            height: 80%;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: min(5vw, 24px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            position: relative;
+            z-index: 2;
+        }
+        
+        .white {
+            background-color: white;
+            border: 1px solid #999;
+        }
+        
+        .black {
+            background-color: black;
+            border: 1px solid #333;
+        }
+        
+        .king .white {
+            background-color: #f0f0f0;
+        }
+        
+        .king .black {
+            background-color: #333;
+        }
+        
+        .selected {
+            box-shadow: 0 0 0 3px yellow;
+            z-index: 3;
+        }
+        
+        .valid-move {
+            position: relative;
+        }
+        
+        .valid-move::after {
+            content: "";
+            position: absolute;
+            width: 20%;
+            height: 20%;
+            background-color: rgba(0, 200, 0, 0.7);
+            border-radius: 50%;
+            z-index: 1;
+        }
+        
+        .capture-move::after {
+            background-color: rgba(255, 0, 0, 0.7);
+            width: 30%;
+            height: 30%;
+        }
+        
+        .result-message {
+            font-size: 22px;
+            font-weight: bold;
+            margin-top: 15px;
+            padding: 10px 20px;
+            border-radius: 5px;
+            background-color: rgba(255, 255, 255, 0.95);
+            text-align: center;
+        }
+        
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .new-game-btn {
+            padding: 10px 25px;
+            font-size: 16px;
+            background-color: #40e0d0;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        
+        @media (max-width: 480px) {
+            .stats {
+                font-size: 14px;
+                padding: 8px 10px;
+            }
+            
+            .stat-item {
+                min-width: 70px;
+                margin: 3px 5px;
+            }
+            
+            .message {
+                font-size: 16px;
+            }
+            
+            .result-message {
+                font-size: 20px;
+                padding: 8px 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="stats">
+        <span class="stat-item">Побед: <span id="wins">0</span></span>
+        <span class="stat-item">Ничей: <span id="draws">0</span></span>
+        <span class="stat-item">Поражений: <span id="losses">0</span></span>
+    </div>
+    
+    <div class="message" id="message">Ваш ход.</div>
+    
+    <div class="board-container">
+        <div class="board" id="board"></div>
+    </div>
+    
+    <div class="result-message" id="result" style="display: none;"></div>
+    
+    <div class="controls">
+        <button class="new-game-btn" id="newGameBtn">Новая игра</button>
+    </div>
+
+    <script>
+        // Игровые константы
+        const BOARD_SIZE = 8;
+        const PLAYER_COLOR = 'white';
+        const BOT_COLOR = 'black';
+        
+        // Состояние игры
+        let board = [];
+        let currentPlayer = PLAYER_COLOR;
+        let selectedPiece = null;
+        let validMoves = [];
+        let stats = { wins: 0, draws: 0, losses: 0 };
+        let gameOver = false;
+        let mustContinueCapture = false; // Флаг для продолжения взятия
+        let lastMoveWasCapture = false; // Флаг, указывающий, что последний ход был взятием
+        
+        // Элементы DOM
+        const boardElement = document.getElementById('board');
+        const messageElement = document.getElementById('message');
+        const resultElement = document.getElementById('result');
+        const winsElement = document.getElementById('wins');
+        const drawsElement = document.getElementById('draws');
+        const lossesElement = document.getElementById('losses');
+        const newGameBtn = document.getElementById('newGameBtn');
+        
+        // Инициализация IndexedDB
+        function initDB() {
+            const request = indexedDB.open('checkersDB', 1);
+            
+            request.onupgradeneeded = function(event) {
+                const db = event.target.result;
+                if (!db.objectStoreNames.contains('stats')) {
+                    db.createObjectStore('stats');
+                }
+            };
+            
+            request.onsuccess = function(event) {
+                const db = event.target.result;
+                loadStats(db);
+            };
+            
+            request.onerror = function(event) {
+                console.error('IndexedDB error:', event.target.error);
+            };
+        }
+        
+        // Загрузка статистики из БД
+        function loadStats(db) {
+            const transaction = db.transaction(['stats'], 'readonly');
+            const store = transaction.objectStore('stats');
+            const request = store.get('stats');
+            
+            request.onsuccess = function(event) {
+                if (request.result) {
+                    stats = request.result;
+                    updateStatsDisplay();
+                }
+            };
+        }
+        
+        // Сохранение статистики в БД
+        function saveStats() {
+            const request = indexedDB.open('checkersDB', 1);
+            
+            request.onsuccess = function(event) {
+                const db = event.target.result;
+                const transaction = db.transaction(['stats'], 'readwrite');
+                const store = transaction.objectStore('stats');
+                store.put(stats, 'stats');
+            };
+        }
+        
+        // Обновление отображения статистики
+        function updateStatsDisplay() {
+            winsElement.textContent = stats.wins;
+            drawsElement.textContent = stats.draws;
+            lossesElement.textContent = stats.losses;
+        }
+        
+        // Инициализация доски
+        function initBoard() {
+            board = Array(BOARD_SIZE).fill().map(() => Array(BOARD_SIZE).fill(null));
+            
+            // Расстановка шашек
+            for (let row = 0; row < 3; row++) {
+                for (let col = 0; col < BOARD_SIZE; col++) {
+                    if ((row + col) % 2 === 1) {
+                        board[row][col] = { color: BOT_COLOR, king: false };
+                    }
+                }
+            }
+            
+            for (let row = 5; row < BOARD_SIZE; row++) {
+                for (let col = 0; col < BOARD_SIZE; col++) {
+                    if ((row + col) % 2 === 1) {
+                        board[row][col] = { color: PLAYER_COLOR, king: false };
+                    }
+                }
+            }
+        }
+        
+        // Отрисовка доски
+        function renderBoard() {
+            boardElement.innerHTML = '';
+            
+            for (let row = 0; row < BOARD_SIZE; row++) {
+                for (let col = 0; col < BOARD_SIZE; col++) {
+                    const cell = document.createElement('div');
+                    cell.className = `cell ${(row + col) % 2 === 0 ? 'light' : 'dark'}`;
+                    cell.dataset.row = row;
+                    cell.dataset.col = col;
+                    
+                    // Проверка на валидный ход
+                    const moveInfo = validMoves.find(move => 
+                        move.row === row && move.col === col);
+                    
+                    if (moveInfo) {
+                        cell.classList.add('valid-move');
+                        if (moveInfo.isCapture) {
+                            cell.classList.add('capture-move');
+                        }
+                    }
+                    
+                    // Добавление шашки
+                    const piece = board[row][col];
+                    if (piece) {
+                        const pieceElement = document.createElement('div');
+                        pieceElement.className = `piece ${piece.color} ${piece.king ? 'king' : ''}`;
+                        
+                        // Выделение выбранной шашки
+                        if (selectedPiece && 
+                            selectedPiece.row === row && 
+                            selectedPiece.col === col) {
+                            pieceElement.classList.add('selected');
+                        }
+                        
+                        // Отображение короны для короля
+                        if (piece.king) {
+                            pieceElement.textContent = '👑';
+                        }
+                        
+                        cell.appendChild(pieceElement);
+                    }
+                    
+                    cell.addEventListener('click', handleCellClick);
+                    boardElement.appendChild(cell);
+                }
+            }
+        }
+        
+        // Обработка клика по клетке
+        function handleCellClick(event) {
+            if (gameOver || currentPlayer !== PLAYER_COLOR) return;
+            
+            const row = parseInt(event.currentTarget.dataset.row);
+            const col = parseInt(event.currentTarget.dataset.col);
+            const piece = board[row][col];
+            
+            // Если игрок должен продолжать взятие, он может выбрать только ту же шашку
+            if (mustContinueCapture && selectedPiece && 
+                !(selectedPiece.row === row && selectedPiece.col === col)) {
+                // Игрок пытается выбрать другую шашку, когда должен продолжать взятие
+                return;
+            }
+            
+            // Выбор шашки игрока
+            if (piece && piece.color === PLAYER_COLOR) {
+                // Если игрок должен продолжать взятие, он может выбрать только ту же шашку
+                if (mustContinueCapture && selectedPiece && 
+                    !(selectedPiece.row === row && selectedPiece.col === col)) {
+                    return;
+                }
+                
+                selectedPiece = { row, col };
+                validMoves = getValidMoves(row, col);
+                renderBoard();
+                return;
+            }
+            
+            // Ход на выбранную клетку
+            if (selectedPiece) {
+                const moveInfo = validMoves.find(move => 
+                    move.row === row && move.col === col);
+                
+                if (moveInfo) {
+                    const wasCapture = movePiece(selectedPiece.row, selectedPiece.col, row, col, moveInfo.isCapture, moveInfo.captures);
+                    
+                    // Если был сделан захват, проверяем, можно ли продолжать взятие
+                    if (wasCapture) {
+                        const furtherCaptures = getCaptureMoves(row, col);
+                        if (furtherCaptures.length > 0) {
+                            // Игрок должен продолжать взятие
+                            mustContinueCapture = true;
+                            selectedPiece = { row, col };
+                            validMoves = furtherCaptures;
+                            renderBoard();
+                            messageElement.textContent = 'Продолжайте брать шашки.';
+                            return;
+                        }
+                    }
+                    
+                    // Сброс состояния и переход хода
+                    mustContinueCapture = false;
+                    selectedPiece = null;
+                    validMoves = [];
+                    
+                    // Проверка окончания игры
+                    if (!checkGameOver()) {
+                        currentPlayer = BOT_COLOR;
+                        messageElement.textContent = 'Ход бота...';
+                        setTimeout(botMove, 800);
+                    }
+                }
+            }
+        }
+        
+        // Получение допустимых ходов для шашки
+        function getValidMoves(row, col) {
+            const piece = board[row][col];
+            if (!piece) return [];
+            
+            // Если есть обязательное взятие, возвращаем только взятия
+            const captureMoves = getCaptureMoves(row, col);
+            if (captureMoves.length > 0) {
+                return captureMoves;
+            }
+            
+            // Если нет обязательного взятия, возвращаем обычные ходы
+            return getRegularMoves(row, col);
+        }
+        
+        // Получение ходов со взятием
+        function getCaptureMoves(row, col) {
+            const piece = board[row][col];
+            if (!piece) return [];
+            
+            const moves = [];
+            const directions = [[-1, -1], [-1, 1], [1, -1], [1, 1]]; // Все 4 направления
+            
+            for (const [dr, dc] of directions) {
+                findCaptureMovesInDirection(row, col, dr, dc, piece, moves, []);
+            }
+            
+            // Фильтруем ходы, оставляя только с максимальным количеством взятий
+            if (moves.length > 0) {
+                let maxCaptures = 0;
+                for (const move of moves) {
+                    if (move.captures.length > maxCaptures) {
+                        maxCaptures = move.captures.length;
+                    }
+                }
+                
+                return moves.filter(move => move.captures.length === maxCaptures);
+            }
+            
+            return moves;
+        }
+        
+        // Рекурсивный поиск ходов со взятием в заданном направлении
+        function findCaptureMovesInDirection(row, col, dr, dc, piece, moves, capturedSoFar) {
+            if (!piece.king) {
+                // Для обычной шашки
+                const jumpRow = row + dr * 2;
+                const jumpCol = col + dc * 2;
+                const enemyRow = row + dr;
+                const enemyCol = col + dc;
+                
+                if (isValidPosition(jumpRow, jumpCol) && 
+                    !board[jumpRow][jumpCol] &&
+                    board[enemyRow][enemyCol] && 
+                    board[enemyRow][enemyCol].color !== piece.color &&
+                    !isAlreadyCaptured(enemyRow, enemyCol, capturedSoFar)) {
+                    
+                    // Добавляем ход со взятием
+                    moves.push({
+                        row: jumpRow,
+                        col: jumpCol,
+                        isCapture: true,
+                        captures: [...capturedSoFar, {row: enemyRow, col: enemyCol}]
+                    });
+                    
+                    // Рекурсивно ищем дальнейшие взятия
+                    const simulatedBoard = JSON.parse(JSON.stringify(board));
+                    simulatedBoard[jumpRow][jumpCol] = simulatedBoard[row][col];
+                    simulatedBoard[row][col] = null;
+                    simulatedBoard[enemyRow][enemyCol] = null;
+                    
+                    findFurtherCaptures(jumpRow, jumpCol, piece, moves, [...capturedSoFar, {row: enemyRow, col: enemyCol}], simulatedBoard);
+                }
+            } else {
+                // Для короля - проверяем все клетки в направлении
+                let foundEnemy = false;
+                let enemyPos = null;
+                
+                for (let distance = 1; distance < BOARD_SIZE; distance++) {
+                    const checkRow = row + dr * distance;
+                    const checkCol = col + dc * distance;
+                    
+                    if (!isValidPosition(checkRow, checkCol)) break;
+                    
+                    if (!foundEnemy) {
+                        if (board[checkRow][checkCol]) {
+                            if (board[checkRow][checkCol].color !== piece.color &&
+                                !isAlreadyCaptured(checkRow, checkCol, capturedSoFar)) {
+                                foundEnemy = true;
+                                enemyPos = {row: checkRow, col: checkCol};
+                            } else {
+                                // Своя шашка или уже взятая - прерываем поиск
+                                break;
+                            }
+                        }
+                    } else {
+                        // После найденной вражеской шашки ищем пустую клетку для прыжка
+                        if (!board[checkRow][checkCol]) {
+                            // Добавляем ход со взятием
+                            moves.push({
+                                row: checkRow,
+                                col: checkCol,
+                                isCapture: true,
+                                captures: [...capturedSoFar, enemyPos]
+                            });
+                            
+                            // Рекурсивно ищем дальнейшие взятия
+                            const simulatedBoard = JSON.parse(JSON.stringify(board));
+                            simulatedBoard[checkRow][checkCol] = simulatedBoard[row][col];
+                            simulatedBoard[row][col] = null;
+                            simulatedBoard[enemyPos.row][enemyPos.col] = null;
+                            
+                            findFurtherCaptures(checkRow, checkCol, piece, moves, [...capturedSoFar, enemyPos], simulatedBoard);
+                        } else {
+                            // Клетка занята - прерываем поиск
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Поиск дальнейших взятий после первого
+        function findFurtherCaptures(row, col, piece, moves, capturedSoFar, simulatedBoard) {
+            const directions = [[-1, -1], [-1, 1], [1, -1], [1, 1]];
+            
+            for (const [dr, dc] of directions) {
+                if (!piece.king) {
+                    // Для обычной шашки
+                    const jumpRow = row + dr * 2;
+                    const jumpCol = col + dc * 2;
+                    const enemyRow = row + dr;
+                    const enemyCol = col + dc;
+                    
+                    if (isValidPosition(jumpRow, jumpCol) && 
+                        !simulatedBoard[jumpRow][jumpCol] &&
+                        simulatedBoard[enemyRow][enemyCol] && 
+                        simulatedBoard[enemyRow][enemyCol].color !== piece.color &&
+                        !isAlreadyCaptured(enemyRow, enemyCol, capturedSoFar)) {
+                        
+                        // Добавляем ход со взятием
+                        moves.push({
+                            row: jumpRow,
+                            col: jumpCol,
+                            isCapture: true,
+                            captures: [...capturedSoFar, {row: enemyRow, col: enemyCol}]
+                        });
+                        
+                        // Рекурсивно ищем дальнейшие взятия
+                        const newSimulatedBoard = JSON.parse(JSON.stringify(simulatedBoard));
+                        newSimulatedBoard[jumpRow][jumpCol] = newSimulatedBoard[row][col];
+                        newSimulatedBoard[row][col] = null;
+                        newSimulatedBoard[enemyRow][enemyCol] = null;
+                        
+                        findFurtherCaptures(jumpRow, jumpCol, piece, moves, [...capturedSoFar, {row: enemyRow, col: enemyCol}], newSimulatedBoard);
+                    }
+                } else {
+                    // Для короля
+                    let foundEnemy = false;
+                    let enemyPos = null;
+                    
+                    for (let distance = 1; distance < BOARD_SIZE; distance++) {
+                        const checkRow = row + dr * distance;
+                        const checkCol = col + dc * distance;
+                        
+                        if (!isValidPosition(checkRow, checkCol)) break;
+                        
+                        if (!foundEnemy) {
+                            if (simulatedBoard[checkRow][checkCol]) {
+                                if (simulatedBoard[checkRow][checkCol].color !== piece.color &&
+                                    !isAlreadyCaptured(checkRow, checkCol, capturedSoFar)) {
+                                    foundEnemy = true;
+                                    enemyPos = {row: checkRow, col: checkCol};
+                                } else {
+                                    // Своя шашка или уже взятая - прерываем поиск
+                                    break;
+                                }
+                            }
+                        } else {
+                            // После найденной вражеской шашки ищем пустую клетку для прыжка
+                            if (!simulatedBoard[checkRow][checkCol]) {
+                                // Добавляем ход со взятием
+                                moves.push({
+                                    row: checkRow,
+                                    col: checkCol,
+                                    isCapture: true,
+                                    captures: [...capturedSoFar, enemyPos]
+                                });
+                                
+                                // Рекурсивно ищем дальнейшие взятия
+                                const newSimulatedBoard = JSON.parse(JSON.stringify(simulatedBoard));
+                                newSimulatedBoard[checkRow][checkCol] = newSimulatedBoard[row][col];
+                                newSimulatedBoard[row][col] = null;
+                                newSimulatedBoard[enemyPos.row][enemyPos.col] = null;
+                                
+                                findFurtherCaptures(checkRow, checkCol, piece, moves, [...capturedSoFar, enemyPos], newSimulatedBoard);
+                            } else {
+                                // Клетка занята - прерываем поиск
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Проверка, не была ли уже взята эта шашка в текущей цепочке
+        function isAlreadyCaptured(row, col, capturedSoFar) {
+            return capturedSoFar.some(capture => capture.row === row && capture.col === col);
+        }
+        
+        // Получение обычных ходов (без взятия)
+        function getRegularMoves(row, col) {
+            const piece = board[row][col];
+            if (!piece) return [];
+            
+            const moves = [];
+            const directions = [];
+            
+            // Определение направлений движения
+            if (piece.king) {
+                // Король ходит во все направления
+                directions.push([-1, -1], [-1, 1], [1, -1], [1, 1]);
+            } else {
+                // Обычная шашка ходит только вперёд
+                if (piece.color === PLAYER_COLOR) {
+                    directions.push([-1, -1], [-1, 1]); // Вверх
+                } else {
+                    directions.push([1, -1], [1, 1]); // Вниз
+                }
+            }
+            
+            // Проверка возможных ходов
+            for (const [dr, dc] of directions) {
+                if (piece.king) {
+                    // Король может ходить на любое количество клеток
+                    for (let distance = 1; distance < BOARD_SIZE; distance++) {
+                        const newRow = row + dr * distance;
+                        const newCol = col + dc * distance;
+                        
+                        if (!isValidPosition(newRow, newCol)) break;
+                        
+                        if (!board[newRow][newCol]) {
+                            moves.push({ row: newRow, col: newCol, isCapture: false });
+                        } else {
+                            // Наткнулись на шашку - дальше нельзя
+                            break;
+                        }
+                    }
+                } else {
+                    // Обычная шашка ходит только на одну клетку
+                    const newRow = row + dr;
+                    const newCol = col + dc;
+                    
+                    if (isValidPosition(newRow, newCol) && !board[newRow][newCol]) {
+                        moves.push({ row: newRow, col: newCol, isCapture: false });
+                    }
+                }
+            }
+            
+            return moves;
+        }
+        
+        // Проверка валидности позиции
+        function isValidPosition(row, col) {
+            return row >= 0 && row < BOARD_SIZE && col >= 0 && col < BOARD_SIZE;
+        }
+        
+        // Перемещение шашки
+        function movePiece(fromRow, fromCol, toRow, toCol, isCapture, captures = []) {
+            const piece = board[fromRow][fromCol];
+            board[fromRow][fromCol] = null;
+            board[toRow][toCol] = piece;
+            
+            // Удаление взятой шашки
+            if (isCapture) {
+                if (captures.length > 0) {
+                    // Удаляем все захваченные шашки
+                    for (const capture of captures) {
+                        board[capture.row][capture.col] = null;
+                    }
+                } else {
+                    // Старый метод (для обратной совместимости)
+                    const capturedRow = (fromRow + toRow) / 2;
+                    const capturedCol = (fromCol + toCol) / 2;
+                    board[capturedRow][capturedCol] = null;
+                }
+                
+                lastMoveWasCapture = true;
+            } else {
+                lastMoveWasCapture = false;
+            }
+            
+            // Проверка превращения в короля
+            if (!piece.king) {
+                if ((piece.color === PLAYER_COLOR && toRow === 0) || 
+                    (piece.color === BOT_COLOR && toRow === BOARD_SIZE - 1)) {
+                    piece.king = true;
+                }
+            }
+            
+            renderBoard();
+            return isCapture;
+        }
+        
+        // Ход бота
+        function botMove() {
+            if (gameOver) return;
+            
+            // Сначала ищем ходы со взятием
+            let captureMoves = [];
+            let regularMoves = [];
+            
+            for (let row = 0; row < BOARD_SIZE; row++) {
+                for (let col = 0; col < BOARD_SIZE; col++) {
+                    const piece = board[row][col];
+                    if (piece && piece.color === BOT_COLOR) {
+                        const moves = getValidMoves(row, col);
+                        moves.forEach(move => {
+                            const moveData = {
+                                fromRow: row,
+                                fromCol: col,
+                                toRow: move.row,
+                                toCol: move.col,
+                                isCapture: move.isCapture,
+                                captures: move.captures || [],
+                                score: move.captures ? move.captures.length * 10 : 0
+                            };
+                            
+                            if (move.isCapture) {
+                                captureMoves.push(moveData);
+                            } else {
+                                regularMoves.push(moveData);
+                            }
+                        });
+                    }
+                }
+            }
+            
+            // Если есть взятия, фильтруем только с максимальным количеством
+            if (captureMoves.length > 0) {
+                let maxCaptures = 0;
+                for (const move of captureMoves) {
+                    if (move.captures.length > maxCaptures) {
+                        maxCaptures = move.captures.length;
+                    }
+                }
+                captureMoves = captureMoves.filter(move => move.captures.length === maxCaptures);
+            }
+            
+            // Выбор хода (приоритет взятиям)
+            let selectedMove = null;
+            if (captureMoves.length > 0) {
+                // Выбираем случайное взятие с максимальным количеством captured шашек
+                selectedMove = captureMoves[Math.floor(Math.random() * captureMoves.length)];
+            } else if (regularMoves.length > 0) {
+                selectedMove = regularMoves[Math.floor(Math.random() * regularMoves.length)];
+            }
+            
+            if (selectedMove) {
+                movePiece(
+                    selectedMove.fromRow, 
+                    selectedMove.fromCol, 
+                    selectedMove.toRow, 
+                    selectedMove.toCol,
+                    selectedMove.isCapture,
+                    selectedMove.captures
+                );
+                
+                // Если был захват, проверяем, может ли бот продолжать брать
+                if (selectedMove.isCapture) {
+                    const furtherCaptures = getCaptureMoves(selectedMove.toRow, selectedMove.toCol);
+                    if (furtherCaptures.length > 0) {
+                        // Бот должен продолжать взятие
+                        setTimeout(() => {
+                            botContinueCapture(selectedMove.toRow, selectedMove.toCol);
+                        }, 800);
+                        return;
+                    }
+                }
+                
+                // Проверка окончания игры
+                if (!checkGameOver()) {
+                    currentPlayer = PLAYER_COLOR;
+                    messageElement.textContent = 'Ваш ход.';
+                }
+            } else {
+                // Если у бота нет ходов
+                endGame('draw');
+            }
+        }
+        
+        // Продолжение взятия для бота
+        function botContinueCapture(row, col) {
+            const captureMoves = getCaptureMoves(row, col);
+            
+            if (captureMoves.length > 0) {
+                // Выбираем случайное взятие с максимальным количеством captured шашек
+                let maxCaptures = 0;
+                for (const move of captureMoves) {
+                    if (move.captures.length > maxCaptures) {
+                        maxCaptures = move.captures.length;
+                    }
+                }
+                const maxCaptureMoves = captureMoves.filter(move => move.captures.length === maxCaptures);
+                const selectedMove = maxCaptureMoves[Math.floor(Math.random() * maxCaptureMoves.length)];
+                
+                movePiece(
+                    row, 
+                    col, 
+                    selectedMove.row, 
+                    selectedMove.col,
+                    true,
+                    selectedMove.captures
+                );
+                
+                // Проверяем, может ли бот продолжать брать
+                const furtherCaptures = getCaptureMoves(selectedMove.row, selectedMove.col);
+                if (furtherCaptures.length > 0) {
+                    // Бот должен продолжать взятие
+                    setTimeout(() => {
+                        botContinueCapture(selectedMove.row, selectedMove.col);
+                    }, 800);
+                } else {
+                    // Проверка окончания игры
+                    if (!checkGameOver()) {
+                        currentPlayer = PLAYER_COLOR;
+                        messageElement.textContent = 'Ваш ход.';
+                    }
+                }
+            } else {
+                // Проверка окончания игры
+                if (!checkGameOver()) {
+                    currentPlayer = PLAYER_COLOR;
+                    messageElement.textContent = 'Ваш ход.';
+                }
+            }
+        }
+        
+        // Проверка окончания игры
+        function checkGameOver() {
+            let playerPieces = 0;
+            let botPieces = 0;
+            let playerCanMove = false;
+            let botCanMove = false;
+            
+            // Подсчёт шашек и проверка возможности хода
+            for (let row = 0; row < BOARD_SIZE; row++) {
+                for (let col = 0; col < BOARD_SIZE; col++) {
+                    const piece = board[row][col];
+                    if (piece) {
+                        if (piece.color === PLAYER_COLOR) {
+                            playerPieces++;
+                            if (!playerCanMove && getValidMoves(row, col).length > 0) {
+                                playerCanMove = true;
+                            }
+                        } else {
+                            botPieces++;
+                            if (!botCanMove && getValidMoves(row, col).length > 0) {
+                                botCanMove = true;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Определение результата игры
+            if (playerPieces === 0 || !playerCanMove) {
+                endGame('loss');
+                return true;
+            }
+            
+            if (botPieces === 0 || !botCanMove) {
+                endGame('win');
+                return true;
+            }
+            
+            return false;
+        }
+        
+        // Завершение игры
+        function endGame(result) {
+            gameOver = true;
+            
+            switch (result) {
+                case 'win':
+                    resultElement.textContent = '😎 Вы выиграли!';
+                    stats.wins++;
+                    break;
+                case 'loss':
+                    resultElement.textContent = '😔 Проигрыш';
+                    stats.losses++;
+                    break;
+                case 'draw':
+                    resultElement.textContent = '😐 Ничья';
+                    stats.draws++;
+                    break;
+            }
+            
+            resultElement.style.display = 'block';
+            messageElement.textContent = 'Игра завершена';
+            
+            // Обновление статистики и сохранение
+            updateStatsDisplay();
+            saveStats();
+        }
+        
+        // Начало новой игры
+        function newGame() {
+            initBoard();
+            currentPlayer = PLAYER_COLOR;
+            selectedPiece = null;
+            validMoves = [];
+            gameOver = false;
+            mustContinueCapture = false;
+            lastMoveWasCapture = false;
+            messageElement.textContent = 'Ваш ход.';
+            resultElement.style.display = 'none';
+            renderBoard();
+        }
+        
+        // Инициализация игры
+        function initGame() {
+            initDB();
+            initBoard();
+            newGameBtn.addEventListener('click', newGame);
+            renderBoard();
+        }
+        
+        // Запуск игры при загрузке страницы
+        window.onload = initGame;
+    </script>
+</body>
+</html>

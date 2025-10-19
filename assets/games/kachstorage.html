@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тренировка памяти</title>
+    <style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background: linear-gradient(135deg, #1cb2bc, #0a0f1a);
+    color: white;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    padding: 20px;
+    /* Оставляем скролл здесь! */
+    overflow-y: auto; 
+}
+
+.game-container {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    text-align: center;
+    max-width: 600px;
+    width: 100%;
+    margin-bottom: 20px; 
+}
+
+h1 {
+    margin-bottom: 20px;
+    font-size: 2em;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.stats {
+    display: flex;
+    justify-content: space-around;
+    margin: 20px 0;
+    font-size: 1.2em;
+}
+
+.level {
+    color: #44ff44;
+    font-weight: bold;
+}
+
+/* Ключевые изменения: Переключаемся на Flexbox для переноса! */
+.cards-container {
+    /* Меняем display на flex */
+    display: flex;
+    /* Разрешаем перенос на следующую строку */
+    flex-wrap: wrap; 
+    /* Карточки будут располагаться по центру, но переноситься вниз */
+    justify-content: center;
+    
+    gap: 15px;
+    margin: 30px 0;
+    
+    /* УДАЛЕНО: все grid-свойства */
+    padding-right: 0; 
+    align-content: start; 
+}
+
+.card {
+    background: #1168c2;
+    border-radius: 10px;
+    padding: 15px;
+    min-height: 100px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    position: relative;
+    
+    /* Самое важное! Говорим Flex-элементу, чтобы он не сжимался */
+    flex-shrink: 0; 
+    /* И даём ему фиксированную ширину, чтобы он переносился при нехватке места */
+    width: 140px; 
+    min-width: 140px; /* Для надёжности */
+}
+
+.card.hidden {
+    background: #2a2a2a;
+}
+
+.card.hidden .card-word {
+    display: none;
+}
+
+.card.hidden .card-input {
+    display: block;
+}
+
+.card-word {
+    font-size: 18px;
+    margin-bottom: 10px;
+    word-break: break-word; 
+    text-align: center;
+}
+
+.card-input {
+    display: none;
+    width: 90%;
+    padding: 8px;
+    border: none;
+    border-radius: 5px;
+    font-size: 14px;
+    text-align: center;
+    margin-top: 5px;
+    color: #0a0f1a;
+}
+
+.card-input:focus {
+    outline: 2px solid #44ff44;
+}
+
+.check-btn {
+    display: none;
+    background: #44ff44;
+    color: #000;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: bold;
+    margin-top: 8px;
+}
+
+.card.hidden .check-btn {
+    display: block;
+}
+
+.controls {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin: 20px 0 10px;
+    flex-wrap: nowrap;
+}
+
+button {
+    background: #1168c2;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+
+button:hover {
+    background: #0d5aa6;
+    transform: scale(1.05);
+}
+
+.reset-btn {
+    background: #ff4444;
+    padding: 8px 16px;
+    font-size: 14px;
+}
+
+.reset-btn:hover {
+    background: #cc3333;
+}
+
+.message {
+    height: 30px;
+    margin: 10px 0;
+    font-weight: bold;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.message.show {
+    opacity: 1;
+}
+
+.message.success {
+    color: #44ff44;
+}
+
+.message.error {
+    color: #ff4444;
+}
+
+.timer {
+    font-size: 1.5em;
+    margin: 10px 0;
+    color: #ffcc00;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+    animation: fadeIn 0.6s ease;
+}
+
+@media (max-width: 768px) {
+    /* На мобильных сохраняем Flexbox и фиксированную ширину */
+    .cards-container {
+        /* Ничего не меняем, просто убираем старый Grid */
+    }
+    
+    .card {
+        min-height: 90px;
+        padding: 12px;
+        /* Уменьшаем ширину на мобильных, но не даем сжиматься */
+        width: 120px;
+        min-width: 120px; 
+    }
+    
+    .card-word {
+        font-size: 16px;
+    }
+}
+      
+    </style>
+</head>
+<body>
+    <div class="game-container fade-in">
+        <h1>🧠 Тренировка памяти</h1>
+        
+        <div class="stats">
+            <div>Уровень: <span class="level" id="level">1</span></div>
+            <div>Карточек: <span id="cardCount">2</span></div>
+        </div>
+
+        <div class="timer" id="timer">5</div>
+        
+        <div class="message" id="message"></div>
+        
+        <div class="cards-container" id="cardsContainer">
+            <!-- Карточки будут созданы через JavaScript -->
+        </div>
+        
+        <div class="controls">
+            <button onclick="startLevel()">🎮 Начать уровень</button>
+            <button class="reset-btn" onclick="resetGame()">🔄 Сбросить игру</button>
+        </div>
+    </div>
+
+    <script>
+        // Богатый словарь нейтральных слов
+        const wordDictionary = [
+            "компьютер", "человек", "подушка", "солнце", "окно", "книга", "стол", "стул",
+            "телефон", "кошка", "собака", "дерево", "цветок", "машина", "дом", "город",
+            "река", "гора", "море", "небо", "звезда", "луна", "птица", "рыба",
+            "хлеб", "вода", "молоко", "яблоко", "банан", "апельсин", "помидор", "огурец",
+            "школа", "учитель", "ученик", "друг", "семья", "работа", "отдых", "спорт",
+            "музыка", "фильм", "игра", "время", "число", "буква", "слово", "предмет",
+            "утро", "день", "вечер", "ночь", "зима", "весна", "лето", "осень",
+            "дорога", "улица", "площадь", "парк", "лес", "поле", "сад", "огород",
+            "ручка", "карандаш", "тетрадь", "альбом", "краска", "кисть", "ножницы", "клей",
+            "часы", "зеркало", "полотенце", "мыло", "шампунь", "расческа", "зубы", "щетка",
+            "кофе", "чай", "сахар", "соль", "перец", "масло", "сыр", "колбаса",
+            "поезд", "самолет", "корабль", "автобус", "трамвай", "метро", "такси", "велосипед"
+        ];
+
+        let currentLevel = 1;
+        let currentWords = [];
+        let gameState = 'waiting'; // waiting, showing, guessing
+        let timerValue = 5;
+        let timerInterval = null;
+
+        const levelElement = document.getElementById('level');
+        const cardCountElement = document.getElementById('cardCount');
+        const cardsContainer = document.getElementById('cardsContainer');
+        const messageElement = document.getElementById('message');
+        const timerElement = document.getElementById('timer');
+
+        // Загрузка уровня из IndexedDB
+        async function loadGame() {
+            try {
+                const db = await openDB();
+                const level = await getFromDB(db, 'memoryGame', 'level');
+                if (level !== undefined) {
+                    currentLevel = level;
+                    updateUI();
+                }
+            } catch (error) {
+                console.log('Не удалось загрузить прогресс:', error);
+            }
+        }
+
+        // Сохранение уровня в IndexedDB
+        async function saveGame() {
+            try {
+                const db = await openDB();
+                await saveToDB(db, 'memoryGame', 'level', currentLevel);
+            } catch (error) {
+                console.log('Не удалось сохранить прогресс:', error);
+            }
+        }
+
+        // IndexedDB функции
+        function openDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open('LostBoxGames', 1);
+                
+                request.onerror = () => reject(request.error);
+                request.onsuccess = () => resolve(request.result);
+                
+                request.onupgradeneeded = (event) => {
+                    const db = event.target.result;
+                    if (!db.objectStoreNames.contains('gameData')) {
+                        db.createObjectStore('gameData');
+                    }
+                };
+            });
+        }
+
+        function saveToDB(db, storeName, key, value) {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([storeName], 'readwrite');
+                const store = transaction.objectStore(storeName);
+                const request = store.put(value, key);
+                
+                request.onerror = () => reject(request.error);
+                request.onsuccess = () => resolve(request.result);
+            });
+        }
+
+        function getFromDB(db, storeName, key) {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([storeName], 'readonly');
+                const store = transaction.objectStore(storeName);
+                const request = store.get(key);
+                
+                request.onerror = () => reject(request.error);
+                request.onsuccess = () => resolve(request.result);
+            });
+        }
+
+        // Запуск уровня
+        function startLevel() {
+            if (gameState !== 'waiting') return;
+            
+            gameState = 'showing';
+            generateWords();
+            createCards();
+            startTimer();
+        }
+
+        // Генерация случайных слов
+        function generateWords() {
+            const wordCount = currentLevel + 1; // Начинаем с 2 слов
+            currentWords = [];
+            
+            // Выбираем случайные уникальные слова
+            const shuffled = [...wordDictionary].sort(() => 0.5 - Math.random());
+            currentWords = shuffled.slice(0, wordCount);
+        }
+
+        // Создание карточек
+        function createCards() {
+            cardsContainer.innerHTML = '';
+            const columns = Math.min(currentWords.length, 4);
+            cardsContainer.style.gridTemplateColumns = `repeat(${columns}, 1fr)`;
+            
+            currentWords.forEach((word, index) => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.dataset.index = index;
+                card.dataset.word = word;
+                
+                // Слово
+                const wordElement = document.createElement('div');
+                wordElement.className = 'card-word';
+                wordElement.textContent = word;
+                
+                // Input для ввода
+                const inputElement = document.createElement('input');
+                inputElement.type = 'text';
+                inputElement.className = 'card-input';
+                inputElement.placeholder = 'Введите слово...';
+                inputElement.dataset.index = index;
+                
+                // Кнопка проверки
+                const checkButton = document.createElement('button');
+                checkButton.className = 'check-btn';
+                checkButton.textContent = '✅ Проверить';
+                checkButton.onclick = () => checkAnswer(index);
+                
+                card.appendChild(wordElement);
+                card.appendChild(inputElement);
+                card.appendChild(checkButton);
+                cardsContainer.appendChild(card);
+            });
+        }
+
+        // Таймер показа карточек
+        function startTimer() {
+            timerValue = 5;
+            timerElement.textContent = timerValue;
+            
+            timerInterval = setInterval(() => {
+                timerValue--;
+                timerElement.textContent = timerValue;
+                
+                if (timerValue <= 0) {
+                    clearInterval(timerInterval);
+                    hideCards();
+                }
+            }, 1000);
+        }
+
+        // Скрыть карточки
+        function hideCards() {
+            gameState = 'guessing';
+            const cards = document.querySelectorAll('.card');
+            cards.forEach(card => {
+                card.classList.add('hidden');
+                // Фокусируемся на первом input
+                const firstInput = card.querySelector('.card-input');
+                if (firstInput) {
+                    firstInput.focus();
+                }
+            });
+            
+            timerElement.textContent = 'Вводите слова!';
+        }
+
+        // Проверка ответа для конкретной карточки
+        function checkAnswer(cardIndex) {
+            const card = document.querySelector(`.card[data-index="${cardIndex}"]`);
+            const input = card.querySelector('.card-input');
+            const userAnswer = input.value.trim().toLowerCase();
+            const correctWord = card.dataset.word.toLowerCase();
+            
+            if (userAnswer === correctWord) {
+                card.style.background = '#44ff44';
+                input.disabled = true;
+                showMessage(`Карточка ${cardIndex + 1}: Правильно! ✅`, 'success');
+                
+                // Проверяем, все ли карточки угаданы
+                checkAllCardsGuessed();
+            } else {
+                card.style.background = '#ff4444';
+                showMessage(`Карточка ${cardIndex + 1}: Неправильно! ❌`, 'error');
+                input.focus();
+            }
+        }
+
+        // Проверка, все ли карточки угаданы
+        function checkAllCardsGuessed() {
+            const inputs = document.querySelectorAll('.card-input');
+            const allGuessed = Array.from(inputs).every(input => input.disabled);
+            
+            if (allGuessed) {
+                showMessage('Все карточки угаданы! Уровень пройден! 🎉', 'success');
+                setTimeout(() => {
+                    nextLevel();
+                }, 2000);
+            }
+        }
+
+        // Enter для проверки ответа
+        function setupInputListeners() {
+            const inputs = document.querySelectorAll('.card-input');
+            inputs.forEach(input => {
+                input.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        const cardIndex = parseInt(input.dataset.index);
+                        checkAnswer(cardIndex);
+                    }
+                });
+            });
+        }
+
+        // Следующий уровень
+        function nextLevel() {
+            currentLevel++;
+            gameState = 'waiting';
+            updateUI();
+            saveGame();
+            showMessage(`Уровень ${currentLevel}!`, 'success');
+        }
+
+        // Сброс игры
+        async function resetGame() {
+            currentLevel = 1;
+            gameState = 'waiting';
+            clearInterval(timerInterval);
+            updateUI();
+            
+            try {
+                const db = await openDB();
+                await saveToDB(db, 'memoryGame', 'level', 1);
+            } catch (error) {
+                console.log('Не удалось сбросить прогресс:', error);
+            }
+            
+            showMessage('Игра сброшена!', 'success');
+        }
+
+        // Обновление интерфейса
+        function updateUI() {
+            levelElement.textContent = currentLevel;
+            cardCountElement.textContent = currentLevel + 1;
+            cardsContainer.innerHTML = '';
+            timerElement.textContent = '5';
+        }
+
+        // Показать сообщение
+        function showMessage(text, type) {
+            messageElement.textContent = text;
+            messageElement.className = `message show ${type}`;
+        }
+
+        // Инициализация при загрузке
+        document.addEventListener('DOMContentLoaded', () => {
+            loadGame();
+            updateUI();
+        });
+    </script>
+</body>
+</html>
