@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale-1.0">
+<meta name="description" content="Склейка фото от LostBox: Выберите несколько фото, и они в горизонтальном порядке сольются в один!" />
+<meta name="keywords" content="слияние, фото, редакторы, склейка">
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" sizes="256x256" href="https://lostbox1000.neocities.org/favicon.png" />
+    <title>Горизонтальная склейка фото</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .plus-btn {
+            width: 60px;
+            height: 60px;
+            border: 2px dashed #ccc;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 30px;
+            cursor: pointer;
+            margin: 20px auto;
+        }
+        
+        .plus-btn:hover {
+            border-color: #666;
+        }
+        
+        #file-input {
+            display: none;
+        }
+        
+        .preview-container {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+            overflow-x: auto;
+            padding: 10px;
+            border: 1px solid #ddd;
+            min-height: 120px;
+        }
+        
+        .preview-item {
+            position: relative;
+            border: 1px solid #ccc;
+            flex-shrink: 0;
+        }
+        
+        .preview-item img {
+            height: 100px;
+            display: block;
+        }
+        
+        .preview-number {
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 12px;
+        }
+        
+        #download-btn {
+            padding: 10px 20px;
+            background: #007cba;
+            color: white;
+            border: none;
+            cursor: pointer;
+            margin: 20px 0;
+        }
+        
+        #download-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .counter {
+            margin: 10px 0;
+        }
+        
+        .status {
+            margin: 10px 0;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <h1>Горизонтальная склейка фото</h1>
+    <h6>Примечание: некоторые галереи длинное фото могут пометить повреждённым.</h6>
+    
+    <div class="plus-btn" id="plus-btn">+</div>
+    <input type="file" id="file-input" accept="image/*" multiple>
+    
+    <div class="counter">Изображений выбрано: <span id="count">0</span></div>
+    <div class="status" id="status"></div>
+    
+    <div class="preview-container" id="preview-container"></div>
+    
+    <button id="download-btn" disabled>Скачать PNG</button>
+
+    <script>
+        const fileInput = document.getElementById('file-input');
+        const plusBtn = document.getElementById('plus-btn');
+        const previewContainer = document.getElementById('preview-container');
+        const downloadBtn = document.getElementById('download-btn');
+        const counter = document.getElementById('count');
+        const status = document.getElementById('status');
+        
+        const images = [];
+        let processing = false;
+        
+        plusBtn.addEventListener('click', () => {
+            if (!processing) fileInput.click();
+        });
+        
+        fileInput.addEventListener('change', handleFileSelect);
+        downloadBtn.addEventListener('click', mergeAndDownload);
+        
+        function handleFileSelect(e) {
+            if (processing) return;
+            
+            const files = Array.from(e.target.files);
+            if (files.length === 0) return;
+            
+            const imageFiles = files.filter(file => file.type.match('image.*'));
+            
+            if (imageFiles.length === 0) {
+                status.textContent = "Пожалуйста, выбирайте только изображения!";
+                return;
+            }
+            
+            processing = true;
+            status.textContent = "Обработка выбранных изображений...";
+            
+            const startIndex = images.length;
+            
+            const promises = imageFiles.map((file, index) => {
+                return new Promise((resolve) => {
+                    const reader = new FileReader();
+                    
+                    reader.onload = function(event) {
+                        resolve({
+                            src: event.target.result,
+                            file: file,
+                            originalIndex: startIndex + index
+                        });
+                    };
+                    
+                    reader.readAsDataURL(file);
+                });
+            });
+            
+            Promise.all(promises).then(results => {
+                results.forEach(result => {
+                    images.push(result);
+                });
+                
+                results.forEach((result, i) => {
+                    createPreview(result, startIndex + i + 1);
+                });
+                
+                counter.textContent = images.length;
+                downloadBtn.disabled = false;
+                processing = false;
+                status.textContent = `Успешно загружено ${imageFiles.length} изображений!`;
+                
+                previewContainer.scrollLeft = previewContainer.scrollWidth;
+            });
+            
+            fileInput.value = '';
+        }
+        
+        function createPreview(imgData, index) {
+            const container = document.createElement('div');
+            container.className = 'preview-item';
+            container.dataset.index = index - 1;
+            
+            const img = document.createElement('img');
+            img.src = imgData.src;
+            img.alt = `Изображение ${index}`;
+            
+            const numberBadge = document.createElement('div');
+            numberBadge.className = 'preview-number';
+            numberBadge.textContent = index;
+            
+            container.appendChild(img);
+            container.appendChild(numberBadge);
+            previewContainer.appendChild(container);
+        }
+        
+        function mergeAndDownload() {
+            if (images.length === 0 || processing) return;
+            
+            processing = true;
+            status.textContent = "Начинаю склейку изображений...";
+            downloadBtn.textContent = 'Склейка...';
+            downloadBtn.disabled = true;
+            
+            const loadPromises = images.map(imgData => {
+                return new Promise((resolve) => {
+                    const img = new Image();
+                    img.onload = () => resolve(img);
+                    img.src = imgData.src;
+                });
+            });
+            
+            Promise.all(loadPromises).then(loadedImages => {
+                status.textContent = "Изображения загружены, начинаю склейку...";
+                
+                let totalWidth = 0;
+                let maxHeight = 0;
+                
+                loadedImages.forEach(img => {
+                    totalWidth += img.width;
+                    if (img.height > maxHeight) maxHeight = img.height;
+                });
+                
+                const canvas = document.createElement('canvas');
+                canvas.width = totalWidth;
+                canvas.height = maxHeight;
+                const ctx = canvas.getContext('2d');
+                
+                ctx.fillStyle = 'transparent';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                let currentX = 0;
+                loadedImages.forEach(img => {
+                    ctx.drawImage(img, currentX, 0, img.width, img.height);
+                    currentX += img.width;
+                });
+                
+                status.textContent = "Склейка завершена, начинаю сохранение...";
+                
+                setTimeout(() => {
+                    const link = document.createElement('a');
+                    link.download = `склейка-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.png`;
+                    link.href = canvas.toDataURL('image/png');
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    
+                    downloadBtn.textContent = 'Скачать PNG';
+                    downloadBtn.disabled = false;
+                    processing = false;
+                    status.textContent = `Склейка успешно сохранена как ${link.download}`;
+                }, 500);
+            }).catch(error => {
+                console.error('Ошибка склейки:', error);
+                status.textContent = 'Ошибка при склейке изображений!';
+                downloadBtn.textContent = 'Скачать PNG';
+                downloadBtn.disabled = false;
+                processing = false;
+            });
+        }
+    </script>
+</body>
+</html>

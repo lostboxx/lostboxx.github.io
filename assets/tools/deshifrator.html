@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="robots" content="noindex, follow"> 
+  <title>Расшифровка каракулей</title>
+  <style>
+    body {
+      background: #121212;
+      color: #eee;
+      font-family: monospace;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+    select, textarea, button {
+      font-size: 1rem;
+      margin: 10px;
+      padding: 10px;
+      border-radius: 6px;
+      border: none;
+    }
+    textarea {
+      width: 90%;
+      max-width: 600px;
+      height: 100px;
+      resize: vertical;
+      background: #1e1e1e;
+      color: #eee;
+    }
+    button {
+      background: #444;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #666;
+    }
+  </style>
+</head>
+<body>
+  <h2>🔍 расшифровка каракулей</h2>
+  
+  <label for="encoding">исходная кодировка (в какой был текст):</label> 
+  <select id="encoding">
+    <option value="windows-1251">Windows-1251 (кириллица)</option>
+    <option value="windows-1252">Windows-1252 (латиница)</option>
+    <option value="koi8-r">KOI8-R (русский)</option>
+    <option value="koi8-u">KOI8-U (украинский)</option>
+    <option value="iso-8859-1">ISO-8859-1 (латиница)</option>
+    <option value="iso-8859-5">ISO-8859-5 (кириллица)</option>
+    <option value="maccyrillic">MacCyrillic</option>
+    <option value="ibm866">IBM866</option>
+    <option value="x-mac-cyrillic">x-mac-cyrillic</option>
+  </select>
+
+  <textarea id="input" placeholder="вставьте каракули сюда..."></textarea>
+  <button id="decode">расшифровать</button>
+
+  <script>
+    const input = document.getElementById('input');
+    const encodingSelect = document.getElementById('encoding');
+    const decodeBtn = document.getElementById('decode');
+
+    let isDecoded = false;
+
+    decodeBtn.onclick = () => {
+      if (isDecoded) {
+        input.value = '';
+        decodeBtn.textContent = 'расшифровать';
+        encodingSelect.disabled = false;
+        isDecoded = false;
+        return;
+      }
+
+      const correctEncoding = encodingSelect.value;
+      const garbledText = input.value;
+
+      try {
+        // Получаем байты из искаженного текста, предполагая что он был прочитан как UTF-8
+        const encoder = new TextEncoder();
+        const bytes = encoder.encode(garbledText);
+        
+        // Декодируем эти байты с использованием правильной кодировки
+        const decoder = new TextDecoder(correctEncoding);
+        const decoded = decoder.decode(bytes);
+
+        input.value = decoded;
+        decodeBtn.textContent = 'сбросить';
+        encodingSelect.disabled = true;
+        isDecoded = true;
+      } catch (e) {
+        input.value = '❌ ошибка расшифровки: ' + e.message;
+      }
+    };
+  </script>
+</body>
+</html>

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+    <meta name="robots" content="noindex, follow">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>📦 Массовый BASE64</title>
+  <style>
+    body {
+      background: #1588;
+      font-family: sans-serif;
+      padding: 20px;
+      text-align: center;
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: start;
+      align-items: center;
+    }
+    h1 {
+      margin-bottom: 6px;
+    }
+    #desc {
+      font-size: 14px;
+      margin-bottom: 20px;
+      color: #333;
+      max-width: 320px;
+    }
+    #plus-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    #plus-label {
+      width: 80px;
+      height: 80px;
+      font-size: 40px;
+      line-height: 80px;
+      border: 2px dashed #777;
+      background: #fff;
+      border-radius: 12px;
+      color: #666;
+      cursor: pointer;
+      user-select: none;
+    }
+    #count {
+      font-size: 24px;
+      color: #000;
+      min-width: 40px;
+    }
+    input[type="file"] {
+      display: none;
+    }
+    #generate-btn {
+      margin-top: 12px;
+      padding: 10px 18px;
+      font-size: 16px;
+      font-weight: bold;
+      background: #1588;
+      color: #000;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      user-select: none;
+      transition: background-color 0.2s ease;
+    }
+    #generate-btn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+  <h1>📦 Массовый BASE64</h1>
+  <div id="desc">Вставьте фото, чтобы создать .txt-файл с base64</div>
+
+  <div id="plus-container">
+    <label id="plus-label" for="file-input" tabindex="0" aria-label="Добавить файлы">＋</label>
+    <div id="count">0</div>
+  </div>
+
+  <input type="file" id="file-input" multiple accept="image/*" />
+
+  <button id="generate-btn" disabled>СОЗДАТЬ БАЗ64 В ТКСТ</button>
+
+  <script>
+    const fileInput = document.getElementById('file-input');
+    const countDisplay = document.getElementById('count');
+    const generateBtn = document.getElementById('generate-btn');
+    let files = [];
+
+    function updateUI() {
+      countDisplay.textContent = files.length;
+      generateBtn.disabled = files.length === 0;
+    }
+
+    function toBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject('Ошибка чтения файла ' + file.name);
+        reader.readAsDataURL(file);
+      });
+    }
+
+    fileInput.addEventListener('change', () => {
+      files = Array.from(fileInput.files);
+      updateUI();
+    });
+
+    generateBtn.addEventListener('click', async () => {
+      if (files.length === 0) {
+        alert('Вы не вставили ни одного файла!');
+        return;
+      }
+      generateBtn.disabled = true;
+      generateBtn.textContent = 'ГЕНЕРАЦИЯ...';
+
+      try {
+        let result = '';
+        for (const file of files) {
+          const base64 = await toBase64(file);
+          result += `=== ${file.name} ===\n${base64}\n\n`;
+        }
+
+        const blob = new Blob([result], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'massbase64.txt';
+        a.click();
+        URL.revokeObjectURL(url);
+      } catch (e) {
+        alert('Ошибка при генерации: ' + e);
+      } finally {
+        generateBtn.disabled = false;
+        generateBtn.textContent = 'СОЗДАТЬ БАЗ64 В ТКСТ';
+      }
+    });
+
+    updateUI();
+  </script>
+</body>
+</html>

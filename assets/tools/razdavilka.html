@@ -1,0 +1,288 @@
+<!DOCTYPE html>  
+<html lang="ru">  
+<head>  
+  <meta charset="UTF-8">  
+  <meta name="robots" content="noindex, nofollow">  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">    
+  <title>🫨РАЗДАВИЛКА</title>  
+  <style>  
+    body {  
+      background: #111;  
+      color: #eee;  
+      font-family: sans-serif;  
+      margin: 0;  
+      padding: 10px;  
+      display: flex;  
+      flex-direction: column;  
+      align-items: center;  
+    }  
+    h1 {  
+      margin-bottom: 10px;  
+      font-size: 20px;  
+    }  
+    #container {  
+      width: 100%;  
+      max-width: 360px;  
+      display: flex;  
+      flex-direction: column;  
+      align-items: center;  
+    }  
+    #preview-wrapper {  
+      width: 100%;  
+      overflow: auto;  
+      max-height: 80vh;  
+      display: flex;  
+      justify-content: center;  
+    }  
+    #preview-container {  
+      position: relative;  
+      width: 100%;  
+      max-width: 300px;  
+      border: 2px dashed #555;  
+      display: flex;  
+      align-items: center;  
+      justify-content: center;  
+      cursor: pointer;  
+      background: #222;  
+      overflow: hidden;  
+    }  
+    #preview-canvas {  
+      display: none;  
+      background: #000;  
+      width: 100%;  
+      height: auto;  
+    }  
+    #placeholder-text {  
+      text-align: center;  
+      color: #777;  
+      padding: 10px;  
+      position: absolute;  
+      font-size: 14px;  
+      pointer-events: none;  
+    }  
+    .controls {  
+      margin-top: 8px;  
+      display: flex;  
+      align-items: center;  
+      width: 100%;  
+      position: relative;  
+    }  
+    .spacer {  
+      width: 60px; /* Примерная ширина .watermark-control для баланса */  
+      flex-shrink: 0;  
+    }  
+    .buttons {  
+      display: flex;  
+      gap: 8px;  
+      position: absolute;  
+      left: 50%;  
+      transform: translateX(-50%);  
+    }  
+    button {  
+      padding: 6px 10px;  
+      background: #0cf;  
+      border: none;  
+      border-radius: 6px;  
+      color: #000;  
+      font-weight: bold;  
+      cursor: pointer;  
+      font-size: 14px;  
+    }  
+    button.active {  
+      background: #0fa;  
+    }  
+    #note-insert {  
+      margin-top: 6px;  
+      font-size: 12px;  
+      color: #ccc;  
+      text-align: center;  
+    }  
+    #download-btn {  
+      margin-top: 8px;  
+      padding: 8px 12px;  
+      background: #0cf;  
+      border: none;  
+      border-radius: 6px;  
+      color: #000;  
+      font-weight: bold;  
+      cursor: pointer;  
+      font-size: 14px;  
+    }  
+    input[type="file"] {  
+      display: none;  
+    }  
+    .watermark-control {  
+      display: flex;  
+      flex-direction: column;  
+      align-items: center;  
+      gap: 2px;  
+      margin-left: auto;  
+    }  
+    .watermark-control input[type="checkbox"] {  
+      width: 14px;  
+      height: 14px;  
+      cursor: pointer;  
+    }  
+    .watermark-control span {  
+      font-size: 10px;  
+      color: #ccc;  
+      text-align: center;  
+    }  
+  </style>  
+</head>  
+<body>  
+  <h1>🫨РАЗДАВИЛКА</h1>  
+  <div id="container">  
+    <div id="preview-wrapper">  
+      <label id="preview-container">  
+        <canvas id="preview-canvas"></canvas>  
+        <div id="placeholder-text">Нажмите, чтобы вставить фото</div>  
+        <input type="file" id="file-input" accept="image/*">  
+      </label>  
+    </div>  
+    <div class="controls">  
+      <div class="spacer"></div>  
+      <div class="buttons">  
+        <button id="ratio-1-1" class="active">1:1</button>  
+        <button id="ratio-9-16">9:16</button>  
+        <button id="ratio-16-9">16:9</button>  
+      </div>  
+      <div class="watermark-control">  
+        <input type="checkbox" id="watermark-toggle">  
+        <span>Водяной знак</span>  
+      </div>  
+    </div>  
+    <div id="note-insert">С первого раза фото не вставляется, просим 2 раза вставить фото</div>  
+    <button id="download-btn">СКАЧАТЬ</button>  
+  </div>  
+
+  <script>  
+    const fileInput = document.getElementById('file-input');  
+    const previewContainer = document.getElementById('preview-container');  
+    const placeholderText = document.getElementById('placeholder-text');  
+    const canvas = document.getElementById('preview-canvas');  
+    const ctx = canvas.getContext('2d');  
+    const btn11 = document.getElementById('ratio-1-1');  
+    const btn916 = document.getElementById('ratio-9-16');  
+    const btn169 = document.getElementById('ratio-16-9');  
+    const downloadBtn = document.getElementById('download-btn');  
+    const watermarkToggle = document.getElementById('watermark-toggle');  
+
+    let img = null;  
+    let currentRatio = '1:1';  
+
+    btn11.addEventListener('click', () => setRatio('1:1'));  
+    btn916.addEventListener('click', () => setRatio('9:16'));  
+    btn169.addEventListener('click', () => setRatio('16:9'));  
+    watermarkToggle.addEventListener('change', () => {  
+      if (img) drawPreview();  
+    });  
+
+    function setRatio(ratio) {  
+      currentRatio = ratio;  
+      btn11.classList.toggle('active', ratio === '1:1');  
+      btn916.classList.toggle('active', ratio === '9:16');  
+      btn169.classList.toggle('active', ratio === '16:9');  
+      updatePreviewContainerSize();  
+      if (img) {  
+        drawPreview();  
+      }  
+    }  
+
+    previewContainer.addEventListener('click', () => {  
+      fileInput.value = '';  
+      fileInput.click();  
+    });  
+
+    fileInput.addEventListener('change', (e) => {  
+      const file = e.target.files[0];  
+      if (!file) return;  
+      const reader = new FileReader();  
+      reader.onload = () => {  
+        const image = new Image();  
+        image.onload = () => {  
+          img = image;  
+          placeholderText.style.display = 'none';  
+          drawPreview();  
+        };  
+        image.src = reader.result;  
+      };  
+      reader.readAsDataURL(file);  
+    });  
+
+    function updatePreviewContainerSize() {  
+      const containerWidth = Math.min(previewContainer.parentElement.clientWidth, 300);  
+      let width = containerWidth;  
+      let height;  
+      if (currentRatio === '1:1') {  
+        height = width;  
+      } else if (currentRatio === '9:16') {  
+        height = width * 16 / 9;  
+      } else if (currentRatio === '16:9') {  
+        height = width * 9 / 16;  
+      }  
+      previewContainer.style.width = width + 'px';  
+      previewContainer.style.height = height + 'px';  
+      canvas.width = width;  
+      canvas.height = height;  
+      canvas.style.display = img ? 'block' : 'none';  
+    }  
+
+    function drawPreview() {  
+      updatePreviewContainerSize();  
+      ctx.clearRect(0, 0, canvas.width, canvas.height);  
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);  
+      if (watermarkToggle.checked) {  
+        const text = "Подвержено давлению от BANKA.OS";  
+        const fontSize = Math.max(10, Math.round(canvas.width / 30));  
+        ctx.fillStyle = "rgba(0, 0, 0, 0.5)";  
+        ctx.font = fontSize + "px sans-serif";  
+        const padding = 4;  
+        const rectHeight = fontSize + padding * 2;  
+        ctx.fillRect(0, canvas.height - rectHeight, canvas.width, rectHeight);  
+        ctx.fillStyle = "#fff";  
+        ctx.textBaseline = "middle";  
+        ctx.textAlign = "center";  
+        ctx.fillText(text, canvas.width / 2, canvas.height - rectHeight / 2);  
+      }  
+    }  
+
+    downloadBtn.addEventListener('click', () => {  
+      if (!img) {  
+        alert('Сначала вставьте фото');  
+        return;  
+      }  
+      const tempCanvas = document.createElement('canvas');  
+      tempCanvas.width = canvas.width;  
+      tempCanvas.height = canvas.height;  
+      const tempCtx = tempCanvas.getContext('2d');  
+      tempCtx.drawImage(img, 0, 0, tempCanvas.width, tempCanvas.height);  
+      if (watermarkToggle.checked) {  
+        const text = "Подвержено давлению от BANKA.OS";  
+        const fontSize = Math.max(10, Math.round(tempCanvas.width / 30));  
+        tempCtx.fillStyle = "rgba(0, 0, 0, 0.5)";  
+        tempCtx.font = fontSize + "px sans-serif";  
+        const padding = 4;  
+        const rectHeight = fontSize + padding * 2;  
+        tempCtx.fillRect(0, tempCanvas.height - rectHeight, tempCanvas.width, rectHeight);  
+        tempCtx.fillStyle = "#fff";  
+        tempCtx.textBaseline = "middle";  
+        tempCtx.textAlign = "center";  
+        tempCtx.fillText(text, tempCanvas.width / 2, tempCanvas.height - rectHeight / 2);  
+      }  
+      const link = document.createElement('a');  
+      link.download = 'razdavilka.jpg';  
+      link.href = tempCanvas.toDataURL('image/jpeg');  
+      link.click();  
+    });  
+
+    window.addEventListener('load', () => {  
+      updatePreviewContainerSize();  
+    });  
+    window.addEventListener('resize', () => {  
+      if (img) drawPreview();  
+      else updatePreviewContainerSize();  
+    });  
+  </script>  
+</body>  
+</html>

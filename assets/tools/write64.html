@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="robots" content="noindex, follow">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Писатель</title>
+  <style>
+    body {
+      background: #87CEEB;
+      color: #000;
+      font-family: sans-serif;
+      margin: 0;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      box-sizing: border-box;
+    }
+    h1 {
+      margin: 10px 0 5px;
+      font-size: 20px;
+      text-align: center;
+    }
+    p.subtitle {
+      font-size: 13px;
+      margin-bottom: 10px;
+      text-align: center;
+      color: #222;
+      max-width: 90%;
+    }
+    #uploader {
+      position: relative;
+      width: 80vw; max-width: 240px;
+      height: 80vw; max-height: 240px;
+      border: 2px dashed #555;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; background: #fff; margin-bottom: 10px;
+      user-select: none; border-radius: 12px; overflow: hidden;
+    }
+    #uploader.placeholder::before {
+      content: "+";
+      font-size: 48px; color: #555;
+    }
+    #uploader img, #uploader video, #uploader audio {
+      width: 100%; height: 100%; object-fit: contain; display: block;
+    }
+    input[type="file"] {
+      display: none;
+    }
+    #download-btn {
+      margin-top: 10px; padding: 8px 16px;
+      background: #0cf; color: #000; border: none; border-radius: 6px;
+      cursor: pointer; font-size: 14px; font-weight: bold;
+      display: none;
+    }
+    #file-info {
+      font-size: 12px;
+      margin-top: 5px;
+      color: #444;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <h1>Писатель</h1>
+  <p class="subtitle">Загрузите фото, видео или аудио для конвертации в Base64</p>  
+  <div id="uploader" class="placeholder" tabindex="0"></div>
+  <input type="file" id="file-input" accept="image/*,video/*,audio/*">
+  <div id="file-info"></div>
+  <button id="download-btn">Скачать Base64</button>  
+
+  <script>
+    const uploader = document.getElementById('uploader');
+    const fileInput = document.getElementById('file-input');
+    const downloadBtn = document.getElementById('download-btn');
+    const fileInfo = document.getElementById('file-info');
+    let lastData = '';
+
+    // Словарь MIME типов
+    const extensionTypes = {
+      // Изображения
+      'jpg': 'image/jpeg',
+      'jpeg': 'image/jpeg',
+      'png': 'image/png',
+      'gif': 'image/gif',
+      'bmp': 'image/bmp',
+      'webp': 'image/webp',
+      'svg': 'image/svg+xml',
+      'ico': 'image/x-icon',
+      
+      // Аудио
+      'mp3': 'audio/mpeg',
+      'wav': 'audio/wav',
+      'ogg': 'audio/ogg',
+      'aac': 'audio/aac',
+      'flac': 'audio/flac',
+      'm4a': 'audio/mp4',
+      
+      // Видео
+      'mp4': 'video/mp4',
+      'avi': 'video/x-msvideo',
+      'mov': 'video/quicktime',
+      'webm': 'video/webm',
+      'mkv': 'video/x-matroska',
+      'flv': 'video/x-flv',
+      'wmv': 'video/x-ms-wmv',
+      'm4v': 'video/mp4',
+      '3gp': 'video/3gpp'
+    };
+
+    uploader.addEventListener('click', () => fileInput.click());
+
+    fileInput.addEventListener('change', e => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = () => processWrite(reader.result, file);
+      reader.readAsDataURL(file);
+    });
+
+    downloadBtn.addEventListener('click', () => {
+      if (!lastData) return;
+      
+      const blob = new Blob([lastData], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'base64.txt';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    });
+
+    function processWrite(dataURL, file) {
+      // Получаем расширение файла
+      const fileName = file.name.toLowerCase();
+      const extension = fileName.split('.').pop();
+      
+      // Получаем MIME тип из словаря
+      const mimeType = extensionTypes[extension];
+      const mediaType = mimeType ? mimeType.split('/')[0] : 'unknown';
+      
+      // Обновляем информацию о файле
+      fileInfo.textContent = `Тип: ${mediaType} | Расширение: ${extension}`;
+
+      // Сохраняем данные
+      lastData = dataURL;
+
+      // Отображаем медиа в зависимости от типа
+      uploader.innerHTML = '';
+      uploader.classList.remove('placeholder');
+
+      if (mediaType === 'image') {
+        const img = new Image();
+        img.onload = () => {
+          uploader.appendChild(img);
+          downloadBtn.style.display = 'block';
+        };
+        img.src = dataURL;
+      } else if (mediaType === 'audio') {
+        const audio = document.createElement('audio');
+        audio.controls = true;
+        audio.onloadeddata = () => {
+          uploader.appendChild(audio);
+          downloadBtn.style.display = 'block';
+        };
+        audio.onerror = () => {
+          uploader.textContent = 'Аудио файл';
+          downloadBtn.style.display = 'block';
+        };
+        audio.src = dataURL;
+      } else if (mediaType === 'video') {
+        const video = document.createElement('video');
+        video.controls = true;
+        video.onloadeddata = () => {
+          uploader.appendChild(video);
+          downloadBtn.style.display = 'block';
+        };
+        video.onerror = () => {
+          uploader.textContent = 'Видео файл';
+          downloadBtn.style.display = 'block';
+        };
+        video.src = dataURL;
+      } else {
+        // Для неизвестных типов просто сохраняем данные
+        uploader.textContent = 'Файл загружен';
+        downloadBtn.style.display = 'block';
+      }
+    }
+  </script>
+</body>
+</html>

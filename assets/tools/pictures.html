@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+  <title>Фото</title>
+  <style>
+    body {
+      margin: 0;
+      background-color: #87CEFA;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 90vh;
+      padding: 10px;
+      box-sizing: border-box;
+    }
+
+    #square {
+      width: 60vmin;
+      height: 60vmin;
+      max-width: 400px;
+      max-height: 400px;
+      background-color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 15px;
+      overflow: hidden;
+    }
+
+    #square img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    button {
+      font-size: 1.2em;
+      padding: 8px 16px;
+      border: none;
+      border-radius: 8px;
+      background-color: white;
+      cursor: pointer;
+      margin: 5px;
+    }
+
+    #downloadBtn {
+      background-color: #8888;
+    }
+    
+    #rulesBtn {
+      position: fixed;
+      top: 8px;
+      right: 8px;
+      font-size: 1.4em;
+      background: white;
+      border: none;
+      border-radius: 50%;
+      width: 35px;
+      height: 35px;
+      cursor: pointer;
+      box-shadow: 0 0 8px rgba(0,0,0,0.3);
+      z-index: 1000;
+    }
+
+    #rulesBox {
+      position: fixed;
+      top: 50px;
+      right: 8px;
+      background: white;
+      padding: 10px;
+      border-radius: 8px;
+      max-width: 250px;
+      box-shadow: 0 0 12px rgba(0,0,0,0.4);
+      display: none;
+      z-index: 1000;
+      font-size: 0.9em;
+      line-height: 1.3em;
+    }
+
+    #notice {
+      position: absolute;
+      top: 8%;
+      background: rgba(255, 255, 255, 0.9);
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 1em;
+      box-shadow: 0 0 8px rgba(0,0,0,0.2);
+      display: none;
+      z-index: 999;
+    }
+    .marquee {
+  width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+
+.marquee span {
+  display: inline-block;
+  padding-left: 100%;
+  animation: marquee 50s linear infinite;
+}
+
+@keyframes marquee {
+  0%   { transform: translateX(0%); }
+  100% { transform: translateX(-100%); }
+}
+  </style>
+</head>
+<body>
+
+  <div id="notice">Прочитайте правила, это займет несколько секунд. Нажмите ¡</div>
+
+<div class="marquee"><span>Если вы скачали одно фото, то второе может не загрузиться, из-за правил безопасности браузера. Приношу извинения за причиненные неудобства. Чтобы повторно скачать фото, зажмите квадратик, а потом "Скачать изображение", если у вас Chrome браузер.</span></div>
+  
+  <div id="square"></div>
+
+  <button onclick="showRandomImage()">Показать картинку</button>
+  <button id="downloadBtn" onclick="downloadImage()">📥 Скачать фото</button>
+
+  <!-- кнопка и окно с правилами -->
+  <button id="rulesBtn" onclick="toggleRules()">¡</button>
+  <div id="rulesBox">
+    <strong>Правила:</strong><br><br>
+    Эта функция вам показывает различные фото разного типа.<br><br>
+    Их можно поставить на обои, но <b>ни в коем случае не говорить, что фото принадлежит вам</b>,<br>
+    или использовать фото в видео, или плохих целях.<br><br>
+    Фоток довольно много!<br><br>
+    <b>Удачи ;)</b>
+  </div>
+
+
+  <script>
+    let currentImageUrl = null;
+
+    function showRandomImage() {
+      const square = document.getElementById("square");
+      const randomUrl = `https://picsum.photos/800?random=${Math.floor(Math.random() * 10000)}`;
+      
+      // Создаем изображение с crossOrigin
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.onload = function() {
+        square.innerHTML = '';
+        square.appendChild(this);
+        document.getElementById("downloadBtn").style.display = "inline-block";
+      };
+      img.style.width = "100%";
+      img.style.height = "100%";
+      img.style.objectFit = "cover";
+      img.src = randomUrl;
+    }
+
+    let isDownloading = false;
+
+    function downloadImage() {
+      const img = document.querySelector("#square img");
+      if (!img) {
+        alert("Сначала загрузите картинку!");
+        return;
+      }
+
+      if (isDownloading) {
+        return; // Предотвращаем множественные клики
+      }
+
+      isDownloading = true;
+      const btn = document.getElementById("downloadBtn");
+      const originalText = btn.textContent;
+      btn.textContent = "Скачиваю...";
+
+      // Создаем canvas и рисуем именно то, что видит пользователь
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+
+      canvas.width = img.naturalWidth || img.width;
+      canvas.height = img.naturalHeight || img.height;
+
+      try {
+        ctx.drawImage(img, 0, 0);
+        
+        // Конвертируем canvas в blob и скачиваем
+        canvas.toBlob(function(blob) {
+          if (blob) {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `photo_${Date.now()}.jpg`;
+            a.style.display = "none";
+            
+            document.body.appendChild(a);
+            a.click();
+            
+            // Очистка через небольшую задержку
+            setTimeout(() => {
+              document.body.removeChild(a);
+              URL.revokeObjectURL(url);
+            }, 100);
+          }
+          
+          // Восстанавливаем кнопку
+          setTimeout(() => {
+            btn.textContent = originalText;
+            isDownloading = false;
+          }, 500);
+        }, "image/jpeg", 0.9);
+      } catch (error) {
+        alert("Не удалось скачать изображение из-за ограничений браузера");
+        btn.textContent = originalText;
+        isDownloading = false;
+      }
+    }
+
+    function toggleMusic() {
+      const audio = document.getElementById("myAudio");
+      const btn = document.getElementById("musicBtn");
+
+      if (audio.paused) {
+        audio.play();
+        btn.textContent = "🔊 Выключить музыку";
+      } else {
+        audio.pause();
+        btn.textContent = "🔇 Включить музыку";
+      }
+    }
+
+    function toggleRules() {
+      const box = document.getElementById("rulesBox");
+      const btn = document.getElementById("rulesBtn");
+
+      if (box.style.display === "none" || box.style.display === "") {
+        box.style.display = "block";
+        btn.textContent = "×";
+      } else {
+        box.style.display = "none";
+        btn.textContent = "¡";
+      }
+    }
+
+    // показать подсказку при первом заходе
+    window.addEventListener("load", () => {
+      const wasShown = localStorage.getItem("rulesNoticeShown");
+      if (!wasShown) {
+        const notice = document.getElementById("notice");
+        notice.style.display = "block";
+        setTimeout(() => {
+          notice.style.display = "none";
+          localStorage.setItem("rulesNoticeShown", "true");
+        }, 3000);
+      }
+    });
+  </script>
+
+</body>
+</html>

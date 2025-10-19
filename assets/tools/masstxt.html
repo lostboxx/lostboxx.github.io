@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale-1.0">
+<meta name="description" content="Массовый TXT от LostBox: Выберите несколько текстовых файлов, и они сольются с названиями в один!" />
+<meta name="keywords" content="массовый тхт, слияние, файлы, mass txt, txt">
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" sizes="256x256" href="https://lostbox1000.neocities.org/favicon.png" />
+  <title>Text Merger</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      background: #e0f7ff;
+      font-family: sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .container {
+      text-align: center;
+      max-width: 360px;
+      width: 100%;
+      padding: 20px;
+      background: #ffffff;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    h1 {
+      margin: 0 0 6px;
+      font-size: 24px;
+      color: #1168c2;
+    }
+    #desc {
+      margin: 0 0 20px;
+      font-size: 14px;
+      color: #555;
+    }
+    .controls {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    #file-count {
+      font-size: 20px;
+      width: 24px;
+      text-align: right;
+      color: #1168c2;
+      user-select: none;
+    }
+    #plus-label {
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      width: 48px;
+      height: 48px;
+      background: #00aaff;
+      color: #fff;
+      font-size: 32px;
+      border-radius: 50%;
+      cursor: pointer;
+      transition: background 0.2s;
+      user-select: none;
+    }
+    #plus-label:hover {
+      background: #008ecc;
+    }
+    input[type="file"] {
+      display: none;
+    }
+    .reset-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    #reset-btn {
+      background: none;
+      border: none;
+      padding: 0;
+      cursor: pointer;
+    }
+    .reset-container .icon-circle {
+      width: 36px;
+      height: 36px;
+      background: #f5f5f5;
+      color: #1168c2;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 20px;
+      transition: background 0.2s;
+    }
+    #reset-btn:hover .icon-circle {
+      background: #e0eaff;
+    }
+    .reset-text {
+      margin-top: 4px;
+      font-size: 10px;
+      color: #777;
+      user-select: none;
+    }
+    #download-btn {
+      padding: 10px 24px;
+      font-size: 16px;
+      background: #00aaff;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    #download-btn:disabled {
+      background: #99d9ff;
+      cursor: not-allowed;
+    }
+    #download-btn:not(:disabled):hover {
+      background: #008ecc;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📄 Text Merger</h1>
+    <p id="desc">Выберите в разных папках текстовые файлы и нажмите «Скачать», чтобы объединить их в один файл.</p>
+
+    <div class="controls">
+      <span id="file-count">0</span>
+
+      <label id="plus-label" for="file-input">＋</label>
+      <input
+        type="file"
+        id="file-input"
+        multiple
+        accept=".txt,.html,.css,.js,.json,.md,.xml,.csv,.log,text/*"
+      />
+
+      <div class="reset-container">
+        <button id="reset-btn" title="Сбросить выбор">
+          <div class="icon-circle">🔻</div>
+        </button>
+        <div class="reset-text">Сброс</div>
+      </div>
+    </div>
+
+    <button id="download-btn" disabled>Скачать</button>
+  </div>
+
+  <script>
+    const fileInput   = document.getElementById('file-input');
+    const fileCount   = document.getElementById('file-count');
+    const resetBtn    = document.getElementById('reset-btn');
+    const downloadBtn = document.getElementById('download-btn');
+    let files = [];
+
+    // Обновить интерфейс (количество и кнопка)
+    function updateUI() {
+      fileCount.textContent = files.length;
+      downloadBtn.disabled = files.length === 0;
+    }
+
+    // При выборе файлов
+    fileInput.addEventListener('change', () => {
+      files = Array.from(fileInput.files);
+      updateUI();
+    });
+
+    // Сброс выбора
+    resetBtn.addEventListener('click', () => {
+      files = [];
+      fileInput.value = '';
+      updateUI();
+    });
+
+    // Генерация и скачивание merged файла
+    downloadBtn.addEventListener('click', async () => {
+      if (!files.length) return;
+      downloadBtn.disabled = true;
+
+      let mergedText = '';
+      for (const file of files) {
+        const content = await file.text();
+        mergedText += `-${file.name}-\n${content}\n\n`;
+      }
+
+      const blob = new Blob([mergedText], { type: 'text/plain;charset=utf-8' });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href     = url;
+      a.download = 'together.txt';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      downloadBtn.disabled = false;
+    });
+
+    // Инициализация
+    updateUI();
+  </script>
+</body>
+</html>

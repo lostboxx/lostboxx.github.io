@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="robots" content="noindex, nofollow">
+<title>Создать звук</title>
+<style>
+body { background: #111; color: #eee; font-family: sans-serif; text-align: center; padding: 20px; }
+button { margin: 5px; padding: 10px 15px; font-size: 16px; cursor: pointer; }
+#helpBox, #playerBox, #downloadBox {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #222;
+    border: 2px solid #444;
+    padding: 20px;
+    width: 300px;
+    color: #fff;
+    text-align: left;
+    z-index: 1000;
+}
+#helpBox button.close, #playerBox button.close, #downloadBox button.close { float: right; background: red; color: #fff; border: none; cursor:pointer; }
+textarea { width: 90%; height: 100px; margin-top: 15px; font-size: 20px; }
+progress { width: 60%; margin-right: 10px; vertical-align: middle; }
+span.length { margin-right: 10px; }
+</style>
+</head>
+<body>
+
+<h1>Создать звук</h1>
+<h4>Добро пожаловать в создание звука через смайлики!</h4>
+<button onclick="showHelp()">Подсказки</button>
+
+<div id="helpBox">
+  <button class="close" onclick="closeHelp()">X</button>
+  <h4>Обучение звукам:</h4>
+  <p>💀 ← Страшно громкий</p>
+  <p>🟪 ← Очень громкий</p>
+  <p>🟥 ← Громкий</p>
+  <p>🟧 ← Выше обычного</p>
+  <p>🟨 ← Обычный</p>
+  <p>🟩 ← Ниже обычного</p>
+  <p>🟦 ← Тихий</p>
+  <p>Чтобы создать звук, нужно просто несколько раз подряд ввести определенные смайлики, например:
+🟩🟩🟩🟪🟩🟩🟩
+это будет звук, где посередине резко становится громко. </p>
+</div>
+
+<textarea id="sequence" placeholder="Введите кубики..."></textarea><br>
+<button onclick="playSoundWithUI()">Прослушать</button>
+<button onclick="downloadSound()">Скачать</button>
+
+<div id="playerBox">
+  <button class="close" onclick="closePlayer()">X</button><br><br>
+  <progress id="progressBar" value="0" max="100"></progress>
+  <span class="length" id="timeDisplay">0.0s</span>
+  <button id="playPauseBtn">⏸️</button>
+</div>
+
+<div id="downloadBox">
+  <button class="close" onclick="closeDownloadBox()">X</button>
+  <p>Файл создаётся<span id="dots"></span></p>
+</div>
+
+<script>
+const notes = {
+  "💀": 5000,
+  "🟪": 900,
+  "🟥": 880,
+  "🟧": 660,
+  "🟨": 550,
+  "🟩": 440,
+  "🟦": 330,
+  "⬛": 0
+};
+
+let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+let oscList = [];
+let gainList = [];
+let startTime = 0, isPaused = false, totalDuration = 0;
+let progressInterval;
+
+function showHelp() { document.getElementById('helpBox').style.display = 'block'; }
+function closeHelp() { document.getElementById('helpBox').style.display = 'none'; }
+function closePlayer() { 
+    document.getElementById('playerBox').style.display = 'none'; 
+    stopAllOsc();
+    clearInterval(progressInterval);
+    isPaused = false;
+}
+function closeDownloadBox() {
+    document.getElementById('downloadBox').style.display = 'none'; 
+}
+
+function stopAllOsc() {
+    for (let osc of oscList) osc.stop();
+    oscList = [];
+    gainList = [];
+}
+
+function playSoundWithUI() {
+    const seq = document.getElementById('sequence').value;
+    totalDuration = seq.length * 0.3;
+    startTime = audioCtx.currentTime;
+    isPaused = false;
+
+    document.getElementById('playerBox').style.display = 'block';
+    document.getElementById('playPauseBtn').textContent = '⏸️';
+
+    stopAllOsc();
+    let offset = 0;
+    const baseTime = audioCtx.currentTime;
+
+    for (let char of seq) {
+        const freq = notes[char];
+        const duration = 0.3;
+
+        if (freq > 0) {
+            const osc = audioCtx.createOscillator();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, baseTime + offset);
+
+            const gain = audioCtx.createGain();
+            gain.gain.setValueAtTime(0.3, baseTime + offset);
+
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            osc.start(baseTime + offset);
+            osc.stop(baseTime + offset + duration);
+
+            oscList.push(osc);
+            gainList.push(gain);
+        }
+        offset += duration;
+    }
+
+    // Прогресс и время
+    const progressBar = document.getElementById('progressBar');
+    const timeDisplay = document.getElementById('timeDisplay');
+    progressInterval = setInterval(() => {
+        if (!isPaused) {
+            let elapsed = audioCtx.currentTime - startTime;
+            if (elapsed >= totalDuration) elapsed = totalDuration;
+            progressBar.value = (elapsed / totalDuration) * 100;
+            timeDisplay.textContent = elapsed.toFixed(1) + 's';
+            if (elapsed >= totalDuration) {
+                clearInterval(progressInterval);
+                document.getElementById('playPauseBtn').textContent = '▶️';
+                setTimeout(closePlayer, 5000);
+            }
+        }
+    }, 50);
+
+    // Кнопка паузы/возобновления
+    const playPauseBtn = document.getElementById('playPauseBtn');
+    playPauseBtn.onclick = function() {
+        if (!isPaused) {
+            audioCtx.suspend();
+            this.textContent = '▶️';
+            isPaused = true;
+        } else {
+            audioCtx.resume();
+            this.textContent = '⏸️';
+            isPaused = false;
+        }
+    };
+}
+
+// Скачивание звука
+function downloadSound() {
+  const seq = document.getElementById('sequence').value;
+  if (seq.length === 0) return;
+
+  document.getElementById('downloadBox').style.display = 'block';
+  const dotsEl = document.getElementById('dots');
+  dotsEl.textContent = '.';
+  let dotInterval = setInterval(() => {
+    if (dotsEl.textContent === '.') {
+      dotsEl.textContent = '..';
+    } else if (dotsEl.textContent === '..') {
+      dotsEl.textContent = '...';
+    } else if (dotsEl.textContent === '...') {
+      dotsEl.textContent = '.';
+    } else {
+      dotsEl.textContent = '.';
+    }
+  }, 1000);
+
+  const dest = audioCtx.createMediaStreamDestination();
+  const recorder = new MediaRecorder(dest.stream);
+  const chunks = [];
+
+  recorder.ondataavailable = e => chunks.push(e.data);
+  recorder.onstop = e => {
+    clearInterval(dotInterval);
+    document.getElementById('downloadBox').style.display = 'none';
+    const blob = new Blob(chunks, { type: 'audio/wav' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `newmusic_${Date.now()}.wav`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  let offset = 0;
+  const baseTime = audioCtx.currentTime;
+  for (let char of seq) {
+    const freq = notes[char];
+    const duration = 0.3;
+    if (freq > 0) {
+      const osc = audioCtx.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, baseTime + offset);
+
+      const gain = audioCtx.createGain();
+      gain.gain.setValueAtTime(0.3, baseTime + offset);
+
+      osc.connect(gain);
+      gain.connect(dest);
+
+      osc.start(baseTime + offset);
+      osc.stop(baseTime + offset + duration);
+    }
+    offset += duration;
+  }
+
+  recorder.start();
+  setTimeout(() => recorder.stop(), seq.length * 300 + 50);
+}
+</script>
+
+</body>
+</html>

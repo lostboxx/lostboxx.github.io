@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="robots" content="noindex, follow">
+    <title>калькулятор времени</title>
+</head>
+<body>
+
+<h1>сколько времени прошло?</h1>
+
+<!-- одиночная дата -->
+<label>дата и время:</label><br>
+<input type="datetime-local" id="singleDate"><br><br>
+
+<label>формат 1:</label>
+<select id="format1">
+  <option value="">(ничего)</option>
+  <option value="minutes">минуты</option>
+  <option value="hours">часы</option>
+  <option value="days">дни</option>
+</select><br><br>
+
+<label>формат 2:</label>
+<select id="format2">
+  <option value="">(ничего)</option>
+  <option value="minutes">минуты</option>
+  <option value="hours">часы</option>
+  <option value="days">дни</option>
+</select><br><br>
+
+<button onclick="calculateSingle()">посчитать от даты до сейчас</button>
+<p id="result1"></p>
+
+<hr>
+
+<!-- диапазон двух дат -->
+<h2>расчёт между двумя датами</h2>
+
+<label>первая дата:</label><br>
+<input type="datetime-local" id="startDate"><br><br>
+
+<label>вторая дата:</label><br>
+<input type="datetime-local" id="endDate"><br><br>
+
+<button onclick="calculateBetween()">посчитать пройденное время</button>
+<p id="result2"></p>
+
+<script>
+function copyText(id) {
+  const el = document.getElementById(id);
+  if (!el || !el.textContent) return;
+
+  navigator.clipboard.writeText(el.textContent).then(() => {
+    alert('скопировано!');
+  });
+}
+
+function calculateSingle() {
+  const input = document.getElementById('singleDate').value;
+  const format1 = document.getElementById('format1').value;
+  const format2 = document.getElementById('format2').value;
+  const result = document.getElementById('result1');
+
+  if (!input) {
+    result.innerHTML = 'выберите дату!';
+    return;
+  }
+
+  const selectedTime = new Date(input);
+  const now = new Date();
+  const diffMs = now - selectedTime;
+  const absDiff = Math.abs(diffMs);
+
+  const prefix = diffMs < 0 ? 'до этого дня осталось' : 'прошло';
+
+  const allValues = {
+    minutes: Math.floor(absDiff / 60000) % 60,
+    hours: Math.floor(absDiff / 3600000) % 24,
+    days: Math.floor(absDiff / 86400000)
+  };
+
+  const used = new Set([format1, format2].filter(Boolean));
+  if (used.size === 0) {
+    result.innerHTML = 'выберите хотя бы один формат!';
+    return;
+  }
+
+  let parts = [];
+  if (used.has('days')) parts.push(`${allValues.days} дн`);
+  if (used.has('hours')) parts.push(`${allValues.hours} ч`);
+  if (used.has('minutes')) parts.push(`${allValues.minutes} мин`);
+
+  const text = `${prefix} ${parts.join(', ')}.`;
+  result.innerHTML = `${text} <button onclick="copyText('result1')">💾</button>`;
+}
+
+function calculateBetween() {
+  const start = document.getElementById('startDate').value;
+  const end = document.getElementById('endDate').value;
+  const result = document.getElementById('result2');
+
+  if (!start || !end) {
+    result.innerHTML = 'выберите обе даты!';
+    return;
+  }
+
+  const startTime = new Date(start);
+  const endTime = new Date(end);
+
+  if (startTime > endTime) {
+    result.innerHTML = 'неверная дата! в первом поле дата новее, чем во втором.';
+    return;
+  }
+
+  const diffMs = endTime - startTime;
+  const days = Math.floor(diffMs / 86400000);
+  const hours = Math.floor((diffMs % 86400000) / 3600000);
+  const minutes = Math.floor((diffMs % 3600000) / 60000);
+
+  const text = `между датами прошло: ${days} дн, ${hours} ч, ${minutes} мин.`;
+  result.innerHTML = `${text} <button onclick="copyText('result2')">💾</button>`;
+}
+</script>
+
+</body>
+</html>

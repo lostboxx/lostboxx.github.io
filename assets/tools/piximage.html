@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Изменение разрешения от LostBox: Загрузите своё фото, и настройте его разрешение под себя." />
+<meta name="keywords" content="пикселизация, фотомашинка, изменения разрешения, фото, редактор">
+  <link rel="icon" type="image/png" sizes="256x256" href="https://lostbox1000.neocities.org/favicon.png" />
+  <title>ФотоМашинка</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+      gap: 20px;
+      background: #f0f0f0;
+    }
+
+    #sizeDisplay {
+      font-size: 24px;
+    }
+
+    /* Добавляем стили для полей ввода */
+    .size-input {
+      font-size: 24px;
+      border: none;
+      background: none;
+      text-align: right;
+      width: 70px; /* Достаточная ширина для 4-5 цифр */
+      padding: 0;
+      margin: 0;
+      font-family: inherit;
+      outline: none;
+      border-bottom: 2px dashed transparent; /* Пунктирная линия внизу по умолчанию */
+      transition: border-bottom-color 0.2s;
+    }
+
+    /* Стиль для активного поля ввода */
+    .size-input:focus {
+      border-bottom-color: #666;
+    }
+    
+    #previewWrapper {
+      border: 2px dashed #aaa;
+      background: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      position: relative;
+      max-width: 256px;
+      max-height: 256px;
+      overflow: hidden;
+    }
+
+    #previewCanvas {
+      image-rendering: pixelated;
+      display: block;
+    }
+
+    #plusText {
+      position: absolute;
+      font-size: 50px;
+      color: #999;
+      pointer-events: none;
+    }
+
+    input[type="range"] {
+      width: 300px;
+    }
+
+    #downloadBtn {
+      padding: 10px 20px;
+      font-size: 18px;
+      background-color: #2196f3;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    #presets {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    .preset {
+      padding: 6px 10px;
+      background: #e0e0e0;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    canvas#realCanvas {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="sizeDisplay">
+    <input type="number" id="widthVal" class="size-input" value="3200" min="1" max="10000" style="color:green;" tabindex="0" /> ×
+    <input type="number" id="heightVal" class="size-input" value="5600" min="1" max="10000" style="color:goldenrod;" tabindex="0" />
+  </div>
+
+  <label id="previewWrapper" for="uploadInput">
+    <canvas id="previewCanvas" width="128" height="128"></canvas>
+    <div id="plusText">+</div>
+  </label>
+  <input type="file" id="uploadInput" accept="image/*" style="display:none" />
+
+  <input
+    type="range"
+    id="widthSlider"
+    min="1"
+    max="10000"
+    step="1"
+    value="3200"
+    style="accent-color: green;"
+  />
+  <input
+    type="range"
+    id="heightSlider"
+    min="1"
+    max="10000"
+    step="1"
+    value="5600"
+    style="accent-color: goldenrod;"
+  />
+
+  <button id="downloadBtn">Скачать</button>
+
+  <div id="presets">
+    <div class="preset">8×8</div>
+    <div class="preset">64×64</div>
+    <div class="preset">128×128</div>
+    <div class="preset">256×256</div>
+    <div class="preset">516×516</div>
+    <div class="preset">1048×1048</div>
+    <div class="preset">177×177</div>
+    <div class="preset">512×1024</div>
+  </div>
+
+  <canvas id="realCanvas"></canvas>
+
+  <script>
+    const uploadInput = document.getElementById("uploadInput");
+    const previewCanvas = document.getElementById("previewCanvas");
+    const previewCtx = previewCanvas.getContext("2d");
+    const realCanvas = document.getElementById("realCanvas");
+    const realCtx = realCanvas.getContext("2d");
+    const plusText = document.getElementById("plusText");
+
+    const widthSlider = document.getElementById("widthSlider");
+    const heightSlider = document.getElementById("heightSlider");
+    // Меняем на input элементы
+    const widthValInput = document.getElementById("widthVal");
+    const heightValInput = document.getElementById("heightVal");
+    const presets = document.querySelectorAll(".preset");
+
+    let image = null;
+
+    function updateSizeDisplay() {
+      // Обновляем значения input и ползунка
+      widthValInput.value = widthSlider.value;
+      heightValInput.value = heightSlider.value;
+    }
+
+    function updatePreviewCanvasSize() {
+      const w = parseInt(widthSlider.value);
+      const h = parseInt(heightSlider.value);
+      const maxSize = 256;
+      const minSideSize = 40; // минимальный размер по меньшей стороне
+
+      let scale;
+
+      if (w > h) {
+        scale = maxSize / w;
+        let scaledH = h * scale;
+        if (scaledH < minSideSize) {
+          scale = minSideSize / h;
+        }
+      } else {
+        scale = maxSize / h;
+        let scaledW = w * scale;
+        if (scaledW < minSideSize) {
+          scale = minSideSize / w;
+        }
+      }
+
+      const displayW = Math.round(w * scale);
+      const displayH = Math.round(h * scale);
+
+      previewCanvas.width = w;
+      previewCanvas.height = h;
+      previewCanvas.style.width = displayW + "px";
+      previewCanvas.style.height = displayH + "px";
+    }
+
+    function drawPreview() {
+      const w = parseInt(widthSlider.value);
+      const h = parseInt(heightSlider.value);
+      if (!image || w < 1 || h < 1) return;
+
+      const tempCanvas = document.createElement("canvas");
+      const tempCtx = tempCanvas.getContext("2d");
+      tempCanvas.width = w;
+      tempCanvas.height = h;
+
+      tempCtx.fillStyle = "white";
+      tempCtx.fillRect(0, 0, w, h);
+      tempCtx.imageSmoothingEnabled = false;
+
+      const ratio = Math.min(w / image.width, h / image.height, 1);
+      const drawW = image.width * ratio;
+      const drawH = image.height * ratio;
+      const dx = (w - drawW) / 2;
+      const dy = (h - drawH) / 2;
+      tempCtx.drawImage(image, dx, dy, drawW, drawH);
+
+      previewCtx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
+      previewCtx.fillStyle = "white";
+      previewCtx.fillRect(0, 0, previewCanvas.width, previewCanvas.height);
+      previewCtx.imageSmoothingEnabled = false;
+      previewCtx.drawImage(tempCanvas, 0, 0);
+    }
+
+    function drawFinalCanvas() {
+      const w = parseInt(widthSlider.value);
+      const h = parseInt(heightSlider.value);
+      if (!image || w < 1 || h < 1) return;
+
+      realCanvas.width = w;
+      realCanvas.height = h;
+
+      realCtx.fillStyle = "white";
+      realCtx.fillRect(0, 0, w, h);
+      realCtx.imageSmoothingEnabled = false;
+
+      const ratio = Math.min(w / image.width, h / image.height, 1);
+      const drawW = image.width * ratio;
+      const drawH = image.height * ratio;
+      const dx = (w - drawW) / 2;
+      const dy = (h - drawH) / 2;
+      realCtx.drawImage(image, dx, dy, drawW, drawH);
+    }
+
+    function updateAll() {
+      updateSizeDisplay();
+      updatePreviewCanvasSize();
+      drawPreview();
+    }
+
+    // --- Новый функционал для редактирования вводом ---
+
+    function handleManualInput(inputElement, sliderElement) {
+      // Ограничиваем ввод: только числа и допустимый диапазон
+      let value = parseInt(inputElement.value);
+      const min = parseInt(inputElement.min);
+      const max = parseInt(inputElement.max);
+
+      if (isNaN(value) || value < min) {
+        value = min;
+      } else if (value > max) {
+        value = max;
+      }
+
+      inputElement.value = value;
+      sliderElement.value = value;
+      updateAll();
+    }
+
+    // Обработчики событий для полей ввода (при потере фокуса или нажатии Enter)
+    widthValInput.addEventListener('blur', () => handleManualInput(widthValInput, widthSlider));
+    heightValInput.addEventListener('blur', () => handleManualInput(heightValInput, heightSlider));
+
+    widthValInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        widthValInput.blur(); // Применяем значение и убираем фокус
+      }
+    });
+
+    heightValInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        heightValInput.blur(); // Применяем значение и убираем фокус
+      }
+    });
+
+    // --- Конец нового функционала ---
+
+    uploadInput.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function (evt) {
+        image = new Image();
+        image.onload = () => {
+          plusText.style.display = "none";
+          updateAll();
+        };
+        image.src = evt.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    widthSlider.addEventListener("input", updateAll);
+    heightSlider.addEventListener("input", updateAll);
+
+    document.getElementById("downloadBtn").addEventListener("click", () => {
+      if (!image) {
+        alert("Сначала выбери изображение");
+        return;
+      }
+      drawFinalCanvas();
+      const w = widthSlider.value;
+      const h = heightSlider.value;
+      const link = document.createElement("a");
+      link.download = `image_${w}x${h}.png`;
+      link.href = realCanvas.toDataURL();
+      link.click();
+    });
+
+    presets.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const [w, h] = btn.textContent.split("×").map(Number);
+        widthSlider.value = w;
+        heightSlider.value = h;
+        updateAll();
+      });
+    });
+
+    updateAll();
+  </script>
+</body>
+</html>

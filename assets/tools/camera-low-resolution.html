@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Камера</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: Arial, sans-serif;
+    background: black;
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+  }
+  .main-screen {
+    position: relative;
+    width: 100%;
+    height: 100%;
+  }
+  #videoPreview {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .controls {
+    position: absolute;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 30px;
+  }
+  .capture-btn {
+    width: 80px;
+    height: 80px;
+    border: 4px solid white;
+    border-radius: 50%;
+    background: transparent;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s;
+  }
+  .capture-btn::after {
+    content: '';
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 60px; height: 60px;
+    background: white;
+    border-radius: 50%;
+    transition: all 0.2s;
+  }
+  .capture-btn.recording {
+    border-color: #ff4444;
+  }
+  .capture-btn.recording::after {
+    background: #ff4444;
+    border-radius: 8px;
+    width: 30px; height: 30px;
+  }
+  .switch-camera {
+    width: 50px;
+    height: 50px;
+    border: 2px solid white;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.3);
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .result-screen {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: black;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  .result-content {
+    max-width: 90%;
+    max-height: 70%;
+    border-radius: 10px;
+  }
+  .result-controls {
+    position: absolute;
+    bottom: 40px;
+    display: flex;
+    gap: 30px;
+  }
+  .result-btn {
+    width: 60px; height: 60px;
+    border: 2px solid white;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.5);
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .back-btn {
+    position: absolute;
+    top: 30px; left: 30px;
+    width: 40px; height: 40px;
+    border: 2px solid white;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.5);
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .timer {
+    position: absolute;
+    top: 30px; right: 30px;
+    color: #ff4444;
+    font-size: 18px;
+    font-weight: bold;
+    background: rgba(0,0,0,0.7);
+    padding: 8px 16px;
+    border-radius: 20px;
+    display: none;
+  }
+</style>
+</head>
+<body>
+  <div class="main-screen" id="mainScreen">
+    <video id="videoPreview" autoplay muted playsinline></video>
+    <div class="timer" id="timer">00:00</div>
+    <div class="controls">
+      <button class="capture-btn" id="captureBtn"></button>
+      <button class="switch-camera" id="switchCamera">🔄</button>
+    </div>
+  </div>
+
+  <div class="result-screen" id="resultScreen">
+    <button class="back-btn" id="backBtn">←</button>
+    <img id="resultPhoto" class="result-content" style="display:none;" />
+    <video id="resultVideo" class="result-content" style="display:none;" controls></video>
+    <div class="result-controls">
+      <button class="result-btn" id="saveBtn">💾</button>
+    </div>
+  </div>
+
+<script>
+  let mediaStream = null;
+  let mediaRecorder = null;
+  let recordedChunks = [];
+  let isRecording = false;
+  let currentCamera = 'environment';
+  let recordingTimer = null;
+  let recordingTime = 0;
+  let longPressTimer = null;
+  let currentResult = null;
+
+  const videoPreview = document.getElementById('videoPreview');
+  const captureBtn = document.getElementById('captureBtn');
+  const switchCamera = document.getElementById('switchCamera');
+  const mainScreen = document.getElementById('mainScreen');
+  const resultScreen = document.getElementById('resultScreen');
+  const resultPhoto = document.getElementById('resultPhoto');
+  const resultVideo = document.getElementById('resultVideo');
+  const backBtn = document.getElementById('backBtn');
+  const saveBtn = document.getElementById('saveBtn');
+  const timer = document.getElementById('timer');
+
+  const getVideoConstraints = () => ({
+    video: {
+      width: { ideal: 256 },
+      height: { ideal: 144 },
+      frameRate: { ideal: 10 },
+      facingMode: currentCamera
+    },
+    audio: {
+      sampleRate: 22050,
+      channelCount: 1,
+      echoCancellation: false,
+      noiseSuppression: false
+    }
+  });
+
+  async function initCamera() {
+    try {
+      if (mediaStream) {
+        mediaStream.getTracks().forEach(track => track.stop());
+      }
+      mediaStream = await navigator.mediaDevices.getUserMedia(getVideoConstraints());
+      videoPreview.srcObject = mediaStream;
+    } catch (e) {
+      console.error('Ошибка доступа к камере:', e);
+      if (currentCamera === 'environment') {
+        currentCamera = 'user';
+        initCamera();
+      }
+    }
+  }
+
+  switchCamera.addEventListener('click', () => {
+    currentCamera = currentCamera === 'environment' ? 'user' : 'environment';
+    initCamera();
+  });
+
+  // Клик и удержание
+  captureBtn.addEventListener('mousedown', onPressStart);
+  captureBtn.addEventListener('touchstart', onPressStart);
+
+  captureBtn.addEventListener('mouseup', onPressEnd);
+  captureBtn.addEventListener('mouseleave', onPressEnd);
+  captureBtn.addEventListener('touchend', onPressEnd);
+  captureBtn.addEventListener('touchcancel', onPressEnd);
+
+  function onPressStart() {
+    if (isRecording) return; // если уже записываем — не запускаем таймер удержания
+
+    longPressTimer = setTimeout(() => {
+      startRecording();
+      longPressTimer = null;
+    }, 500);
+  }
+
+  function onPressEnd() {
+    if (longPressTimer) {
+      clearTimeout(longPressTimer);
+      longPressTimer = null;
+      if (!isRecording) takePhoto();
+    } else {
+      // Если удержание прошло — это уже видео, отпускаем без действий
+    }
+  }
+
+  // Запись видео
+  function startRecording() {
+    recordedChunks = [];
+    recordingTime = 0;
+
+    const options = {
+      mimeType: 'video/webm;codecs=vp8,opus',
+      videoBitsPerSecond: 100000,
+      audioBitsPerSecond: 50000
+    };
+
+    if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+      options.mimeType = 'video/webm';
+    }
+
+    mediaRecorder = new MediaRecorder(mediaStream, options);
+
+    mediaRecorder.ondataavailable = (event) => {
+      if (event.data.size > 0) recordedChunks.push(event.data);
+    };
+
+    mediaRecorder.onstop = () => {
+      const blob = new Blob(recordedChunks, { type: 'video/webm' });
+      const url = URL.createObjectURL(blob);
+      showResult('video', url);
+      currentResult = { type: 'video', blob, url, filename: 'video.webm' };
+    };
+
+    mediaRecorder.start(1000);
+    isRecording = true;
+    captureBtn.classList.add('recording');
+    timer.style.display = 'block';
+
+    recordingTimer = setInterval(() => {
+      recordingTime++;
+      const m = Math.floor(recordingTime / 60).toString().padStart(2, '0');
+      const s = (recordingTime % 60).toString().padStart(2, '0');
+      timer.textContent = `${m}:${s}`;
+    }, 1000);
+  }
+
+  function stopRecording() {
+    if (!isRecording) return;
+    mediaRecorder.stop();
+    isRecording = false;
+    captureBtn.classList.remove('recording');
+    timer.style.display = 'none';
+    clearInterval(recordingTimer);
+    recordingTimer = null;
+  }
+
+  // чтобы остановить видео — нажми на кнопку записи ещё раз (клик)
+  captureBtn.addEventListener('click', () => {
+    if (isRecording) stopRecording();
+  });
+
+  // Фото
+  function takePhoto() {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+
+    canvas.width = videoPreview.videoWidth || 256;
+    canvas.height = videoPreview.videoHeight || 144;
+
+    ctx.drawImage(videoPreview, 0, 0, canvas.width, canvas.height);
+
+    canvas.toBlob((blob) => {
+      const url = URL.createObjectURL(blob);
+      showResult('photo', url);
+      currentResult = { type: 'photo', blob, url, filename: 'photo.jpg' };
+    }, 'image/jpeg', 0.3);
+  }
+
+  function showResult(type, url) {
+    mainScreen.style.display = 'none';
+    resultScreen.style.display = 'flex';
+
+    if (type === 'photo') {
+      resultPhoto.src = url;
+      resultPhoto.style.display = 'block';
+      resultVideo.style.display = 'none';
+    } else {
+      resultVideo.src = url;
+      resultVideo.style.display = 'block';
+      resultPhoto.style.display = 'none';
+    }
+  }
+
+  backBtn.addEventListener('click', () => {
+    mainScreen.style.display = 'block';
+    resultScreen.style.display = 'none';
+    resultPhoto.style.display = 'none';
+    resultVideo.style.display = 'none';
+
+    if (currentResult) {
+      URL.revokeObjectURL(currentResult.url);
+      currentResult = null;
+    }
+  });
+
+  saveBtn.addEventListener('click', () => {
+    if (!currentResult) return;
+    const a = document.createElement('a');
+    a.href = currentResult.url;
+    a.download = currentResult.filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  });
+
+  window.addEventListener('beforeunload', () => {
+    if (mediaStream) mediaStream.getTracks().forEach(t => t.stop());
+  });
+
+  initCamera();
+</script>
+</body>
+</html>

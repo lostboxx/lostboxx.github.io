@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Информатор от LostBox: Загрузите BASE-64 файл, и узнайте: валиден ли он." />
+<meta name="keywords" content="информатор, base-64, base64, валидность">
+<!-- Favicon -->
+<link rel="icon" type="image/png" sizes="256x256" href="https://lostbox1000.neocities.org/favicon.png" />
+<title>Информатор</title>
+<style>
+  body {
+    background: #87CEEB;
+    color: #000;
+    font-family: sans-serif;
+    margin: 0; padding: 10px;
+    display: flex; flex-direction: column; align-items: center;
+    min-height: 100vh; box-sizing: border-box;
+  }
+  h1 { margin: 10px 0 5px; font-size: 20px; text-align: center; }
+  p.subtitle { font-size: 13px; margin: 0 0 6px; text-align: center; max-width: 90%; color: #222; }
+  #uploader {
+    position: relative; width: 80vw; max-width: 240px; height: 80vw; max-height: 240px;
+    border: 2px dashed #555; background: #fff;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 12px; overflow: hidden;
+    cursor: pointer; user-select: none; margin: 10px 0;
+  }
+  #uploader.placeholder::before {
+    content: "+"; font-size: 48px; color: #555;
+  }
+  #uploader img, #uploader video, #uploader audio { 
+    width: 100%; height: 100%; object-fit: contain; 
+  }
+  input[type="file"] { display: none; }
+  #extension-input-container {
+    display: none;
+    margin: 10px 0;
+    text-align: center;
+  }
+  #extension-input {
+    padding: 5px;
+    border: 1px solid #555;
+    border-radius: 4px;
+    margin-right: 5px;
+  }
+  #extension-submit {
+    padding: 5px 10px;
+    background: #0077cc;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  #status { font-size: 14px; margin-top: 5px; font-weight: bold; }
+  #reset-btn {
+    margin-top: 6px; font-size: 14px; color: #0077cc;
+    cursor: pointer; user-select: none;
+  }
+</style>
+</head>
+<body>
+
+  <h1>Информатор</h1>
+  <p class="subtitle">Загрузите .txt с base64-содержимым (фото, аудио, видео)</p>
+  <div id="uploader" class="placeholder" tabindex="0"></div>
+  <input type="file" id="file-input" accept=".txt,application/json,image/*">
+  
+  <div id="extension-input-container">
+    <p>Введите расширение файла:</p>
+    <input type="text" id="extension-input" placeholder="jpg, png, mp3...">
+    <button id="extension-submit">Проверить</button>
+  </div>
+  
+  <div id="status"></div>
+  <div id="reset-btn" style="display:none;">🔄 Сброс</div>
+
+  <script>
+    const uploader = document.getElementById('uploader');
+    const fileInput = document.getElementById('file-input');
+    const statusDiv = document.getElementById('status');
+    const resetBtn = document.getElementById('reset-btn');
+    const extensionInputContainer = document.getElementById('extension-input-container');
+    const extensionInput = document.getElementById('extension-input');
+    const extensionSubmit = document.getElementById('extension-submit');
+
+    let currentBase64Data = '';
+
+    // Словарь расширений
+    const extensionTypes = {
+      // Изображения
+      'jpg': 'image/jpeg',
+      'jpeg': 'image/jpeg',
+      'png': 'image/png',
+      'gif': 'image/gif',
+      'bmp': 'image/bmp',
+      'webp': 'image/webp',
+      'svg': 'image/svg+xml',
+      'ico': 'image/x-icon',
+      
+      // Аудио
+      'mp3': 'audio/mpeg',
+      'wav': 'audio/wav',
+      'ogg': 'audio/ogg',
+      'aac': 'audio/aac',
+      'flac': 'audio/flac',
+      'm4a': 'audio/mp4',
+      
+      // Видео
+      'mp4': 'video/mp4',
+      'avi': 'video/x-msvideo',
+      'mov': 'video/quicktime',
+      'webm': 'video/webm',
+      'mkv': 'video/x-matroska',
+      'flv': 'video/x-flv',
+      'wmv': 'video/x-ms-wmv',
+      'm4v': 'video/mp4',
+      '3gp': 'video/3gpp'
+    };
+
+    uploader.addEventListener('click', () => {
+      fileInput.click();
+      statusDiv.textContent = '';
+      resetBtn.style.display = 'none';
+      extensionInputContainer.style.display = 'none';
+    });
+
+    fileInput.addEventListener('change', e => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        const text = reader.result.trim();
+        processCheck(text);
+      };
+      reader.readAsText(file);
+    });
+
+    resetBtn.addEventListener('click', resetAll);
+    
+    extensionSubmit.addEventListener('click', () => {
+      const extension = extensionInput.value.toLowerCase().trim();
+      if (!extension) {
+        statusDiv.textContent = '❌ Введите расширение файла';
+        return;
+      }
+      
+      processWithExtension(extension);
+    });
+
+    function processCheck(data) {
+      currentBase64Data = data;
+      
+      // Если данные уже содержат data: URI схему (любого типа)
+      if (data.startsWith('data:')) {
+        validateAndDisplay(data);
+        return;
+      }
+
+      // Проверим, похоже ли это вообще на base64
+      const isMaybeB64 = /^[A-Za-z0-9+/=\s\r\n]+$/.test(data);
+      if (isMaybeB64) {
+        // Показать поле для ввода расширения
+        extensionInputContainer.style.display = 'block';
+        statusDiv.textContent = '⚠️ Введите расширение файла для проверки';
+      } else {
+        statusDiv.textContent = '❗ Загрузите правильный txt-файл с Base64';
+        resetBtn.style.display = 'block';
+      }
+    }
+
+    function processWithExtension(extension) {
+      const cleanB64 = currentBase64Data.replace(/\s+/g, '');
+      
+      // Получаем MIME тип из словаря
+      const mimeType = extensionTypes[extension];
+      
+      if (mimeType) {
+        const fullDataURI = `data:${mimeType};base64,${cleanB64}`;
+        validateAndDisplay(fullDataURI);
+      } else {
+        statusDiv.textContent = `❌ Неподдерживаемое расширение: ${extension}`;
+      }
+    }
+
+    function validateAndDisplay(dataURI) {
+      // Определяем тип медиа
+      const mediaType = dataURI.split(':')[1].split(';')[0].split('/')[0];
+      
+      switch(mediaType) {
+        case 'image':
+          displayImage(dataURI);
+          break;
+        case 'audio':
+          displayAudio(dataURI);
+          break;
+        case 'video':
+          displayVideo(dataURI);
+          break;
+        default:
+          statusDiv.textContent = '❌ Неподдерживаемый тип медиа';
+          resetBtn.style.display = 'block';
+      }
+    }
+
+    function displayImage(src) {
+      const img = new Image();
+      img.onload = () => {
+        uploader.innerHTML = ''; 
+        uploader.classList.remove('placeholder');
+        uploader.appendChild(img);
+        statusDiv.textContent = '✔️ Изображение валидно';
+        resetBtn.style.display = 'block';
+        extensionInputContainer.style.display = 'none';
+      };
+      img.onerror = () => {
+        statusDiv.textContent = '❌ Повреждённый Base64 (изображение)';
+        resetBtn.style.display = 'block';
+        extensionInputContainer.style.display = 'none';
+      };
+      img.src = src;
+    }
+
+    function displayAudio(src) {
+      const audio = document.createElement('audio');
+      audio.controls = true;
+      
+      audio.onloadeddata = () => {
+        uploader.innerHTML = ''; 
+        uploader.classList.remove('placeholder');
+        uploader.appendChild(audio);
+        statusDiv.textContent = '✔️ Аудио валидно';
+        resetBtn.style.display = 'block';
+        extensionInputContainer.style.display = 'none';
+      };
+      
+      audio.onerror = () => {
+        statusDiv.textContent = '❌ Повреждённый Base64 (аудио)';
+        resetBtn.style.display = 'block';
+        extensionInputContainer.style.display = 'none';
+      };
+      
+      audio.src = src;
+    }
+
+    function displayVideo(src) {
+      const video = document.createElement('video');
+      video.controls = true;
+      
+      video.onloadeddata = () => {
+        uploader.innerHTML = ''; 
+        uploader.classList.remove('placeholder');
+        uploader.appendChild(video);
+        statusDiv.textContent = '✔️ Видео валидно';
+        resetBtn.style.display = 'block';
+        extensionInputContainer.style.display = 'none';
+      };
+      
+      video.onerror = () => {
+        statusDiv.textContent = '❌ Повреждённый Base64 (видео)';
+        resetBtn.style.display = 'block';
+        extensionInputContainer.style.display = 'none';
+      };
+      
+      video.src = src;
+    }
+
+    function resetAll() {
+      uploader.innerHTML = '';
+      uploader.classList.add('placeholder');
+      statusDiv.textContent = '';
+      resetBtn.style.display = 'none';
+      extensionInputContainer.style.display = 'none';
+      extensionInput.value = '';
+      currentBase64Data = '';
+      fileInput.value = '';
+    }
+  </script>
+
+</body>
+</html>

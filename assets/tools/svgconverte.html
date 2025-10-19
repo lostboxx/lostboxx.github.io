@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="robots" content="noindex, nofollow">
+<title>SVG Конвертер</title>
+<style>
+  body { 
+    font-family: sans-serif; 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    padding: 20px; 
+    padding-bottom: 50px; 
+    gap: 10px; 
+  }
+  img { 
+    max-width: 200px; 
+    max-height: 200px; 
+    border: 1px solid #ccc; 
+  }
+  button { 
+    padding: 8px 16px; 
+    cursor: pointer; 
+  }
+</style>
+</head>
+<body>
+<h2>SVG Конвертер</h2>
+<h5>Загрузите своё фото, и получите svg версию своего фото!</h5>
+<p>[ ! ] Внимание! Если фото огромное, то svg будет весить в 50 раз больше. Если загрузить большое фото, браузер может не загрузить .svg. Советуется для маленьких пиксельных картинок.</p>
+<input type="file" id="fileInput" accept="image/*">
+<img id="preview" alt="Preview">
+<button id="downloadBtn" disabled>Скачать SVG</button>
+
+<script>
+const fileInput = document.getElementById('fileInput');
+const preview = document.getElementById('preview');
+const downloadBtn = document.getElementById('downloadBtn');
+
+/**
+ * Функция для добавления ведущего нуля к числу (например, 5 -> 05)
+ * @param {number} number 
+ * @returns {string}
+ */
+const pad = (number) => (number < 10 ? '0' : '') + number;
+
+// --- Самое важное изменение тут, внутри обработчика ---
+fileInput.addEventListener('change', () => {
+    const file = fileInput.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = e => {
+        const img = new Image();
+        img.onload = () => {
+            const width = img.width;
+            const height = img.height;
+
+            // Canvas для получения пикселей
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0);
+
+            const imageData = ctx.getImageData(0, 0, width, height).data;
+
+            // Генерация SVG с <rect> для каждого пикселя
+            let svgRects = '';
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    const idx = (y * width + x) * 4;
+                    const r = imageData[idx];
+                    const g = imageData[idx + 1];
+                    const b = imageData[idx + 2];
+                    const a = imageData[idx + 3] / 255;
+                    if (a > 0) { // пропускаем прозрачные
+                        svgRects += `<rect x="${x}" y="${y}" width="1" height="1" fill="rgba(${r},${g},${b},${a})"/>`;
+                    }
+                }
+            }
+
+            const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">${svgRects}</svg>`;
+
+            // Создаем ссылку для скачивания
+            const blob = new Blob([svgContent], { type: "image/svg+xml" });
+            const url = URL.createObjectURL(blob);
+
+            // --- Генерация имени файла ---
+            const now = new Date();
+            // Генерируем случайное число из 5 цифр (от 10000 до 99999)
+            const randomNumber = Math.floor(10000 + Math.random() * 90000); 
+
+            const filename = 
+                `${now.getFullYear()}.` +
+                `${pad(now.getMonth() + 1)}.` + // Месяцы в JS с 0, поэтому + 1
+                `${pad(now.getDate())}.` +
+                `${pad(now.getHours())};` + // Разделитель ; для часов и минут
+                `${pad(now.getMinutes())}.` +
+                `${randomNumber}.svg`; 
+            // ---------------------------
+
+            downloadBtn.onclick = () => {
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename; // Используем сгенерированное имя
+                a.click();
+                URL.revokeObjectURL(url);
+            };
+            downloadBtn.disabled = false;
+
+            preview.src = e.target.result;
+        };
+        img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+});
+</script>
+</body>
+</html>

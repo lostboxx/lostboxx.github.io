@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Парсер</title>
+</head>
+<body>
+  <h2>перевод в римские цифры</h2>
+  <input type="number" id="num" placeholder="введи число">
+  <button onclick="convertToArabic()">конвертировать</button>
+  <div id="result-arabic"></div>
+
+  <hr>
+
+  <h2>перевод в арабские цифры</h2>
+  <input type="text" id="roman-num" placeholder="введи римские цифры">
+  <button onclick="convertFromRoman()">конвертировать</button>
+  <div id="result-roman"></div>
+
+  <script>
+    // Функция для перевода из арабских в римские
+    function toRoman(num) {
+      const map = [
+        [1000, 'M'], [900, 'CM'], [500, 'D'], [400, 'CD'],
+        [100, 'C'], [90, 'XC'], [50, 'L'], [40, 'XL'],
+        [10, 'X'], [9, 'IX'], [5, 'V'], [4, 'IV'], [1, 'I']
+      ];
+      let res = '';
+      for (const [val, sym] of map) {
+        while (num >= val) {
+          res += sym;
+          num -= val;
+        }
+      }
+      return res;
+    }
+
+    function convertToArabic() {
+      const val = document.getElementById("num").value;
+      const n = parseInt(val);
+      if (isNaN(n) || n <= 0) {
+        document.getElementById("result-arabic").innerText = "Введите правильное число!";
+      } else {
+        document.getElementById("result-arabic").innerText = toRoman(n);
+      }
+    }
+
+    // Функция для перевода из римских в арабские
+    function fromRoman(roman) {
+      const map = {
+        'M': 1000, 'CM': 900, 'D': 500, 'CD': 400,
+        'C': 100, 'XC': 90, 'L': 50, 'XL': 40,
+        'X': 10, 'IX': 9, 'V': 5, 'IV': 4, 'I': 1
+      };
+      let res = 0;
+      for (let i = 0; i < roman.length; i++) {
+        const current = map[roman[i]];
+        const next = map[roman[i + 1]];
+        if (next > current) {
+          res += next - current;
+          i++;
+        } else {
+          res += current;
+        }
+      }
+      return res;
+    }
+
+    function convertFromRoman() {
+      const val = document.getElementById("roman-num").value.toUpperCase().trim();
+      const validRoman = /^(?=[MDCLXVI])M{0,4}(CM|CD|D?C{0,3})(XC|XL|L?X{0,3})(IX|IV|V?I{0,3})$/;
+      if (!val || !validRoman.test(val)) {
+        document.getElementById("result-roman").innerText = "Введите правильные римские цифры!";
+      } else {
+        document.getElementById("result-roman").innerText = fromRoman(val);
+      }
+    }
+  </script>
+</body>
+</html>

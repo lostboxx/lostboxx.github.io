@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="robots" content="noindex, follow">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Спектрограмма</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+      background: #111;
+      color: #fff;
+    }
+    #upload {
+      margin-bottom: 20px;
+    }
+    #loader {
+      display: none;
+      width: 64px;
+      height: 64px;
+    }
+    #spectrogram-container {
+      width: 90vw;
+      max-width: 800px;
+      height: 300px;
+      overflow: hidden;
+      background: #000;
+      border: 2px solid #444;
+      position: relative;
+    }
+    #spectrogram {
+      display: block;
+    }
+    #controls {
+      margin-top: 15px;
+      display: flex;
+      gap: 10px;
+    }
+    #download, #reset {
+      padding: 8px 15px;
+      font-size: 16px;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+    #download {
+      background: #28a;
+      display: none;
+    }
+    #reset {
+      background: #a33;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <h2>Спектрограмма музыки 🎧</h2>
+  <input id="upload" type="file" accept="audio/*" />
+  <img id="loader" src="tool-assets/zagruzkapalka.gif" alt="загрузка..." />
+  
+  <div id="spectrogram-container">
+    <canvas id="spectrogram"></canvas>
+  </div>
+  
+  <audio id="audio-player" style="display:none;"></audio>
+  
+  <div id="controls">
+    <button id="download">Скачать PNG</button>
+    <button id="reset">Сбросить</button>
+  </div>
+  
+  <script>
+    const upload = document.getElementById('upload');
+    const loader = document.getElementById('loader');
+    const canvas = document.getElementById('spectrogram');
+    const ctx = canvas.getContext('2d');
+    const container = document.getElementById('spectrogram-container');
+    const downloadBtn = document.getElementById('download');
+    const resetBtn = document.getElementById('reset');
+    const audioPlayer = document.getElementById('audio-player');
+
+    let audioCtx;
+    let analyser;
+    let dataArray;
+    let isDrawing = false;
+    let animationFrameId;
+    let currentPosition = 0;
+    let fullSpectrogramCanvas = document.createElement('canvas');
+    let fullSpectrogramCtx = fullSpectrogramCanvas.getContext('2d');
+
+    function initAudioContext() {
+      if (!audioCtx || audioCtx.state === 'closed') {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      return audioCtx;
+    }
+
+    upload.addEventListener('change', async e => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      // Останавливаем предыдущую отрисовку
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+      }
+      
+      loader.style.display = 'block';
+      downloadBtn.style.display = 'none';
+      resetBtn.style.display = 'none';
+
+      // Очищаем canvas и устанавливаем фиксированный размер
+      canvas.width = container.clientWidth;
+      canvas.height = container.clientHeight;
+      ctx.fillStyle = '#000';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      // Инициализируем полную спектрограмму
+      fullSpectrogramCanvas.width = canvas.width;
+      fullSpectrogramCanvas.height = canvas.height;
+      fullSpectrogramCtx.fillStyle = '#000';
+      fullSpectrogramCtx.fillRect(0, 0, fullSpectrogramCanvas.width, fullSpectrogramCanvas.height);
+      
+      currentPosition = 0;
+      
+      try {
+        // Инициализируем аудиоконтекст
+        const audioContext = initAudioContext();
+        
+        // Загружаем файл в скрытый аудио-плеер
+        const audioURL = URL.createObjectURL(file);
+        audioPlayer.src = audioURL;
+        await audioPlayer.load();
+
+        // Создаем новый анализатор
+        analyser = audioContext.createAnalyser();
+        analyser.fftSize = 2048;
+        const bufferLength = analyser.frequencyBinCount;
+        dataArray = new Uint8Array(bufferLength);
+
+        // Подключаем узлы
+        const audioSource = audioContext.createMediaElementSource(audioPlayer);
+        audioSource.connect(analyser);
+        analyser.connect(audioContext.destination);
+        
+        // Запускаем воспроизведение
+        await audioPlayer.play();
+        
+        loader.style.display = 'none';
+        isDrawing = true;
+        
+        drawSpectrogram();
+        
+        // Когда музыка закончилась, показываем кнопки
+        audioPlayer.addEventListener('ended', () => {
+          isDrawing = false;
+          downloadBtn.style.display = 'inline-block';
+          resetBtn.style.display = 'inline-block';
+        }, { once: true });
+
+      } catch (error) {
+        console.error('Ошибка при обработке аудиофайла:', error);
+        loader.style.display = 'none';
+        alert('Не удалось обработать аудиофайл. Пожалуйста, попробуйте другой.');
+      }
+    });
+
+    const drawSpectrogram = () => {
+      if (!isDrawing) return;
+      
+      // Создаем временный холст для сохранения текущего изображения
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = canvas.width;
+      tempCanvas.height = canvas.height;
+      const tempCtx = tempCanvas.getContext('2d');
+      tempCtx.drawImage(canvas, 0, 0);
+
+      // Сдвигаем текущее изображение на 1 пиксель влево
+      ctx.drawImage(tempCanvas, -1, 0);
+
+      // Получаем новые данные частот
+      analyser.getByteFrequencyData(dataArray);
+
+      // Отрисовываем новый столбец данных в правой части холста
+      const x = canvas.width - 1;
+      for (let i = 0; i < dataArray.length; i++) {
+        const value = dataArray[i];
+        const y = canvas.height - (i / dataArray.length) * canvas.height;
+        const color = `hsl(${value + 200}, 100%, ${value / 3}%)`;
+        ctx.fillStyle = color;
+        ctx.fillRect(x, y, 1, 1);
+      }
+      
+      // Обновляем полную спектрограмму
+      if (currentPosition < fullSpectrogramCanvas.width) {
+        // Копируем новую колонку в полную спектрограмму
+        fullSpectrogramCtx.drawImage(
+          canvas, 
+          canvas.width - 1, 0, 1, canvas.height,
+          currentPosition, 0, 1, canvas.height
+        );
+        currentPosition++;
+      } else {
+        // Если достигли конца, расширяем холст
+        const newWidth = fullSpectrogramCanvas.width + 1;
+        const tempFullCanvas = document.createElement('canvas');
+        tempFullCanvas.width = newWidth;
+        tempFullCanvas.height = fullSpectrogramCanvas.height;
+        const tempFullCtx = tempFullCanvas.getContext('2d');
+        tempFullCtx.drawImage(fullSpectrogramCanvas, 0, 0);
+        
+        // Копируем новую колонку
+        tempFullCtx.drawImage(
+          canvas,
+          canvas.width - 1, 0, 1, canvas.height,
+          newWidth - 1, 0, 1, canvas.height
+        );
+        
+        fullSpectrogramCanvas = tempFullCanvas;
+        fullSpectrogramCtx = tempFullCtx;
+        currentPosition = newWidth;
+      }
+      
+      animationFrameId = requestAnimationFrame(drawSpectrogram);
+    };
+    
+    downloadBtn.addEventListener('click', () => {
+      const link = document.createElement('a');
+      link.download = 'spectrogram.png';
+      
+      // Создаем холст для скачивания с правильной шириной
+      const downloadCanvas = document.createElement('canvas');
+      downloadCanvas.width = currentPosition;
+      downloadCanvas.height = fullSpectrogramCanvas.height;
+      const downloadCtx = downloadCanvas.getContext('2d');
+      
+      // Копируем только заполненную часть спектрограммы
+      downloadCtx.drawImage(
+        fullSpectrogramCanvas,
+        0, 0, currentPosition, fullSpectrogramCanvas.height,
+        0, 0, currentPosition, fullSpectrogramCanvas.height
+      );
+      
+      link.href = downloadCanvas.toDataURL('image/png');
+      link.click();
+    });
+    
+    resetBtn.addEventListener('click', () => {
+      // Останавливаем воспроизведение
+      audioPlayer.pause();
+      audioPlayer.src = '';
+      
+      // Останавливаем отрисовку
+      isDrawing = false;
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+      }
+      
+      // Очищаем холсты
+      ctx.fillStyle = '#000';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      fullSpectrogramCanvas.width = canvas.width;
+      fullSpectrogramCanvas.height = canvas.height;
+      fullSpectrogramCtx.fillStyle = '#000';
+      fullSpectrogramCtx.fillRect(0, 0, fullSpectrogramCanvas.width, fullSpectrogramCanvas.height);
+      
+      currentPosition = 0;
+      
+      // Сбрасываем загрузку файла
+      upload.value = '';
+      
+      // Скрываем кнопки
+      downloadBtn.style.display = 'none';
+      resetBtn.style.display = 'none';
+      
+      // Отключаем анализатор
+      if (analyser) {
+        analyser.disconnect();
+      }
+    });
+  </script>
+</body>
+</html>

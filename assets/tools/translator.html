@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+    <meta name="robots" content="noindex, follow">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BANKA.OS Переводчик</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      background: #000;
+      overflow: hidden;
+      font-family: sans-serif;
+    }
+    
+    .screen {
+      width: 100%; 
+      height: 100%;
+      position: absolute; 
+      top: 0; 
+      left: 0;
+      background: black; 
+      color: white;
+      justify-content: center; 
+      align-items: center; 
+      flex-direction: column;
+      display: flex;
+    }
+    
+    #translatorSection {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+    
+    #translatorInput {
+      font-size: 20px;
+      padding: 10px;
+      width: 80%;
+      max-width: 400px;
+      border: none;
+      border-radius: 5px;
+      background: #222;
+      color: white;
+      margin-bottom: 20px;
+    }
+    
+    #translatorResult {
+      margin-top: 20px;
+      font-size: 24px;
+      padding: 15px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.1);
+      width: 90%;
+      max-width: 600px;
+      min-height: 100px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+    
+    .translator-note {
+      margin-top: 10px;
+      color: #aaa;
+      font-size: 14px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div id="translatorSection" class="screen">
+   <marquee><h2>Переводчик</h2></marquee>
+    <input id="translatorInput" placeholder="Введите слова" />
+    <div id="translatorResult">...</div>
+    <div class="translator-note">Нижнее поле святое - не пиши сюда!</div>
+  </div>
+
+  <script>
+    // Упрощенный словарь с уникальными парами
+    const dict = {
+      "привет": "hello", "мама": "mom", "папа": "dad", "кошка": "cat", "собака": "dog",
+      "да": "yes", "нет": "no", "спасибо": "thank you", "пожалуйста": "you're welcome",
+      "яблоко": "apple", "банан": "banana", "арбуз": "watermelon", "груша": "pear",
+      "апельсин": "orange", "машина": "car", "автобус": "bus", "поезд": "train",
+      "самолёт": "plane", "дом": "house", "дверь": "door", "окно": "window",
+      "стол": "table", "стул": "chair", "кровать": "bed", "шкаф": "closet",
+      "вода": "water", "чай": "tea", "кофе": "coffee", "молоко": "milk",
+      "еда": "food", "мясо": "meat", "рыба": "fish", "суп": "soup", "сахар": "sugar",
+      "соль": "salt", "ложка": "spoon", "вилка": "fork", "нож": "knife",
+      "голова": "head", "рука": "hand", "нога": "leg", "глаз": "eye",
+      "ухо": "ear", "нос": "nose", "рот": "mouth", "волосы": "hair", "лицо": "face",
+      "врач": "doctor", "учитель": "teacher", "школа": "school", "ученик": "student",
+      "брат": "brother", "сестра": "sister", "друг": "friend", "враг": "enemy",
+      "жена": "wife", "муж": "husband", "дедушка": "grandfather", "бабушка": "grandmother",
+      "внук": "grandson", "внучка": "granddaughter", "песня": "song", "музыка": "music",
+      "фильм": "movie", "игра": "game", "интернет": "internet", "погода": "weather",
+      "дождь": "rain", "снег": "snow", "ветер": "wind", "жарко": "hot", "холодно": "cold",
+      "солнечно": "sunny", "пасмурно": "cloudy", "тихо": "quiet", "громко": "loud",
+      "красный": "red", "зелёный": "green", "синий": "blue", "жёлтый": "yellow",
+      "белый": "white", "чёрный": "black", "большой": "big", "маленький": "small",
+      "быстро": "fast", "медленно": "slow", "утро": "morning", "день": "day",
+      "вечер": "evening", "ночь": "night", "вчера": "yesterday", "сегодня": "today",
+      "завтра": "tomorrow", "работа": "work", "работать": "to work", "читать": "to read",
+      "писать": "to write", "говорить": "to speak", "сказать": "to say",
+      "смотреть": "to watch", "слушать": "to listen", "бежать": "to run",
+      "идти": "to go", "сидеть": "to sit", "стоять": "to stand", "любить": "to love", "компьютер": "computer",
+  "клавиатура": "keyboard",
+  "мышка": "mouse",
+  "экран": "screen",
+  "монитор": "monitor",
+  "зарядка": "charger",
+  "кабель": "cable",
+  "инструмент": "tool",
+  "ошибка": "error",
+  "сообщение": "message",
+  "папка": "folder",
+  "файл": "file",
+  "загрузка": "download",
+  "загрузить": "to download",
+  "отправить": "to send",
+  "получить": "to receive",
+  "отключить": "to disable",
+  "включить": "to enable",
+  "перезагрузить": "to reboot",
+  "память": "memory",
+  "система": "system",
+  "данные": "data",
+  "безопасность": "security",
+  "доступ": "access",
+  "разрешение": "permission",
+  "обновление": "update",
+  "вирус": "virus",
+  "сканировать": "to scan",
+  "эксперт": "expert",
+  "админ": "admin",
+  "учётная запись": "account",
+  "пароль": "password",
+  "вход": "login",
+  "выход": "logout",
+  "запрос": "request",
+  "ответ": "response",
+  "сервер": "server",
+  "клиент": "client",
+  "интерфейс": "interface",
+  "настройка": "setting",
+  "переменная": "variable",
+  "код": "code",
+  "программа": "program",
+  "команда": "command",
+  "ошибочка": "little error",
+  "сеть": "network",
+  "подключение": "connection",
+  "запись": "record",
+  "драйвер": "driver",
+  "модем": "modem",
+  "звонок": "call",
+  "видеосвязь": "video call",
+  "соединение": "link",
+  "проверка": "check",
+  "отладка": "debug",
+  "разработка": "development",
+  "редактор": "editor",
+  "обработка": "processing",
+  "звук": "sound",
+  "громкость": "volume",
+  "вибрация": "vibration",
+  "функция": "function",
+  "модель": "model",
+  "тип": "type",
+  "вкладка": "tab",
+  "событие": "event",
+  "база данных": "database",
+  "поиск": "search",
+  "сортировка": "sorting",
+  "фильтр": "filter",
+  "метка": "tag",
+  "сохранить": "to save",
+  "забыть": "to forget",
+  "восстановить": "to restore",
+  "удалить": "to delete",
+  "создать": "to create",
+  "нажми": "click",
+  "перетащи": "drag",
+  "открой": "open",
+  "закрой": "close",
+  "перейди": "go to",
+  "проверь": "check",
+  "исправь": "fix",
+  "обнови": "refresh",
+  "останови": "stop",
+  "запусти": "run",
+  "вкладка": "tab",
+  "персонаж": "character",
+  "уровень": "level",
+  "награда": "reward",
+  "баланс": "balance",
+  "ресурс": "resource",
+  "монета": "coin",
+  "кнопка": "button",
+  "сцена": "scene",
+  "враг": "foe",
+  "союзник": "ally",
+  "оружие": "weapon",
+  "броня": "armor",
+  "щит": "shield",
+  "меч": "sword",
+  "лук": "bow",
+  "стрела": "arrow",
+  "магия": "magic",
+  "заклинание": "spell",
+  "транспорт": "vehicle",
+  "энергия": "energy",
+  "опыт": "experience",
+  "здоровье": "health",
+  "сила": "strength",
+  "скорость": "speed",
+  "защита": "defense",
+  "атака": "attack",
+  "режим": "mode",
+  "урон": "damage",
+  "игрок": "player",
+  "загрузка": "loading",
+  "ошибка подключения": "connection error",
+  "подсказка": "hint",
+  "инструкция": "instruction",
+  "мгновенно": "instantly",
+  "таймер": "timer",
+  "пауза": "pause",
+  "продолжить": "continue",
+  "выйти": "exit",
+  "приз": "prize",
+  "главное меню": "main menu",
+  "новая игра": "new game",
+  "сохранение": "save",
+  "продолжение": "resume",
+  "достижение": "achievement",
+  "лидерборд": "leaderboard",
+  "онлайн": "online",
+  "оффлайн": "offline",
+  "профиль": "profile",
+  "аватар": "avatar",
+  "настройки": "settings",
+  "графика": "graphics",
+  "звук": "sound",
+  "управление": "controls",
+  "язык": "language",
+  "обратная связь": "feedback",
+  "согласен": "agree",
+  "отмена": "cancel",
+  "подтвердить": "confirm",
+  "завершено": "completed",
+  "прогресс": "progress",
+  "задача": "task",
+  "цель": "goal",
+  "задание": "mission",
+  "кампания": "campaign",
+  "карта": "map",
+  "местность": "area",
+  "пустыня": "desert",
+  "гора": "mountain",
+  "леса": "forests",
+  "болото": "swamp",
+  "пещера": "cave",
+  "подземелье": "dungeon",
+  "босс": "boss",
+  "нападение": "attack",
+  "защищать": "defend",
+  "победа": "victory",
+  "поражение": "defeat",
+  "начать": "start",
+  "перезапуск": "restart",
+  "передышка": "break",
+  "ловушка": "trap",
+  "ключ": "key",
+  "сундук": "chest",
+  "подарок": "gift",
+  "монстр": "monster",
+  "зелье": "potion",
+  "золото": "gold",
+  "алмаз": "diamond",
+  "перо": "feather",
+  "костёр": "campfire",
+  "кирка": "pickaxe",
+  "лопата": "shovel",
+  "топор": "axe",
+  "брёвна": "logs",
+  "камень": "stone",
+  "песок": "sand",
+  "земля": "dirt",
+  "руда": "ore",
+  "уголь": "coal",
+  "железо": "iron",
+  "медь": "copper",
+  "сталь": "steel",
+  "магнит": "magnet",
+  "инструмент": "tool",
+  "ремонт": "repair",
+  "крафт": "craft",
+  "рецепт": "recipe",
+  "печь": "furnace",
+  "шкаф": "cabinet",
+  "инвентарь": "inventory",
+  "мусор": "trash",
+  "карман": "pocket"
+    };
+
+    // Функция для создания двунаправленного словаря из базового
+    function createBidirectionalDict(baseDict) {
+      const fullDict = {...baseDict};
+      for (const [key, value] of Object.entries(baseDict)) {
+        // Если обратная пара еще не существует, добавляем
+        if (!fullDict[value]) {
+          fullDict[value] = key;
+        }
+      }
+      return fullDict;
+    }
+
+    // Создаем двунаправленный словарь
+    let bidirectionalDict = createBidirectionalDict(dict);
+
+    // Функция загрузки JSON-словарей
+    async function loadExternalDictionaries() {
+      const promises = [];
+      
+      for (let i = 1; i <= 15; i++) {
+        promises.push(
+          fetch(`tools_help/переводы${i}.json`)
+            .then(response => {
+              if (response.ok) {
+                return response.json();
+              }
+              return {};
+            })
+            .then(data => {
+              // Добавляем прямые пары из JSON
+              Object.assign(bidirectionalDict, data);
+              // Добавляем обратные пары для новых записей, если их еще нет
+              for (const [key, value] of Object.entries(data)) {
+                if (!(value in bidirectionalDict)) {
+                  bidirectionalDict[value] = key;
+                }
+              }
+            })
+            .catch(() => {}) // Игнорируем ошибки
+        );
+      }
+
+      await Promise.allSettled(promises);
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      const translatorInput = document.getElementById("translatorInput");
+      const translatorResult = document.getElementById("translatorResult");
+      
+      // Запускаем загрузку внешних словарей
+      loadExternalDictionaries();
+      
+      translatorInput.addEventListener("input", function() {
+        const text = this.value.trim().toLowerCase();
+        if (!text) {
+          translatorResult.textContent = "...";
+          return;
+        }
+        
+        // Специальные случаи
+        if (text === "я член комитета") {
+          translatorResult.textContent = "I am a member of the military committee";
+          return;
+        }
+        
+        if (text === "кошкотанк") {
+          translatorResult.textContent = "перевод не найден, но идея годная";
+          return;
+        }
+        
+        // Прямой перевод
+        if (bidirectionalDict[text]) {
+          translatorResult.textContent = bidirectionalDict[text];
+          return;
+        }
+        
+        // Разбиваем на слова и переводим по частям
+        const words = text.split(/\s+/);
+        const translatedWords = words.map(word => bidirectionalDict[word] || word);
+        translatorResult.textContent = translatedWords.join(" ");
+      });
+    });
+  </script>
+</body>
+</html>

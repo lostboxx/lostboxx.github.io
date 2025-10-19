@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale-1.0">
+<meta name="description" content="Статистика от LostBox: Загрузите свой .csv файл, и получите статистику!" />
+<meta name="keywords" content="статистика, csv">
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" sizes="256x256" href="https://lostbox1000.neocities.org/favicon.png" />
+    <title>Статистика</title>
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+            background: #f0f0f0;
+        }
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+        #canvasContainer {
+            width: 80%;
+            max-width: 900px;
+            height: 60%;
+            max-height: 500px;
+            border: 1px solid #000;
+            overflow-x: auto;
+            overflow-y: hidden;
+            background: #fff;
+            white-space: nowrap;
+        }
+        canvas {
+            display: inline-block;
+        }
+        #controls {
+            margin-bottom: 10px;
+        }
+        #downloadBtn {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+<h1>Загрузите свой csv файл, и получите статистику! 😊</h1>
+<div id="controls">
+    <input type="file" id="csvFile">
+    <button id="downloadBtn">Скачать .jpg</button>
+</div>
+
+<div id="canvasContainer">
+    <canvas id="statsCanvas" width="700" height="400"></canvas>
+</div>
+
+<script>
+const container = document.getElementById('canvasContainer');
+const canvas = document.getElementById('statsCanvas');
+const ctx = canvas.getContext('2d');
+const padding = 50;
+
+// парсер CSV
+function parseCSV(data) {
+    const lines = data.split('\n').filter(l => l.trim() !== '');
+    const headers = lines[0].split(',');
+    const result = [];
+    for (let i = 1; i < lines.length; i++) {
+        const obj = {};
+        const currentLine = lines[i].split(',');
+        headers.forEach((header, index) => {
+            obj[header] = isNaN(currentLine[index]) ? currentLine[index] : Number(currentLine[index]);
+        });
+        result.push(obj);
+    }
+    return result;
+}
+
+// рисование графика с градиентом цвета
+function drawChart(stats) {
+    const spacing = 80;
+    const minWidth = container.clientWidth;
+    const chartWidth = Math.max(minWidth, padding*2 + spacing*(stats.length-1));
+    canvas.width = chartWidth;
+    canvas.height = container.clientHeight;
+
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    const canvasHeight = canvas.height - padding*2;
+    const maxHits = Math.max(...stats.map(s => s.hits));
+
+    // оси
+    ctx.strokeStyle = '#333';
+    ctx.beginPath();
+    ctx.moveTo(padding, padding);
+    ctx.lineTo(padding, canvas.height - padding);
+    ctx.lineTo(canvas.width - padding, canvas.height - padding);
+    ctx.stroke();
+
+    // горизонтальная сетка
+    ctx.strokeStyle = '#ccc';
+    ctx.lineWidth = 1;
+    const gridLines = 5;
+    for (let i = 0; i <= gridLines; i++) {
+        const y = padding + i * (canvasHeight / gridLines);
+        ctx.beginPath();
+        ctx.moveTo(padding, y);
+        ctx.lineTo(canvas.width - padding, y);
+        ctx.stroke();
+
+        const value = Math.round(maxHits - (maxHits / gridLines) * i);
+        ctx.fillStyle = '#000';
+        ctx.fillText(value, padding - 35, y + 4);
+    }
+
+    ctx.fillStyle = '#000';
+    ctx.font = '12px Arial';
+    ctx.fillText('Hits', padding - 30, padding - 10);
+
+    // линия графика с градиентом
+    for (let i = 1; i < stats.length; i++) {
+        const x1 = padding + (i-1) * spacing;
+        const x2 = padding + i * spacing;
+        const yBottom = canvas.height - padding;
+        const y1 = yBottom - (stats[i-1].hits / maxHits) * canvasHeight;
+        const y2 = yBottom - (stats[i].hits / maxHits) * canvasHeight;
+
+        // вычисляем цвет: зелёный при росте, красный при падении
+        const diff = stats[i].hits - stats[i-1].hits;
+        let r = 0, g = 0;
+        if (diff > 0) {
+            g = Math.min(255, Math.round(100 + diff*5));
+        } else if (diff < 0) {
+            r = Math.min(255, Math.round(100 - diff*5));
+        } else {
+            g = 200; r = 200;
+        }
+        ctx.strokeStyle = `rgb(${r},${g},0)`;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+    }
+
+    // точки и вертикальные линии от даты
+    stats.forEach((s, i) => {
+        const x = padding + i * spacing;
+        const yBottom = canvas.height - padding;
+        const yTop = yBottom - (s.hits / maxHits) * canvasHeight;
+
+        // вертикальная линия
+        ctx.strokeStyle = '#ccc';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(x, yBottom);
+        ctx.lineTo(x, padding);
+        ctx.stroke();
+
+        // точка
+        ctx.fillStyle = 'black';
+        ctx.beginPath();
+        ctx.arc(x, yTop, 4, 0, 2*Math.PI);
+        ctx.fill();
+
+        // подпись даты
+        ctx.fillStyle = '#000';
+        ctx.fillText(s.day, x - 20, yBottom + 15);
+    });
+}
+
+// загрузка CSV
+document.getElementById('csvFile').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(evt) {
+        const text = evt.target.result;
+        const stats = parseCSV(text);
+        drawChart(stats);
+    }
+    reader.readAsText(file);
+});
+
+// кнопка скачивания всего канваса
+document.getElementById('downloadBtn').addEventListener('click', function() {
+    const link = document.createElement('a');
+    link.download = 'stats_full.jpg';
+    link.href = canvas.toDataURL('image/jpeg', 1.0);
+    link.click();
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale-1.0">
+<meta name="description" content="HEX Редактор от LostBox - Редактор, где можно напрямую изменить байты файла!" />
+<meta name="keywords" content="HEX редактор, онлайн hex редактор, редактировать байты, шестнадцатеричный редактор, hex tool, hex editor">
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" sizes="256x256" href="https://lostbox1000.neocities.org/favicon.png" />
+  <title>HEX Редактор</title>
+  <style>
+    * {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+html, body {
+  width: 100%;
+  /* Удаляем height: 100% и overflow: hidden, чтобы страница могла прокручиваться */
+  min-height: 100vh; 
+  overflow-x: hidden;
+  font-size: 14px; 
+}
+
+body {
+  display: block; /* Сбрасываем Flexbox, так как он больше не нужен */
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  padding: 0px; 
+}
+
+header {
+  background: linear-gradient(to right, #4776E6, #006eee, #0000ff);
+  color: #fff;
+  width: 360px;
+  height: 4vh; 
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-size: 1.2rem; 
+  font-weight: 600;
+  box-shadow: 0 10px 8px rgba(0, 0, 0, 0.1); 
+  flex-shrink: 0;
+  margin-bottom: 1px; 
+}
+
+main {
+  /* Удаляем flex: 1 и overflow-y, т.к. они больше не нужны */
+  width: 100%;
+  max-width: 800px;
+  /* Центрируем основной контент */
+  margin: 0 auto; 
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px; 
+  gap: 10px; 
+  padding-bottom: 100px; /* Добавляем отступ, чтобы контент не перекрывался кнопками */
+}
+
+input[type="file"] {
+  margin: 8px 0; 
+  padding: 8px; 
+  background: white;
+  border-radius: 6px; 
+  border: 1px dashed #4776E6; 
+  width: 100%;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9rem; 
+}
+
+input[type="file"]:hover {
+  background: #f0f5ff;
+  border-color: #8E1155;
+}
+
+textarea {
+  width: 100%;
+  height: 250px; 
+  resize: none;
+  font-family: 'Fira Code', 'Consolas', monospace;
+  font-size: 12px; 
+  margin: 8px 0; 
+  padding: 10px; 
+  border: 1px solid #ddd; 
+  border-radius: 6px; 
+  background: #fafafa;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.03); 
+  line-height: 1.3; 
+}
+
+textarea:focus {
+  outline: none;
+  border-color: #4776E6;
+  box-shadow: inset 0 1px 2px rgba(71, 118, 230, 0.1);
+}
+
+.info {
+  margin: 8px 0; 
+  padding: 10px; 
+  background: white;
+  border-radius: 6px; 
+  width: 100%;
+  text-align: center;
+  font-size: 0.85rem; 
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06); 
+  border-left: 3px solid #4776E6; 
+  line-height: 1.4; 
+}
+
+.valid {
+  color: #4caf50;
+  font-weight: bold;
+  font-size: 0.8rem; 
+}
+
+.invalid {
+  color: #f44336;
+  font-weight: bold;
+  font-size: 0.8rem;
+}
+
+.loading {
+  color: #ff9800;
+  font-weight: bold;
+  font-size: 0.8rem;
+}
+
+.extension-info {
+  background: #e3f2fd;
+  border-left: 2px solid #2196f3;
+  padding: 6px 8px;
+  margin: 6px 0;
+  font-size: 0.75rem;
+  border-radius: 3px;
+  line-height: 1.3;
+}
+
+.buttons-container {
+  width: 100%;
+  max-width: 800px;
+  padding: 0 12px 12px; 
+  position: fixed; /* Используем fixed для фиксации контейнера */
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(transparent 0%, #f5f7fa 15%);
+  z-index: 100;
+}
+
+.buttons {
+  display: flex;
+  gap: 6px; 
+  flex-wrap: wrap;
+  justify-content: center;
+  width: 100%;
+  background: white;
+  padding: 8px; 
+  border-radius: 8px; 
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.06); 
+}
+
+button {
+  padding: 5px 10px; 
+  background: linear-gradient(to right, #4776E6, #4776e9);
+  color: white;
+  border: none;
+  border-radius: 5px; 
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 0.75rem; 
+  transition: all 0.15s ease; 
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08); 
+  white-space: nowrap;
+  flex: 1;
+  min-width: 55px; 
+  max-width: 100px; 
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 26px; 
+}
+
+button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.12);
+}
+
+button:active {
+  transform: translateY(0);
+}
+
+button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+@media (max-width: 768px) {
+  html, body {
+    font-size: 13px;
+  }
+  
+  .buttons {
+    padding: 6px;
+    gap: 4px;
+  }
+  
+  button {
+    flex: 1 0 calc(50% - 4px);
+    min-width: 50px;
+    max-width: calc(50% - 4px);
+    padding: 4px 8px;
+    font-size: 0.7rem;
+    height: 24px;
+  }
+  
+  .buttons-container {
+    padding: 0 10px 10px;
+  }
+  
+  textarea {
+    height: 220px;
+    font-size: 11px;
+  }
+  
+  header {
+    /* Удаляем отступы на маленьких экранах */
+    padding: 0;
+    font-size: 1.1rem;
+  }
+  
+  main {
+    padding: 10px;
+    gap: 8px;
+  }
+}
+
+@media (max-width: 400px) {
+  html, body {
+    font-size: 12px;
+  }
+  
+  button {
+    flex: 1 0 calc(50% - 3px);
+    min-width: 45px;
+    max-width: calc(50% - 3px);
+    padding: 3px 6px;
+    font-size: 0.65rem;
+    height: 22px;
+  }
+  
+  .buttons {
+    gap: 3px;
+    padding: 5px;
+  }
+  
+  textarea {
+    height: 200px;
+    font-size: 10px;
+  }
+  
+  header {
+    font-size: 1rem;
+  }
+}
+
+@media (min-width: 769px) {
+  .buttons {
+    flex-wrap: nowrap;
+  }
+  
+  button {
+    flex: 1;
+    min-width: 50px;
+    max-width: 120px;
+    height: 26px;
+  }
+}
+
+.preview-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s ease;
+}
+
+.preview-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.preview-container {
+  background: white;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 600px;
+  max-height: 70%;
+  overflow: hidden;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+}
+
+.preview-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: linear-gradient(to right, #4776E6, #888E58);
+  color: white;
+}
+
+.preview-title {
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.preview-close {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.2rem;
+  cursor: pointer;
+  width: 25px;
+  height: 25px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 50%;
+  transition: background 0.15s ease;
+}
+
+.preview-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.preview-content {
+  padding: 15px;
+  overflow: auto;
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.preview-text {
+  white-space: pre-wrap;
+  font-family: monospace;
+  background: #f8f9fa;
+  padding: 12px;
+  border-radius: 5px;
+  max-height: 300px;
+  overflow: auto;
+  width: 100%;
+  font-size: 0.85rem;
+  line-height: 1.3;
+}
+
+.preview-image {
+  max-width: 100%;
+  max-height: 300px;
+  border-radius: 5px;
+}
+
+.preview-video {
+  max-width: 100%;
+  max-height: 300px;
+  border-radius: 5px;
+}
+
+.preview-audio {
+  width: 100%;
+  margin: 15px 0;
+}
+
+.preview-unsupported {
+  padding: 20px;
+  text-align: center;
+  color: #6c757d;
+  font-size: 0.9rem;
+}
+
+@supports (padding: max(0px)) {
+  .buttons-container {
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
+  }
+}
+
+main {
+  scroll-behavior: smooth;
+}
+  </style>
+</head>
+<body>
+  <header>HEX Редактор</header>
+  <main>
+    <input type="file" id="fileInput">
+    <textarea id="hexArea" placeholder="HEX данные..."></textarea>
+    <div class="info" id="fileInfo">Выберите файл или введите HEX данные</div>
+    <div class="buttons">
+      <button id="checkBtn">Проверить</button>
+      <button id="previewBtn">Предпросмотр</button>
+      <button id="downloadBtn">Скачать</button>
+      <button id="clearBtn">Очистить</button>
+    </div>
+  </main>
+  
+  <!-- Окно предпросмотра -->
+  <div class="preview-overlay" id="previewOverlay">
+    <div class="preview-container">
+      <div class="preview-header">
+        <div class="preview-title">Предпросмотр файла</div>
+        <button class="preview-close" id="previewClose">×</button>
+      </div>
+      <div class="preview-content" id="previewContent">
+        <div class="preview-unsupported">Предпросмотр недоступен</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const fileInput = document.getElementById('fileInput');
+    const hexArea = document.getElementById('hexArea');
+    const fileInfo = document.getElementById('fileInfo');
+    const previewBtn = document.getElementById('previewBtn');
+    const previewOverlay = document.getElementById('previewOverlay');
+    const previewClose = document.getElementById('previewClose');
+    const previewContent = document.getElementById('previewContent');
+
+    // База сигнатур с расширениями и описаниями
+    const fileSignatures = {
+      // Изображения
+      'FFD8FFE0': { type: 'JPEG (JFIF)', ext: 'jpg', category: 'image' },
+      'FFD8FFE1': { type: 'JPEG (EXIF)', ext: 'jpg', category: 'image' },
+      'FFD8FFDB': { type: 'JPEG', ext: 'jpg', category: 'image' },
+      'FFD8FFEE': { type: 'JPEG', ext: 'jpg', category: 'image' },
+      'FFD8FF': { type: 'JPEG', ext: 'jpg', category: 'image' },
+      '89504E470D0A1A0A': { type: 'PNG', ext: 'png', category: 'image' },
+      '474946383761': { type: 'GIF87a', ext: 'gif', category: 'image' },
+      '474946383961': { type: 'GIF89a', ext: 'gif', category: 'image' },
+      '424D': { type: 'BMP', ext: 'bmp', category: 'image' },
+      '49492A00': { type: 'TIFF (Little Endian)', ext: 'tiff', category: 'image' },
+      '4D4D002A': { type: 'TIFF (Big Endian)', ext: 'tiff', category: 'image' },
+      '00000100': { type: 'ICO', ext: 'ico', category: 'image' },
+      '52494646': { type: 'WebP/WAV/AVI', ext: 'webp', category: 'image', needsCheck: true },
+      '38425053': { type: 'PSD', ext: 'psd', category: 'image' },
+      '57454250': { type: 'WebP', ext: 'webp', category: 'image' },
+
+      // Архивы
+      '504B0304': { type: 'ZIP/JAR/DOCX/XLSX', ext: 'zip', category: 'archive' },
+      '504B0506': { type: 'ZIP (пустой)', ext: 'zip', category: 'archive' },
+      '504B0708': { type: 'ZIP', ext: 'zip', category: 'archive' },
+      '526172211A0700': { type: 'RAR v1.5+', ext: 'rar', category: 'archive' },
+      '526172211A070100': { type: 'RAR v5.0+', ext: 'rar', category: 'archive' },
+      '377ABCAF271C': { type: '7-Zip', ext: '7z', category: 'archive' },
+      '425A68': { type: 'BZIP2', ext: 'bz2', category: 'archive' },
+      '1F8B08': { type: 'GZIP', ext: 'gz', category: 'archive' },
+
+      // Аудио
+      '494433': { type: 'MP3 (ID3v2)', ext: 'mp3', category: 'audio' },
+      'FFFB': { type: 'MP3', ext: 'mp3', category: 'audio' },
+      'FFF3': { type: 'MP3', ext: 'mp3', category: 'audio' },
+      'FFF2': { type: 'MP3', ext: 'mp3', category: 'audio' },
+      '464C4143': { type: 'FLAC', ext: 'flac', category: 'audio' },
+      '4F676753': { type: 'OGG', ext: 'ogg', category: 'audio' },
+      '4D546864': { type: 'MIDI', ext: 'mid', category: 'audio' },
+      '52494646': { type: 'WAV', ext: 'wav', category: 'audio', needsCheck: true },
+
+      // Видео
+      '000001BA': { type: 'MPEG Video', ext: 'mpg', category: 'video' },
+      '000001B3': { type: 'MPEG Video', ext: 'mpg', category: 'video' },
+      '66747970': { type: 'MP4/MOV', ext: 'mp4', category: 'video' },
+      '1A45DFA3': { type: 'Matroska/MKV', ext: 'mkv', category: 'video' },
+      '464C56': { type: 'Flash Video', ext: 'flv', category: 'video' },
+      '30262E31': { type: 'WMV', ext: 'wmv', category: 'video' },
+      '52494646': { type: 'AVI', ext: 'avi', category: 'video', needsCheck: true },
+
+      // Документы
+      '25504446': { type: 'PDF', ext: 'pdf', category: 'document' },
+      'D0CF11E0A1B11AE1': { type: 'Microsoft Office (старый)', ext: 'doc', category: 'document' },
+      '7B5C727466': { type: 'RTF', ext: 'rtf', category: 'document' },
+      '504B0304': { type: 'DOCX', ext: 'docx', category: 'document', needsCheck: true },
+      '504B0304': { type: 'XLSX', ext: 'xlsx', category: 'document', needsCheck: true },
+      '504B0304': { type: 'PPTX', ext: 'pptx', category: 'document', needsCheck: true },
+
+      // Веб-файлы
+      '3C21444F43545950': { type: 'HTML', ext: 'html', category: 'web' },
+      '3C68746D6C': { type: 'HTML', ext: 'html', category: 'web' },
+      '3C48544D4C': { type: 'HTML', ext: 'html', category: 'web' },
+      '2F2A': { type: 'CSS/JS', ext: 'css', category: 'web', needsCheck: true },
+      '3C3F786D6C': { type: 'XML', ext: 'xml', category: 'web' },
+      '7B0D0A': { type: 'JSON', ext: 'json', category: 'web' },
+      '7B': { type: 'JSON', ext: 'json', category: 'web' },
+      'EFBBBF': { type: 'UTF-8 BOM', ext: 'txt', category: 'text' },
+
+      // Исполняемые файлы
+      '4D5A': { type: 'Windows EXE/DLL', ext: 'exe', category: 'executable' },
+      '7F454C46': { type: 'Linux ELF', ext: 'elf', category: 'executable' },
+      'FEEDFACE': { type: 'Mach-O 32-bit', ext: 'macho', category: 'executable' },
+      'FEEDFACF': { type: 'Mach-O 64-bit', ext: 'macho', category: 'executable' },
+      'CAFEBABE': { type: 'Java Class', ext: 'class', category: 'executable' },
+
+      // Текстовые файлы с BOM
+      'FEFF': { type: 'UTF-16 BE BOM', ext: 'txt', category: 'text' },
+      'FFFE': { type: 'UTF-16 LE BOM', ext: 'txt', category: 'text' }
+    };
+
+    // Получение расширения из имени файла
+    function getFileExtension(filename) {
+      if (!filename) return null;
+      const parts = filename.toLowerCase().split('.');
+      return parts.length > 1 ? parts[parts.length - 1] : null;
+    }
+
+    // Определение типа по расширению файла
+    function getTypeByExtension(ext) {
+      const extMap = {
+        // Изображения
+        'jpg': { type: 'JPEG Image', ext: 'jpg', category: 'image' },
+        'jpeg': { type: 'JPEG Image', ext: 'jpg', category: 'image' },
+        'png': { type: 'PNG Image', ext: 'png', category: 'image' },
+        'gif': { type: 'GIF Image', ext: 'gif', category: 'image' },
+        'bmp': { type: 'BMP Image', ext: 'bmp', category: 'image' },
+        'webp': { type: 'WebP Image', ext: 'webp', category: 'image' },
+        'tiff': { type: 'TIFF Image', ext: 'tiff', category: 'image' },
+        'ico': { type: 'Icon', ext: 'ico', category: 'image' },
+        'psd': { type: 'Photoshop', ext: 'psd', category: 'image' },
+        'svg': { type: 'SVG Image', ext: 'svg', category: 'image' },
+        
+        // Аудио
+        'mp3': { type: 'MP3 Audio', ext: 'mp3', category: 'audio' },
+        'wav': { type: 'WAV Audio', ext: 'wav', category: 'audio' },
+        'flac': { type: 'FLAC Audio', ext: 'flac', category: 'audio' },
+        'ogg': { type: 'OGG Audio', ext: 'ogg', category: 'audio' },
+        'aac': { type: 'AAC Audio', ext: 'aac', category: 'audio' },
+        'wma': { type: 'WMA Audio', ext: 'wma', category: 'audio' },
+        'm4a': { type: 'M4A Audio', ext: 'm4a', category: 'audio' },
+        'mid': { type: 'MIDI', ext: 'mid', category: 'audio' },
+        'midi': { type: 'MIDI', ext: 'midi', category: 'audio' },
+        
+        // Видео
+        'mp4': { type: 'MP4 Video', ext: 'mp4', category: 'video' },
+        'avi': { type: 'AVI Video', ext: 'avi', category: 'video' },
+        'mkv': { type: 'MKV Video', ext: 'mkv', category: 'video' },
+        'mov': { type: 'MOV Video', ext: 'mov', category: 'video' },
+        'wmv': { type: 'WMV Video', ext: 'wmv', category: 'video' },
+        'flv': { type: 'FLV Video', ext: 'flv', category: 'video' },
+        'webm': { type: 'WebM Video', ext: 'webm', category: 'video' },
+        'mpg': { type: 'MPEG Video', ext: 'mpg', category: 'video' },
+        'mpeg': { type: 'MPEG Video', ext: 'mpeg', category: 'video' },
+        '3gp': { type: '3GP Video', ext: '3gp', category: 'video' },
+        
+        // Документы
+        'pdf': { type: 'PDF Document', ext: 'pdf', category: 'document' },
+        'doc': { type: 'Word Document', ext: 'doc', category: 'document' },
+        'docx': { type: 'Word Document', ext: 'docx', category: 'document' },
+        'xls': { type: 'Excel Spreadsheet', ext: 'xls', category: 'document' },
+        'xlsx': { type: 'Excel Spreadsheet', ext: 'xlsx', category: 'document' },
+        'ppt': { type: 'PowerPoint', ext: 'ppt', category: 'document' },
+        'pptx': { type: 'PowerPoint', ext: 'pptx', category: 'document' },
+        'rtf': { type: 'RTF Document', ext: 'rtf', category: 'document' },
+        'txt': { type: 'Text File', ext: 'txt', category: 'text' },
+        'odt': { type: 'OpenDocument Text', ext: 'odt', category: 'document' },
+        'ods': { type: 'OpenDocument Spreadsheet', ext: 'ods', category: 'document' },
+        'odp': { type: 'OpenDocument Presentation', ext: 'odp', category: 'document' },
+        
+        // Веб-файлы
+        'html': { type: 'HTML Document', ext: 'html', category: 'web' },
+        'htm': { type: 'HTML Document', ext: 'htm', category: 'web' },
+        'css': { type: 'CSS Stylesheet', ext: 'css', category: 'web' },
+        'js': { type: 'JavaScript', ext: 'js', category: 'web' },
+        'json': { type: 'JSON Data', ext: 'json', category: 'web' },
+        'xml': { type: 'XML Document', ext: 'xml', category: 'web' },
+        'php': { type: 'PHP Script', ext: 'php', category: 'web' },
+        
+        // Архивы
+        'zip': { type: 'ZIP Archive', ext: 'zip', category: 'archive' },
+        'rar': { type: 'RAR Archive', ext: 'rar', category: 'archive' },
+        '7z': { type: '7-Zip Archive', ext: '7z', category: 'archive' },
+        'tar': { type: 'TAR Archive', ext: 'tar', category: 'archive' },
+        'gz': { type: 'GZIP Archive', ext: 'gz', category: 'archive' },
+        'bz2': { type: 'BZIP2 Archive', ext: 'bz2', category: 'archive' },
+        
+        // Исполняемые
+        'exe': { type: 'Windows Executable', ext: 'exe', category: 'executable' },
+        'msi': { type: 'Windows Installer', ext: 'msi', category: 'executable' },
+        'app': { type: 'macOS Application', ext: 'app', category: 'executable' },
+        'deb': { type: 'Debian Package', ext: 'deb', category: 'executable' },
+        'rpm': { type: 'RPM Package', ext: 'rpm', category: 'executable' },
+        'bat': { type: 'Batch Script', ext: 'bat', category: 'executable' },
+        'sh': { type: 'Shell Script', ext: 'sh', category: 'executable' },
+        'cmd': { type: 'Command Script', ext: 'cmd', category: 'executable' }
+      };
+      
+      return extMap[ext] || null;
+    }
+
+    let currentFileName = null; // Запоминаем имя загруженного файла
+
+    // Умное определение типа файла с учётом имени файла
+    function detectFileType(hexData, filename = null) {
+      const hex = hexData.toUpperCase();
+      
+      // Сначала пробуем определить по заголовку (HEX)
+      const sortedSigs = Object.keys(fileSignatures)
+        .sort((a, b) => b.length - a.length);
+      
+      let hexDetection = null;
+      for (const signature of sortedSigs) {
+        if (hex.startsWith(signature)) {
+          const info = fileSignatures[signature];
+          
+          // Дополнительные проверки для неоднозначных сигнатур
+          if (info.needsCheck && signature === '52494646') {
+            if (hex.indexOf('57454250') > 0) {
+              hexDetection = { ...info, type: 'WebP', ext: 'webp' };
+            } else if (hex.indexOf('57415645') > 0) {
+              hexDetection = { ...info, type: 'WAV Audio', ext: 'wav' };
+            } else if (hex.indexOf('41564920') > 0) {
+              hexDetection = { ...info, type: 'AVI Video', ext: 'avi' };
+            } else {
+              hexDetection = info;
+            }
+          } else if (signature === '504B0304') {
+            // Проверка Office форматов в ZIP
+            if (hex.indexOf('776F7264') > 0 || hex.indexOf('646F6378') > 0) {
+              hexDetection = { ...info, type: 'DOCX Document', ext: 'docx' };
+            } else if (hex.indexOf('786C7378') > 0 || hex.indexOf('656C') > 0) {
+              hexDetection = { ...info, type: 'XLSX Spreadsheet', ext: 'xlsx' };
+            } else if (hex.indexOf('70707478') > 0) {
+              hexDetection = { ...info, type: 'PPTX Presentation', ext: 'pptx' };
+            } else {
+              hexDetection = info;
+            }
+          } else if (signature === '2F2A') {
+            // Проверка CSS/JS
+            if (hex.indexOf('2A2F') > 0 && hex.indexOf('626F6479') === -1) {
+              hexDetection = { ...info, type: 'CSS', ext: 'css' };
+            } else {
+              hexDetection = { ...info, type: 'JavaScript', ext: 'js' };
+            }
+          } else {
+            hexDetection = info;
+          }
+          break;
+        }
+      }
+      
+      // Теперь пробуем определить по расширению файла
+      let extDetection = null;
+      if (filename) {
+        const fileExt = getFileExtension(filename);
+        if (fileExt) {
+          extDetection = getTypeByExtension(fileExt);
+        }
+      }
+      
+      // Логика выбора результата:
+      // 1. Если и HEX и расширение совпадают - отлично!
+      // 2. Если HEX определился, но расширение не совпадает - доверяем HEX, но показываем предупреждение
+      // 3. Если только расширение определилось - используем его
+      // 4. Если ничего не определилось - пробуем текстовый файл
+      
+      if (hexDetection && extDetection) {
+        if (hexDetection.ext === extDetection.ext) {
+          return { ...hexDetection, confidence: 'высокая', source: 'заголовок + расширение' };
+        } else {
+          return { 
+            ...hexDetection, 
+            confidence: 'средняя', 
+            source: 'заголовок (расширение не совпадает)',
+            expectedExt: extDetection.ext
+          };
+        }
+      } else if (hexDetection) {
+        return { ...hexDetection, confidence: 'средняя', source: 'заголовок файла' };
+      } else if (extDetection) {
+        return { ...extDetection, confidence: 'низкая', source: 'расширение файла' };
+      }
+      
+      // Fallback - проверяем на текстовый файл
+      if (isLikelyText(hexData)) {
+        return { type: 'Text File', ext: 'txt', category: 'text', confidence: 'низкая', source: 'анализ содержимого' };
+      }
+      
+      return { type: 'Unknown Format', ext: 'bin', category: 'unknown', confidence: 'нет', source: 'неизвестно' };
+    }
+
+    // Проверка на текстовый файл
+    function isLikelyText(hexData) {
+      const hex = hexData.toUpperCase();
+      const bytes = hex.match(/.{2}/g) || [];
+      
+      if (bytes.length < 10) return false;
+      
+      let textChars = 0;
+      for (let i = 0; i < Math.min(bytes.length, 100); i++) {
+        const byte = parseInt(bytes[i], 16);
+        if ((byte >= 0x20 && byte <= 0x7E) || byte === 0x09 || byte === 0x0A || byte === 0x0D) {
+          textChars++;
+        }
+      }
+      
+      return (textChars / Math.min(bytes.length, 100)) > 0.7;
+    }
+
+    // Расширенная валидация файлов
+    function validateFile(hexData, fileInfo) {
+      const hex = hexData.toUpperCase();
+      
+      // Специфичные проверки по типам файлов
+      switch (fileInfo.category) {
+        case 'image':
+          if (fileInfo.ext === 'jpg' && hex.startsWith('FFD8')) {
+            return hex.includes('FFD9') ? 'валидный' : 'возможно поврежден (нет EOF)';
+          }
+          if (fileInfo.ext === 'png' && hex.startsWith('89504E47')) {
+            return hex.includes('49454E44AE426082') ? 'валидный' : 'возможно поврежден';
+          }
+          if (fileInfo.ext === 'gif' && hex.startsWith('474946')) {
+            return hex.includes('003B') || hex.includes('21') ? 'валидный' : 'возможно поврежден';
+          }
+          break;
+          
+        case 'document':
+          if (fileInfo.ext === 'pdf' && hex.startsWith('25504446')) {
+            return hex.includes('454O46') || hex.includes('2525454F46') ? 'валидный' : 'возможно поврежден';
+          }
+          break;
+          
+        case 'archive':
+          if (fileInfo.ext === 'zip' && hex.startsWith('504B')) {
+            return hex.length > 60 ? 'валидный' : 'слишком мал';
+          }
+          break;
+      }
+      
+      // Общая проверка размера
+      const size = hex.length / 2;
+      if (size < 10) return 'слишком мал';
+      if (size > 1000000) return 'очень большой';
+      
+      return 'предположительно валидный';
+    }
+
+    // Функция для отображения предпросмотра
+    function showPreview(hexData, fileType) {
+      previewContent.innerHTML = '';
+      
+      // Преобразуем HEX в бинарные данные
+      let hex = hexData.replace(/\s+/g, '').toUpperCase();
+      if (hex.length % 2 !== 0) {
+        hex = '0' + hex;
+      }
+      
+      const bytes = new Uint8Array(hex.match(/.{2}/g).map(h => parseInt(h, 16)));
+      const blob = new Blob([bytes]);
+      const url = URL.createObjectURL(blob);
+      
+      // В зависимости от типа файла показываем соответствующий предпросмотр
+      switch (fileType.category) {
+        case 'image':
+          const img = document.createElement('img');
+          img.src = url;
+          img.classList.add('preview-image');
+          img.onload = () => URL.revokeObjectURL(url);
+          previewContent.appendChild(img);
+          break;
+          
+        case 'audio':
+          const audio = document.createElement('audio');
+          audio.controls = true;
+          audio.src = url;
+          audio.classList.add('preview-audio');
+          previewContent.appendChild(audio);
+          break;
+          
+        case 'video':
+          const video = document.createElement('video');
+          video.controls = true;
+          video.src = url;
+          video.classList.add('preview-video');
+          previewContent.appendChild(video);
+          break;
+          
+        case 'text':
+        case 'web':
+        case 'document':
+          // Для текстовых файлов пытаемся декодировать содержимое
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            const text = e.target.result;
+            const pre = document.createElement('pre');
+            pre.classList.add('preview-text');
+            pre.textContent = text;
+            previewContent.appendChild(pre);
+            URL.revokeObjectURL(url);
+          };
+          reader.readAsText(blob);
+          break;
+          
+        default:
+          previewContent.innerHTML = `
+            <div class="preview-unsupported">
+              <p>Предпросмотр для данного типа файлов не поддерживается</p>
+              <p>Тип: ${fileType.type} (${fileType.ext})</p>
+              <p>Размер: ${bytes.length} байт</p>
+            </div>
+          `;
+          URL.revokeObjectURL(url);
+      }
+      
+      // Показываем окно предпросмотра
+      previewOverlay.classList.add('active');
+    }
+
+    // Загрузка файла
+    fileInput.addEventListener('change', () => {
+      const file = fileInput.files[0];
+      if (!file) return;
+      
+      currentFileName = file.name; // Запоминаем имя файла
+      fileInfo.innerHTML = `<span class="loading">Загрузка: ${file.name} (${file.size} байт)...</span>`;
+      
+      const reader = new FileReader();
+      reader.onload = e => {
+        const bytes = new Uint8Array(e.target.result);
+        const hexString = Array.from(bytes)
+          .map(x => x.toString(16).padStart(2, '0'))
+          .join(' ');
+        hexArea.value = hexString;
+        
+        // Сразу анализируем загруженный файл
+        const detectedInfo = detectFileType(hexString.replace(/\s+/g, ''), currentFileName);
+        const validation = validateFile(hexString.replace(/\s+/g, ''), detectedInfo);
+        
+        let warningText = '';
+        if (detectedInfo.expectedExt) {
+          warningText = `<br><small style="color: #ff9800;">⚠️ Расширение файла (${getFileExtension(currentFileName)}) не совпадает с содержимым</small>`;
+        }
+        
+        fileInfo.innerHTML = `
+          Файл загружен: <strong>${file.name}</strong><br>
+          Размер: ${file.size} байт<br>
+          <strong>Определён как:</strong> ${detectedInfo.type} (.${detectedInfo.ext})<br>
+          <strong>Уверенность:</strong> ${detectedInfo.confidence}${warningText}
+        `;
+      };
+      reader.readAsArrayBuffer(file);
+    });
+
+    // Проверка типа файла
+    document.getElementById('checkBtn').addEventListener('click', () => {
+      let hex = hexArea.value.replace(/\s+/g, '').toUpperCase();
+      
+      if (hex.length === 0) {
+        return alert('Введите HEX данные для проверки');
+      }
+      
+      if (!hex.match(/^[0-9A-F]*$/)) {
+        return alert('Некорректные HEX символы! Используйте только 0-9 и A-F');
+      }
+      
+      if (hex.length < 8) {
+        return alert('Недостаточно данных для определения типа (минимум 4 байта)');
+      }
+      
+      const detectedInfo = detectFileType(hex, currentFileName);
+      const validation = validateFile(hex, detectedInfo);
+      
+      fileInfo.innerHTML = `
+        <strong>Тип:</strong> ${detectedInfo.type}<br>
+        <strong>Категория:</strong> ${detectedInfo.category}<br>
+        <strong>Расширение:</strong> .${detectedInfo.ext}<br>
+        <strong>Уверенность:</strong> ${detectedInfo.confidence}<br>
+        <strong>Источник:</strong> ${detectedInfo.source}<br>
+        <strong>Состояние:</strong> <span class="${validation.includes('валидный') ? 'valid' : validation.includes('поврежден') ? 'invalid' : ''}">${validation}</span><br>
+        <strong>Размер:</strong> ${hex.length / 2} байт
+        <div class="extension-info">💡 Файл будет сохранён как output.${detectedInfo.ext}</div>
+      `;
+    });
+
+    // Предпросмотр файла
+    previewBtn.addEventListener('click', () => {
+      let hex = hexArea.value.replace(/\s+/g, '').toUpperCase();
+      
+      if (hex.length === 0) {
+        return alert('Нет данных для предпросмотра');
+      }
+      
+      if (!hex.match(/^[0-9A-F]*$/)) {
+        return alert('Некорректные HEX символы! Очистите данные и попробуйте снова');
+      }
+      
+      if (hex.length < 8) {
+        return alert('Недостаточно данных для предпросмотра');
+      }
+      
+      const detectedInfo = detectFileType(hex, currentFileName);
+      showPreview(hexArea.value, detectedInfo);
+    });
+
+    // Закрытие окна предпросмотра
+    previewClose.addEventListener('click', () => {
+      previewOverlay.classList.remove('active');
+    });
+
+    // Скачивание файла с умным определением расширения
+    document.getElementById('downloadBtn').addEventListener('click', () => {
+      let hex = hexArea.value.replace(/\s+/g, '').toUpperCase();
+      
+      if (hex.length === 0) {
+        return alert('Нет данных для скачивания');
+      }
+      
+      if (!hex.match(/^[0-9A-F]*$/)) {
+        return alert('Некорректные HEX символы! Очистите данные и попробуйте снова');
+      }
+      
+      if (hex.length % 2 !== 0) {
+        hex = '0' + hex;
+        alert('Добавлен ведущий ноль для корректной работы с байтами');
+      }
+      
+      try {
+        const bytes = new Uint8Array(
+          hex.match(/.{2}/g).map(h => parseInt(h, 16))
+        );
+        
+        const detectedInfo = detectFileType(hex, currentFileName);
+        const validation = validateFile(hex, detectedInfo);
+        
+        // Создаём файл с определённым расширением
+        const blob = new Blob([bytes]);
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `output.${detectedInfo.ext}`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(a.href);
+        
+        fileInfo.innerHTML = `
+          <span class="valid">✓ Файл скачан как output.${detectedInfo.ext}</span><br>
+          <small>Тип: ${detectedInfo.type} | Состояние: ${validation}</small>
+        `;
+        
+      } catch (error) {
+        alert('Ошибка при создании файла: ' + error.message);
+      }
+    });
+
+    // Очистка
+    document.getElementById('clearBtn').addEventListener('click', () => {
+      hexArea.value = '';
+      fileInput.value = '';
+      currentFileName = null; // Сбрасываем имя файла
+      fileInfo.textContent = 'Выберите файл или введите HEX данные';
+    });
+
+    // Обновление информации при вводе
+    hexArea.addEventListener('input', () => {
+      const hex = hexArea.value.replace(/\s+/g, '');
+      if (hex.length > 0) {
+        const bytes = hex.length / 2;
+        fileInfo.innerHTML = `HEX данных: ${bytes} байт${bytes > 8 ? ' <small>(достаточно для анализа)</small>' : ' <small>(мало для точного определения)</small>'}`;
+      }
+    });
+  </script>
+</body>
+</html>
