@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Цветовая палитра HSV</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+        
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #f0f4f8;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            padding: 30px;
+            max-width: 400px;
+            width: 100%;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        
+        .header h1 {
+            color: #2c3e50;
+            font-size: 1.8em;
+            margin-bottom: 8px;
+        }
+        
+        .header p {
+            color: #7f8c8d;
+            font-size: 1em;
+        }
+        
+        .color-display {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .color-preview {
+            width: 80px;
+            height: 80px;
+            border-radius: 12px;
+            border: 3px solid #e0e0e0;
+            background: #1168c2;
+            flex-shrink: 0;
+        }
+        
+        .hex-input {
+            flex: 1;
+            padding: 0px 0px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-family: 'Consolas', monospace;
+            font-size: 1.1em;
+            font-weight: bold;
+            text-align: center;
+            text-transform: uppercase;
+            transition: border-color 0.3s;
+            width: 50px;
+        }
+        
+        .hex-input:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+        
+        .color-picker {
+            position: relative;
+            width: 100%;
+            height: 300px;
+            background: linear-gradient(to right, #fff, #f00);
+            border-radius: 12px;
+            margin-bottom: 25px;
+            overflow: hidden;
+            cursor: crosshair;
+        }
+        
+        .color-picker::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(to top, #000, transparent);
+        }
+        
+        .picker-cursor {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border: 2px solid white;
+            border-radius: 50%;
+            box-shadow: 0 0 4px rgba(0,0,0,0.5);
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            top: 0;
+            left: 100%;
+        }
+        
+        .sliders {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .slider-group {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .slider-label {
+            width: 80px;
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 0.9em;
+        }
+        
+        .slider-container {
+            flex: 1;
+            position: relative;
+        }
+        
+        .slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #e0e0e0;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: white;
+            border: 2px solid #3498db;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .slider-value {
+            width: 40px;
+            text-align: center;
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 0.9em;
+        }
+        
+        .hue-slider {
+            background: linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00);
+        }
+        
+        .saturation-slider {
+            background: linear-gradient(to right, #808080, currentColor);
+        }
+        
+        .value-slider {
+            background: linear-gradient(to right, #000, currentColor);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Цветовая палитра</h1>
+            <p>HSV палитра с HEX-кодами</p>
+        </div>
+        
+        <div class="color-display">
+            <div class="color-preview" id="colorPreview"></div>
+            <input type="text" class="hex-input" id="hexInput" value="#1168C2" maxlength="7">
+        </div>
+        
+        <div class="color-picker" id="colorPicker">
+            <div class="picker-cursor" id="pickerCursor"></div>
+        </div>
+        
+        <div class="sliders">
+            <div class="slider-group">
+                <div class="slider-label">Тон (H)</div>
+                <div class="slider-container">
+                    <input type="range" min="0" max="360" value="210" class="slider hue-slider" id="hueSlider">
+                </div>
+                <div class="slider-value" id="hueValue">210</div>
+            </div>
+            
+            <div class="slider-group">
+                <div class="slider-label">Насыщенность (S)</div>
+                <div class="slider-container">
+                    <input type="range" min="0" max="100" value="70" class="slider saturation-slider" id="saturationSlider">
+                </div>
+                <div class="slider-value" id="saturationValue">70</div>
+            </div>
+            
+            <div class="slider-group">
+                <div class="slider-label">Значение (V)</div>
+                <div class="slider-container">
+                    <input type="range" min="0" max="100" value="76" class="slider value-slider" id="valueSlider">
+                </div>
+                <div class="slider-value" id="valueValue">76</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const colorPreview = document.getElementById('colorPreview');
+            const hexInput = document.getElementById('hexInput');
+            const colorPicker = document.getElementById('colorPicker');
+            const pickerCursor = document.getElementById('pickerCursor');
+            const hueSlider = document.getElementById('hueSlider');
+            const saturationSlider = document.getElementById('saturationSlider');
+            const valueSlider = document.getElementById('valueSlider');
+            const hueValue = document.getElementById('hueValue');
+            const saturationValue = document.getElementById('saturationValue');
+            const valueValue = document.getElementById('valueValue');
+            
+            let currentHue = 210;
+            let currentSaturation = 70;
+            let currentValue = 76;
+            let isDragging = false;
+            
+            function updateColor() {
+                const hex = hsvToHex(currentHue, currentSaturation, currentValue);
+                colorPreview.style.backgroundColor = hex;
+                hexInput.value = hex.toUpperCase();
+                
+                updateColorPickerBackground();
+                updateSlidersColor();
+                updatePickerCursor();
+            }
+            
+            function updateColorPickerBackground() {
+                const hueColor = hsvToHex(currentHue, 100, 100);
+                colorPicker.style.background = `linear-gradient(to right, #fff, ${hueColor})`;
+            }
+            
+            function updateSlidersColor() {
+                const currentColor = hsvToHex(currentHue, currentSaturation, currentValue);
+                saturationSlider.style.setProperty('--current-color', currentColor);
+                valueSlider.style.setProperty('--current-color', currentColor);
+            }
+            
+            function updatePickerCursor() {
+                const x = currentSaturation;
+                const y = 100 - currentValue;
+                pickerCursor.style.left = x + '%';
+                pickerCursor.style.top = y + '%';
+            }
+            
+            function hsvToHex(h, s, v) {
+                h = h / 360;
+                s = s / 100;
+                v = v / 100;
+                
+                let r, g, b;
+                const i = Math.floor(h * 6);
+                const f = h * 6 - i;
+                const p = v * (1 - s);
+                const q = v * (1 - f * s);
+                const t = v * (1 - (1 - f) * s);
+                
+                switch (i % 6) {
+                    case 0: r = v; g = t; b = p; break;
+                    case 1: r = q; g = v; b = p; break;
+                    case 2: r = p; g = v; b = t; break;
+                    case 3: r = p; g = q; b = v; break;
+                    case 4: r = t; g = p; b = v; break;
+                    case 5: r = v; g = p; b = q; break;
+                }
+                
+                const toHex = (c) => {
+                    const hex = Math.round(c * 255).toString(16);
+                    return hex.length === 1 ? '0' + hex : hex;
+                };
+                
+                return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+            }
+            
+            function hexToHsv(hex) {
+                hex = hex.replace('#', '');
+                const r = parseInt(hex.substr(0, 2), 16) / 255;
+                const g = parseInt(hex.substr(2, 2), 16) / 255;
+                const b = parseInt(hex.substr(4, 2), 16) / 255;
+                
+                const max = Math.max(r, g, b);
+                const min = Math.min(r, g, b);
+                let h, s, v = max;
+                
+                const d = max - min;
+                s = max === 0 ? 0 : d / max;
+                
+                if (max === min) {
+                    h = 0;
+                } else {
+                    switch (max) {
+                        case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+                        case g: h = (b - r) / d + 2; break;
+                        case b: h = (r - g) / d + 4; break;
+                    }
+                    h /= 6;
+                }
+                
+                return {
+                    h: Math.round(h * 360),
+                    s: Math.round(s * 100),
+                    v: Math.round(v * 100)
+                };
+            }
+            
+            function handleColorPickerClick(e) {
+                const rect = colorPicker.getBoundingClientRect();
+                const x = ((e.clientX - rect.left) / rect.width) * 100;
+                const y = ((e.clientY - rect.top) / rect.height) * 100;
+                
+                currentSaturation = Math.max(0, Math.min(100, x));
+                currentValue = Math.max(0, Math.min(100, 100 - y));
+                
+                saturationSlider.value = currentSaturation;
+                valueSlider.value = currentValue;
+                saturationValue.textContent = Math.round(currentSaturation);
+                valueValue.textContent = Math.round(currentValue);
+                
+                updateColor();
+            }
+            
+            colorPicker.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                handleColorPickerClick(e);
+            });
+            
+            document.addEventListener('mousemove', (e) => {
+                if (isDragging) {
+                    handleColorPickerClick(e);
+                }
+            });
+            
+            document.addEventListener('mouseup', () => {
+                isDragging = false;
+            });
+            
+            colorPicker.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                isDragging = true;
+                handleColorPickerClick(e.touches[0]);
+            });
+            
+            document.addEventListener('touchmove', (e) => {
+                if (isDragging) {
+                    e.preventDefault();
+                    handleColorPickerClick(e.touches[0]);
+                }
+            });
+            
+            document.addEventListener('touchend', () => {
+                isDragging = false;
+            });
+            
+            hueSlider.addEventListener('input', function() {
+                currentHue = parseInt(this.value);
+                hueValue.textContent = currentHue;
+                updateColor();
+            });
+            
+            saturationSlider.addEventListener('input', function() {
+                currentSaturation = parseInt(this.value);
+                saturationValue.textContent = currentSaturation;
+                updateColor();
+            });
+            
+            valueSlider.addEventListener('input', function() {
+                currentValue = parseInt(this.value);
+                valueValue.textContent = currentValue;
+                updateColor();
+            });
+            
+            hexInput.addEventListener('input', function() {
+                let hex = this.value.replace('#', '');
+                if (hex.length === 3) {
+                    hex = hex.split('').map(c => c + c).join('');
+                }
+                if (hex.length === 6 && /^[0-9A-Fa-f]{6}$/.test(hex)) {
+                    const hsv = hexToHsv(hex);
+                    currentHue = hsv.h;
+                    currentSaturation = hsv.s;
+                    currentValue = hsv.v;
+                    
+                    hueSlider.value = currentHue;
+                    saturationSlider.value = currentSaturation;
+                    valueSlider.value = currentValue;
+                    
+                    hueValue.textContent = currentHue;
+                    saturationValue.textContent = currentSaturation;
+                    valueValue.textContent = currentValue;
+                    
+                    updateColor();
+                }
+            });
+            
+            hexInput.addEventListener('blur', function() {
+                let hex = this.value.replace('#', '').toUpperCase();
+                if (hex.length === 6 && /^[0-9A-F]{6}$/.test(hex)) {
+                    this.value = '#' + hex;
+                } else {
+                    this.value = hsvToHex(currentHue, currentSaturation, currentValue).toUpperCase();
+                }
+            });
+            
+            updateColor();
+        });
+    </script>
+</body>
+</html>
