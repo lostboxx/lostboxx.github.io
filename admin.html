@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title id="title">Admin panel</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: Arial, sans-serif;
+        }
+        
+        .launch-btn {
+            padding: 5px 10px;
+            font-size: 4px;
+            background: #006400;
+            color: white;
+            border: none;
+            cursor: pointer;
+            justify-content: center;
+            align-content: center;
+        }
+        
+        .launch-btn:hover {
+            background: #0d5aa6;
+        }
+        
+        .content-page {
+            display: none;
+            padding: 20px;
+            background: transparent; 
+            min-height: 100vh;
+            width: 100vw;
+        }
+        span {
+            display: inline;  
+        }
+        #resultText {
+          color: green;
+        }
+
+        #reasonSelect, #sendBtn {
+            background: transparent;
+            border: 1px solid currentColor;
+            color: currentColor;
+            padding: 5px;
+        }
+        #sendBtn:hover {
+             background: transparent;
+             opacity: 0.8; 
+        }
+        #1 {
+        border: 10px solid red;  
+        }
+    </style>
+</head>
+<body>
+    <div id="launchScreen">
+        <button class="launch-btn" onclick="launchSystem()">Start</button>
+    </div>
+
+    <div id="contentPage" class="content-page">
+    <span>
+  <img src="admin-assets/1.gif" style="width: 100px; height: 100px;">
+  <img src="admin-assets/2.gif" style="width: 100px; height: 100px;"> 
+  <img src="admin-assets/3.gif" style="width: 100px; height: 100px;"> 
+  <p>Добро пожаловать в админскую панель!</p>  
+    </span>
+    
+  <hr>
+  
+   <h4>ЭЙ, ЧУВАААК!</h4> 
+   <p>Что тебя сюда привело?</p>
+   <img src="admin-assets/4.gif" style="width: 100px; height: 100px;">
+   <br>
+   <select id="reasonSelect">
+     <option>Выбери один из результатов!</option>
+     <option>Лазил в репозитории</option>
+     <option>Заходил по ссылкам</option>
+     <option>Случайно</option>
+     <option>Показали</option>
+     <option>Другое</option>
+   </select>
+   <button id="sendBtn" onclick="send()">Отправить</button>
+   <h3 id="resultText"></h3>
+   
+   <hr>
+   <h1 id="hours-live-counter"></h1>
+   <hr>
+   <img src="assets/photo_resources/lostboxicon.png" style="image-rendering: pixelated;">
+   <hr>
+   <div id="1">
+     <h3>ТАБЛИЦА ПОЧЁТА</h3>
+     <ul>
+    <li>МОЙ ДРУГ ИЗ ARENA BREAKOUT (если ты тут, передаю тебе привет!)</li>
+     </ul>
+   </div>
+   <hr>
+   <iframe src="https://lostboxx.github.io" style="width: 300px; height: 600px;"></iframe>
+    </div>
+
+    <audio id="bgMusic" loop>
+        <source src="https://files.catbox.moe/mxdac0.m4a" type="audio/mpeg">
+    </audio>
+
+    <script>
+        function launchSystem() {
+            document.getElementById('launchScreen').style.display = 'none';
+            document.getElementById('title').innerHTML = "🥹"
+            document.getElementById('contentPage').style.display = 'block';
+            
+            const music = document.getElementById('bgMusic');
+            music.volume = 0.3;
+            music.play().catch(e => {
+                console.log('Автозапуск музыки заблокирован браузером');
+            });
+            
+            music.addEventListener('ended', function() {
+                this.currentTime = 0;
+                this.play();
+            });
+            
+            startPsychoMode(); 
+        }
+          const startDate = new Date(2014, 5, 23, 1, 0, 0); 
+    const MS_PER_HOUR = 1000 * 60 * 60; 
+    const counterElement = document.getElementById('hours-live-counter');
+
+    function updateLiveCounter() {
+        const now = new Date();
+        const timeDifferenceMs = now.getTime() - startDate.getTime();
+        const hoursPassed = Math.floor(timeDifferenceMs / MS_PER_HOUR);
+        counterElement.textContent = '' + hoursPassed.toLocaleString('ru-RU');
+    }
+
+    updateLiveCounter();
+    setInterval(updateLiveCounter, 1000);  
+        function send() { 
+            let selectElement = document.getElementById('reasonSelect');
+            let selectedText = selectElement.options[selectElement.selectedIndex].text;
+            let resultDisplay = document.getElementById('resultText');
+            let responseText = '';
+
+            switch (selectedText.trim()) {
+              case 'Выбери один из результатов!':
+                  responseText = 'Ай, не это нужно выбирать! Выбери то, что ниже. 😅';
+                  break;
+                case 'Лазил в репозитории':
+                    responseText = 'А, ты из тех, кто любит копаться в исходниках? Уважаю! 😄';
+                    break;
+                case 'Заходил по ссылкам':
+                    responseText = 'О, ты один из тех, что любит лазить по «admin» ссылкам? Круто! 😊';
+                    break;
+                case 'Случайно':
+                    responseText = 'Случайности не случайны! Добро пожаловать, заблудшая душа. 😉';
+                    break;
+                case 'Показали':
+                    responseText = 'Круто, кто-то меня посоветовал! Передавай ему привет! 🥹';
+                    break;
+                case 'Другое':
+                    responseText = 'Интересно, а что именно? Надеюсь, ты найдешь тут то, что искал. 😂';
+                    break;
+                default:
+                    responseText = 'Чето сломалось, попробуй снова. 😬';
+                    break;
+            }
+
+            resultDisplay.textContent = responseText;
+        }
+
+        function getRandomColor() {
+            return '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0');
+        }
+
+        function startPsychoMode() {
+            const content = document.getElementById('contentPage');
+            
+            setInterval(() => {
+                document.body.style.backgroundColor = getRandomColor();
+                
+                const randomDegree = Math.floor(Math.random() * 360);
+                content.style.filter = `hue-rotate(${randomDegree}deg)`;
+                
+            }, 500); 
+        }
+    </script>
+</body>
+</html>
