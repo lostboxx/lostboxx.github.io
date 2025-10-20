@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Форматирование HTML/CSS/JS</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: white;
+            color: #333;
+            overflow: auto;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .mode-selector, .file-upload {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        select {
+            padding: 8px 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+            width: 100px;
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .file-label {
+            padding: 8px 12px;
+            background-color: #f0f0f0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        
+        .file-label:hover {
+            background-color: #e0e0e0;
+        }
+        
+        .input-area, .output-area {
+            margin-bottom: 20px;
+        }
+        
+        textarea {
+            width: 100%;
+            height: 200px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-family: monospace;
+            resize: vertical;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        
+        .buttons {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+        
+        button {
+            padding: 8px 12px;
+            background-color: #f0f0f0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        
+        button:hover {
+            background-color: #e0e0e0;
+        }
+        
+        .file-info {
+            margin-top: 5px;
+            font-size: 12px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Форматирование HTML/CSS/JS</h1>
+        
+        <div class="controls">
+            <div class="mode-selector">
+                <label for="mode-select">Режим форматирования:</label>
+                <select id="mode-select">
+                    <option value="html">HTML</option>
+                    <option value="css">CSS</option>
+                    <option value="js">JavaScript</option>
+                    <option value="html-css">HTML + CSS</option>
+                    <option value="html-js">HTML + JS</option>
+                    <option value="html-css-js">HTML + CSS + JS</option>
+                </select>
+            </div>
+            
+            <div class="file-upload">
+                <input type="file" id="file-input" class="file-input" accept=".html,.htm,.css,.js">
+                <label for="file-input" class="file-label">Загрузить файл</label>
+                <div id="file-info" class="file-info"></div>
+            </div>
+        </div>
+        
+        <div class="input-area">
+            <label for="html-input">Введите неформатированный код:</label>
+            <textarea id="html-input" placeholder="Введи код без отступов"></textarea>
+        </div>
+        
+        <div class="buttons">
+            <button id="format-btn">Форматировать</button>
+            <button id="copy-btn">Копировать</button>
+            <button id="clear-btn">Очистить</button>
+        </div>
+        
+        <div class="output-area">
+            <label for="html-output">Отформатированный код:</label>
+            <textarea id="html-output" readonly></textarea>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const htmlInput = document.getElementById('html-input');
+            const htmlOutput = document.getElementById('html-output');
+            const formatBtn = document.getElementById('format-btn');
+            const clearBtn = document.getElementById('clear-btn');
+            const copyBtn = document.getElementById('copy-btn');
+            const modeSelect = document.getElementById('mode-select');
+            const fileInput = document.getElementById('file-input');
+            const fileInfo = document.getElementById('file-info');
+            
+            // Пример неформатированного HTML
+            htmlInput.value = '';
+            
+            // Функция для загрузки файла
+            function handleFileUpload(file) {
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    const content = e.target.result;
+                    htmlInput.value = content;
+                    
+                    // Автоматически определяем режим по расширению файла
+                    const extension = file.name.split('.').pop().toLowerCase();
+                    switch(extension) {
+                        case 'html':
+                        case 'htm':
+                            modeSelect.value = 'html';
+                            break;
+                        case 'css':
+                            modeSelect.value = 'css';
+                            break;
+                        case 'js':
+                            modeSelect.value = 'js';
+                            break;
+                    }
+                    
+                    // Показываем информацию о файле
+                    fileInfo.textContent = `Загружен файл: ${file.name} (${(file.size / 1024).toFixed(2)} KB)`;
+                    
+                    // Автоформатирование
+                    formatBtn.click();
+                };
+                
+                reader.onerror = function() {
+                    alert('Ошибка при чтении файла');
+                };
+                
+                reader.readAsText(file);
+            }
+            
+            // Обработчик загрузки файла
+            fileInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const allowedExtensions = ['html', 'htm', 'css', 'js'];
+                    const extension = file.name.split('.').pop().toLowerCase();
+                    
+                    if (allowedExtensions.includes(extension)) {
+                        handleFileUpload(file);
+                    } else {
+                        alert('Пожалуйста, выберите файл с расширением .html, .htm, .css или .js');
+                        fileInput.value = '';
+                    }
+                }
+            });
+            
+            // Функция для форматирования HTML
+            function formatHTML(html) {
+                let formatted = '';
+                let indentLevel = 0;
+                let inTag = false;
+                let inAttribute = false;
+                let currentTag = '';
+                
+                for (let i = 0; i < html.length; i++) {
+                    const char = html[i];
+                    
+                    if (char === '<') {
+                        if (inTag && currentTag) {
+                            formatted += '>';
+                            inTag = false;
+                            currentTag = '';
+                        }
+                        
+                        if (html[i+1] === '/') {
+                            indentLevel--;
+                            formatted += '\n' + '  '.repeat(indentLevel) + '<';
+                        } else {
+                            formatted += '\n' + '  '.repeat(indentLevel) + '<';
+                            if (html.substring(i).match(/^<([a-z]+[1-6]?)(\s|>)/i) && 
+                                !html.substring(i).match(/^<(img|br|hr|input|meta|link|base)(\s|>)/i)) {
+                                indentLevel++;
+                            }
+                        }
+                        inTag = true;
+                    } else if (char === '>') {
+                        formatted += char;
+                        inTag = false;
+                        currentTag = '';
+                    } else if (inTag) {
+                        if (char === '"' || char === "'") {
+                            inAttribute = !inAttribute;
+                        }
+                        formatted += char;
+                    } else {
+                        formatted += char;
+                    }
+                }
+                
+                return formatted.trim();
+            }
+            
+            // Функция для форматирования CSS
+            function formatCSS(css) {
+                let formatted = '';
+                let indentLevel = 0;
+                let inRule = false;
+                let inComment = false;
+                
+                for (let i = 0; i < css.length; i++) {
+                    const char = css[i];
+                    const nextChar = css[i+1];
+                    
+                    // Обработка комментариев
+                    if (char === '/' && nextChar === '*') {
+                        inComment = true;
+                        formatted += '\n' + '  '.repeat(indentLevel) + '/*';
+                        i++;
+                        continue;
+                    }
+                    
+                    if (char === '*' && nextChar === '/') {
+                        inComment = false;
+                        formatted += '*/';
+                        i++;
+                        continue;
+                    }
+                    
+                    if (inComment) {
+                        formatted += char;
+                        continue;
+                    }
+                    
+                    if (char === '{') {
+                        formatted += ' {\n';
+                        indentLevel++;
+                        inRule = true;
+                    } else if (char === '}') {
+                        indentLevel--;
+                        formatted += '\n' + '  '.repeat(indentLevel) + '}';
+                        inRule = false;
+                    } else if (char === ';') {
+                        if (inRule) {
+                            formatted += ';\n' + '  '.repeat(indentLevel);
+                        } else {
+                            formatted += ';';
+                        }
+                    } else if (char === '\n' || char === '\r' || char === '\t') {
+                        // Пропускаем лишние пробелы
+                        continue;
+                    } else {
+                        formatted += char;
+                    }
+                }
+                
+                return formatted.trim();
+            }
+            
+            // Функция для форматирования JavaScript
+            function formatJS(js) {
+                let formatted = '';
+                let indentLevel = 0;
+                let inString = false;
+                let stringChar = '';
+                let inComment = false;
+                let inBlockComment = false;
+                
+                for (let i = 0; i < js.length; i++) {
+                    const char = js[i];
+                    const nextChar = js[i+1];
+                    
+                    // Обработка строк
+                    if ((char === '"' || char === "'" || char === '`') && !inComment && !inBlockComment) {
+                        if (!inString) {
+                            inString = true;
+                            stringChar = char;
+                        } else if (char === stringChar) {
+                            inString = false;
+                        }
+                    }
+                    
+                    // Обработка комментариев
+                    if (!inString) {
+                        if (char === '/' && nextChar === '/') {
+                            inComment = true;
+                        }
+                        if (char === '/' && nextChar === '*') {
+                            inBlockComment = true;
+                        }
+                        if (char === '\n') {
+                            inComment = false;
+                        }
+                        if (char === '*' && nextChar === '/') {
+                            inBlockComment = false;
+                            i++;
+                        }
+                    }
+                    
+                    if (inString || inComment || inBlockComment) {
+                        formatted += char;
+                        continue;
+                    }
+                    
+                    // Основное форматирование
+                    if (char === '{' || char === '[') {
+                        formatted += char + '\n' + '  '.repeat(++indentLevel);
+                    } else if (char === '}' || char === ']') {
+                        formatted = formatted.trimEnd();
+                        formatted += '\n' + '  '.repeat(--indentLevel) + char;
+                    } else if (char === ';') {
+                        formatted += ';\n' + '  '.repeat(indentLevel);
+                    } else if (char === ',') {
+                        formatted += ',\n' + '  '.repeat(indentLevel);
+                    } else {
+                        formatted += char;
+                    }
+                }
+                
+                return formatted.trim();
+            }
+            
+            // Основная функция форматирования
+            function formatCode(code, mode) {
+                switch(mode) {
+                    case 'html':
+                        return formatHTML(code);
+                    case 'css':
+                        return formatCSS(code);
+                    case 'js':
+                        return formatJS(code);
+                    case 'html-css':
+                        // Извлекаем и форматируем CSS из HTML
+                        let htmlWithCSS = code;
+                        const styleRegex = /<style[^>]*>([\s\S]*?)<\/style>/gi;
+                        htmlWithCSS = htmlWithCSS.replace(styleRegex, (match, cssContent) => {
+                            return match.replace(cssContent, '\n' + formatCSS(cssContent) + '\n');
+                        });
+                        return formatHTML(htmlWithCSS);
+                    case 'html-js':
+                        // Извлекаем и форматируем JS из HTML
+                        let htmlWithJS = code;
+                        const scriptRegex = /<script[^>]*>([\s\S]*?)<\/script>/gi;
+                        htmlWithJS = htmlWithJS.replace(scriptRegex, (match, jsContent) => {
+                            return match.replace(jsContent, '\n' + formatJS(jsContent) + '\n');
+                        });
+                        return formatHTML(htmlWithJS);
+                    case 'html-css-js':
+                        // Форматируем и CSS и JS внутри HTML
+                        let fullHTML = code;
+                        
+                        // Форматируем CSS
+                        const styleRegexFull = /<style[^>]*>([\s\S]*?)<\/style>/gi;
+                        fullHTML = fullHTML.replace(styleRegexFull, (match, cssContent) => {
+                            return match.replace(cssContent, '\n' + formatCSS(cssContent) + '\n');
+                        });
+                        
+                        // Форматируем JS
+                        const scriptRegexFull = /<script[^>]*>([\s\S]*?)<\/script>/gi;
+                        fullHTML = fullHTML.replace(scriptRegexFull, (match, jsContent) => {
+                            return match.replace(jsContent, '\n' + formatJS(jsContent) + '\n');
+                        });
+                        
+                        return formatHTML(fullHTML);
+                    default:
+                        return code;
+                }
+            }
+            
+            // Обработчик для кнопки форматирования
+            formatBtn.addEventListener('click', function() {
+                const inputCode = htmlInput.value;
+                const selectedMode = modeSelect.value;
+                const formattedCode = formatCode(inputCode, selectedMode);
+                htmlOutput.value = formattedCode;
+            });
+            
+            // Обработчик для кнопки очистки
+            clearBtn.addEventListener('click', function() {
+                htmlInput.value = '';
+                htmlOutput.value = '';
+                fileInput.value = '';
+                fileInfo.textContent = '';
+            });
+            
+            // Обработчик для кнопки копирования
+            copyBtn.addEventListener('click', function() {
+                htmlOutput.select();
+                document.execCommand('copy');
+                alert('Код скопирован в буфер обмена!');
+            });
+            
+            // Автоформатирование при загрузке
+            formatBtn.click();
+        });
+    </script>
+</body>
+</html>
