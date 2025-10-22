@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Шифровальщик 🛠️</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #000000;
+            color: #999999;
+        }
+        .container { 
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        textarea, input { 
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 12px;
+            box-sizing: border-box;
+            background: #999999;
+        }
+        button { 
+            padding: 8px 16px; 
+            margin-right: 8px; 
+            cursor: pointer;
+            border: 1px solid #ccc;
+            background-color: #f4f4f4;
+            background: #999999;
+        }
+    </style>
+
+</head>
+<body>
+    <div class="container">
+        <h1>Шифрование сообщения (PBKDF2/AES) 🛠️</h1>
+        <p class="warning">⚠️ 500.000 итераций могут занять несколько секунд! Это специально сделано для безопасности!</p>
+
+        <div class="section">
+            <h2>1. Шифратор 🔒</h2>
+            <label for="password_encrypt">Пароль (Ключ):</label>
+            <input type="password" id="password_encrypt" value="" placeholder="12345">
+            
+            <label for="plaintext">Текст для шифрования:</label>
+            <textarea id="plaintext" placeholder="Введите ваше сообщение...">Это секретное сообщение!</textarea>
+            <button onclick="encryptMessage()">Зашифровать!</button>
+            
+            <p><strong>Зашифрованный результат (Base64 с Солью и IV):</strong></p>
+            <textarea id="ciphertext_output" rows="3" readonly placeholder="Здесь будет Base64"></textarea>
+        </div>
+<hr>
+        <div class="section">
+            <h2>2. Дешифратор 🔓</h2>
+            <label for="password_decrypt">Пароль (Ключ):</label>
+            <input type="password" id="password_decrypt" value="" placeholder="12345">
+
+            <label for="ciphertext_input">Зашифрованный Base64 текст:</label>
+            <textarea id="ciphertext_input" rows="3" placeholder="Вставьте сюда зашифрованный Base64 текст"></textarea>
+            <button onclick="decryptMessage()">Расшифровать!</button>
+
+            <p><strong>Расшифрованный результат:</strong></p>
+            <textarea id="decrypted_output" rows="3" readonly placeholder="Здесь появится ваш исходный текст"></textarea>
+        </div>
+<h6>Внимание! Переживать за безопасность сообщения не надо - base64 используется только для того, чтобы перевести бинарные данные (соль, аес и т.д.) в текстовые данные! 😉</h6>
+    </div>
+
+    <script>
+        // --- Криптографические Константы ---
+        const ITERATIONS = 500000; // 500 000 итераций PBKDF2
+        const KEY_LEN = 32;       // 256 бит (AES-256)
+        const SALT_LEN = 16;      // 128 бит
+        const IV_LEN = 12;        // 96 бит (для AES-GCM)
+
+        // --- Утилиты для Base64 ---
+        function arrayBufferToBase64(buffer) {
+            return btoa(String.fromCharCode(...new Uint8Array(buffer)));
+        }
+
+        function base64ToArrayBuffer(base64) {
+            return Uint8Array.from(atob(base64), c => c.charCodeAt(0)).buffer;
+        }
+
+        // --- Главная Функция: Вывод Ключа (PBKDF2) ---
+        async function deriveKey(password, salt) {
+            const passwordBuffer = new TextEncoder().encode(password);
+            
+            const keyMaterial = await window.crypto.subtle.importKey(
+                "raw",
+                passwordBuffer,
+                { name: "PBKDF2" },
+                false,
+                ["deriveKey"]
+            );
+
+            return window.crypto.subtle.deriveKey(
+                {
+                    name: "PBKDF2",
+                    salt: salt,
+                    iterations: ITERATIONS,
+                    hash: "SHA-256", // SHA-256 для хеширования
+                },
+                keyMaterial,
+                { name: "AES-GCM", length: 256 },
+                true,
+                ["encrypt", "decrypt"]
+            );
+        }
+
+        // --- 1. ШИФРОВАНИЕ ---
+        async function encryptMessage() {
+            const password = document.getElementById('password_encrypt').value;
+            const plaintext = document.getElementById('plaintext').value;
+            
+            if (!password || !plaintext) {
+                status.textContent = 'ОШИБКА: Введите и пароль, и текст!';
+                return;
+            }
+
+            status.textContent = 'Статус: Запуск PBKDF2... (Шифрование)';
+
+            const salt = window.crypto.getRandomValues(new Uint8Array(SALT_LEN));
+            const iv = window.crypto.getRandomValues(new Uint8Array(IV_LEN));
+            
+            try {
+                const aesKey = await deriveKey(password, salt);
+                
+                status.textContent = 'Статус: Шифрование текста...';
+                const plaintextBuffer = new TextEncoder().encode(plaintext);
+
+                const ciphertextBuffer = await window.crypto.subtle.encrypt(
+                    { name: "AES-GCM", iv: iv },
+                    aesKey,
+                    plaintextBuffer
+                );
+                
+                // Склеиваем Соль + IV + Шифр/Тэг в один буфер
+                const fullCiphertext = new Uint8Array(salt.length + iv.length + ciphertextBuffer.byteLength);
+                fullCiphertext.set(salt, 0);
+                fullCiphertext.set(iv, salt.length);
+                fullCiphertext.set(new Uint8Array(ciphertextBuffer), salt.length + iv.length);
+                
+                document.getElementById('ciphertext_output').value = arrayBufferToBase64(fullCiphertext.buffer);
+                status.textContent = 'Статус: Готово! Успешно зашифровано! 😉';
+
+            } catch (e) {
+                console.error(e);
+                status.textContent = `Статус: ОШИБКА ШИФРОВАНИЯ! ${e.name}`;
+            }
+        }
+
+        // --- 2. ДЕШИФРОВАНИЕ ---
+        async function decryptMessage() {
+            const password = document.getElementById('password_decrypt').value;
+            const ciphertextBase64 = document.getElementById('ciphertext_input').value.trim();
+            document.getElementById('decrypted_output').value = '';
+
+            if (!password || !ciphertextBase64) {
+                status.textContent = 'ОШИБКА: Введите и пароль, и зашифрованный Base64!';
+                return;
+            }
+
+            status.textContent = 'Статус: Запуск PBKDF2... (Дешифрование)';
+
+            try {
+                // 1. Декодируем Base64
+                const fullCiphertext = new Uint8Array(base64ToArrayBuffer(ciphertextBase64));
+
+                // 2. Проверяем и Извлекаем Соль, IV, и Шифр
+                if (fullCiphertext.length < SALT_LEN + IV_LEN + 16) { 
+                    throw new Error("Некорректная длина шифра.");
+                }
+
+                const salt = fullCiphertext.slice(0, SALT_LEN);
+                const iv = fullCiphertext.slice(SALT_LEN, SALT_LEN + IV_LEN);
+                const ciphertext = fullCiphertext.slice(SALT_LEN + IV_LEN);
+
+                // 3. Создаем ключ
+                status.textContent = `Статус: Генерация ключа (${ITERATIONS} итераций)...`;
+                const aesKey = await deriveKey(password, salt);
+                
+                // 4. Дешифруем
+                status.textContent = 'Статус: Дешифрование текста...';
+                
+                const decryptedBuffer = await window.crypto.subtle.decrypt(
+                    { name: "AES-GCM", iv: iv },
+                    aesKey,
+                    ciphertext
+                );
+                
+                // 5. Выводим результат
+                const decryptedText = new TextDecoder().decode(decryptedBuffer);
+                document.getElementById('decrypted_output').value = decryptedText;
+                status.textContent = 'Статус: Готово! Успешно расшифровано! 😉';
+
+            } catch (e) {
+                console.error(e);
+                document.getElementById('decrypted_output').value = 'ОШИБКА: Неверный пароль или поврежденный шифр!';
+                status.textContent = `Статус: ОШИБКА ДЕШИФРОВАНИЯ! ${e.message}`;
+            }
+        }
+    </script>
+</body>
+</html>
