@@ -1,0 +1,1685 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTML Entities Dictionary</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #f0ffff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            color: black;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .header p {
+            color: black;
+            font-size: 1.1em;
+        }
+        
+        .categories {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .category-card {
+            background: white;
+            padding: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            border: 2px solid transparent;
+        }
+        
+        .category-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            border-color: #667eea;
+        }
+        
+        .category-card h2 {
+            color: #333;
+            font-size: 1.4em;
+            margin-bottom: 10px;
+        }
+        
+        .category-card p {
+            color: #666;
+            font-size: 0.9em;
+            line-height: 1.4;
+        }
+        
+        .entities-section {
+            display: none;
+            background: white;
+            padding: 30px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .section-header h2 {
+            color: #333;
+            font-size: 1.8em;
+        }
+        
+        .close-btn {
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            font-size: 1.2em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .close-btn:hover {
+            background: #ff5252;
+            transform: rotate(90deg);
+        }
+        
+        .entities-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+        
+        .entity-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            border-left: 4px solid #667eea;
+            transition: all 0.3s ease;
+        }
+        
+        .entity-card:hover {
+            background: #e9ecef;
+            transform: translateX(5px);
+        }
+        
+        .entity-code {
+            color: #e74c3c;
+            font-family: 'Courier New', monospace;
+            font-size: 1.1em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .entity-symbol {
+            color: #e74c3c;
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .entity-desc {
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        .arrow {
+            color: #999;
+            margin: 0 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📚 HTML Entities Dictionary</h1>
+            <p>Справочник HTML-сущностей для вашего кода</p>
+            <p>Нажми на карточку, чтобы скопировать сущность.</p>
+            <h6>Для вашего кота!</h6>
+        </div>
+        
+        <div class="categories" id="categories">
+            <div class="category-card" onclick="showSection('russian')">
+                <h2>🔤 Русские буквы</h2>
+                <p>Кириллические символы и буквы русского алфавита</p>
+            </div>
+            
+            <div class="category-card" onclick="showSection('specials')">
+                <h2>⚡ Спец символы</h2>
+                <p>Специальные символы и знаки препинания</p>
+            </div>
+            
+            <div class="category-card" onclick="showSection('math')">
+                <h2>🔢 Математические</h2>
+                <p>Математические операторы и символы</p>
+            </div>
+            
+            <div class="category-card" onclick="showSection('arrows')">
+                <h2>➡️ Стрелки</h2>
+                <p>Символы стрелок различных направлений</p>
+            </div>
+            
+            <div class="category-card" onclick="showSection('currency')">
+                <h2>💰 Валюты</h2>
+                <p>Символы мировых валют</p>
+            </div>
+            
+            <div class="category-card" onclick="showSection('shapes')">
+                <h2>🔷 Геометрические фигуры</h2>
+                <p>Геометрические формы и символы</p>
+            </div>
+            
+            <div class="category-card" onclick="showSection('greek')">
+                <h2>α Греческие буквы</h2>
+                <p>Буквы греческого алфавита</p>
+            </div>
+            
+            <div class="category-card" onclick="showSection('technical')">
+                <h2>⚙️ Технические</h2>
+                <p>Технические символы и знаки</p>
+            </div>
+        </div>
+        
+        <!-- Русские буквы -->
+        <div class="entities-section" id="russian-section">
+            <div class="section-header">
+                <h2>🔤 Русские буквы</h2>
+                <button class="close-btn" onclick="hideSections()">×</button>
+            </div>
+            <div class="entities-grid">
+                <div class="entity-card">
+                    <div class="entity-code">&amp;Acy;</div>
+                    <div class="entity-symbol">А</div>
+                    <div class="entity-desc">Заглавная А</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;Bcy;</div>
+                    <div class="entity-symbol">Б</div>
+                    <div class="entity-desc">Заглавная Б</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;Vcy;</div>
+                    <div class="entity-symbol">В</div>
+                    <div class="entity-desc">Заглавная В</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;Gcy;</div>
+                    <div class="entity-symbol">Г</div>
+                    <div class="entity-desc">Заглавная Г</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;Dcy;</div>
+                    <div class="entity-symbol">Д</div>
+                    <div class="entity-desc">Заглавная Д</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;IEcy;</div>
+                    <div class="entity-symbol">Е</div>
+                    <div class="entity-desc">Заглавная Е</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;ZHcy;</div>
+                    <div class="entity-symbol">Ж</div>
+                    <div class="entity-desc">Заглавная Ж</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;Zcy;</div>
+                    <div class="entity-symbol">З</div>
+                    <div class="entity-desc">Заглавная З</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;Icy;</div>
+                    <div class="entity-symbol">И</div>
+                    <div class="entity-desc">Заглавная И</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;Jcy;</div>
+                    <div class="entity-symbol">Й</div>
+                    <div class="entity-desc">Заглавная Й</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;Kcy;</div>
+                    <div class="entity-symbol">К</div>
+                    <div class="entity-desc">Заглавная К</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;Lcy;</div>
+                    <div class="entity-symbol">Л</div>
+                    <div class="entity-desc">Заглавная Л</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;Mcy;</div>
+                    <div class="entity-symbol">М</div>
+                    <div class="entity-desc">Заглавная М</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;Ncy;</div>
+                    <div class="entity-symbol">Н</div>
+                    <div class="entity-desc">Заглавная Н</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;Ocy;</div>
+                    <div class="entity-symbol">О</div>
+                    <div class="entity-desc">Заглавная О</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;Pcy;</div>
+                    <div class="entity-symbol">П</div>
+                    <div class="entity-desc">Заглавная П</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;Rcy;</div>
+                    <div class="entity-symbol">Р</div>
+                    <div class="entity-desc">Заглавная Р</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;Scy;</div>
+                    <div class="entity-symbol">С</div>
+                    <div class="entity-desc">Заглавная С</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;Tcy;</div>
+                    <div class="entity-symbol">Т</div>
+                    <div class="entity-desc">Заглавная Т</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;Ucy;</div>
+                    <div class="entity-symbol">У</div>
+                    <div class="entity-desc">Заглавная У</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;Fcy;</div>
+                    <div class="entity-symbol">Ф</div>
+                    <div class="entity-desc">Заглавная Ф</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;KHcy;</div>
+                    <div class="entity-symbol">Х</div>
+                    <div class="entity-desc">Заглавная Х</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;TScy;</div>
+                    <div class="entity-symbol">Ц</div>
+                    <div class="entity-desc">Заглавная Ц</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;CHcy;</div>
+                    <div class="entity-symbol">Ч</div>
+                    <div class="entity-desc">Заглавная Ч</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;SHcy;</div>
+                    <div class="entity-symbol">Ш</div>
+                    <div class="entity-desc">Заглавная Ш</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;SHCHcy;</div>
+                    <div class="entity-symbol">Щ</div>
+                    <div class="entity-desc">Заглавная Щ</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;HARDcy;</div>
+                    <div class="entity-symbol">Ъ</div>
+                    <div class="entity-desc">Заглавная Ъ</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;Ycy;</div>
+                    <div class="entity-symbol">Ы</div>
+                    <div class="entity-desc">Заглавная Ы</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;SOFTcy;</div>
+                    <div class="entity-symbol">Ь</div>
+                    <div class="entity-desc">Заглавная Ь</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;Ecy;</div>
+                    <div class="entity-symbol">Э</div>
+                    <div class="entity-desc">Заглавная Э</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;YUcy;</div>
+                    <div class="entity-symbol">Ю</div>
+                    <div class="entity-desc">Заглавная Ю</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;YAcy;</div>
+                    <div class="entity-symbol">Я</div>
+                    <div class="entity-desc">Заглавная Я</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;acy;</div>
+                    <div class="entity-symbol">а</div>
+                    <div class="entity-desc">Строчная а</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;bcy;</div>
+                    <div class="entity-symbol">б</div>
+                    <div class="entity-desc">Строчная б</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;vcy;</div>
+                    <div class="entity-symbol">в</div>
+                    <div class="entity-desc">Строчная в</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;gcy;</div>
+                    <div class="entity-symbol">г</div>
+                    <div class="entity-desc">Строчная г</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;dcy;</div>
+                    <div class="entity-symbol">д</div>
+                    <div class="entity-desc">Строчная д</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;iecy;</div>
+                    <div class="entity-symbol">е</div>
+                    <div class="entity-desc">Строчная е</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;zhcy;</div>
+                    <div class="entity-symbol">ж</div>
+                    <div class="entity-desc">Строчная ж</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;zcy;</div>
+                    <div class="entity-symbol">з</div>
+                    <div class="entity-desc">Строчная з</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;icy;</div>
+                    <div class="entity-symbol">и</div>
+                    <div class="entity-desc">Строчная и</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;jcy;</div>
+                    <div class="entity-symbol">й</div>
+                    <div class="entity-desc">Строчная й</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;kcy;</div>
+                    <div class="entity-symbol">к</div>
+                    <div class="entity-desc">Строчная к</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;lcy;</div>
+                    <div class="entity-symbol">л</div>
+                    <div class="entity-desc">Строчная л</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;mcy;</div>
+                    <div class="entity-symbol">м</div>
+                    <div class="entity-desc">Строчная м</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;ncy;</div>
+                    <div class="entity-symbol">н</div>
+                    <div class="entity-desc">Строчная н</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;ocy;</div>
+                    <div class="entity-symbol">о</div>
+                    <div class="entity-desc">Строчная о</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;pcy;</div>
+                    <div class="entity-symbol">п</div>
+                    <div class="entity-desc">Строчная п</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;rcy;</div>
+                    <div class="entity-symbol">р</div>
+                    <div class="entity-desc">Строчная р</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;scy;</div>
+                    <div class="entity-symbol">с</div>
+                    <div class="entity-desc">Строчная с</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;tcy;</div>
+                    <div class="entity-symbol">т</div>
+                    <div class="entity-desc">Строчная т</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;ucy;</div>
+                    <div class="entity-symbol">у</div>
+                    <div class="entity-desc">Строчная у</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;fcy;</div>
+                    <div class="entity-symbol">ф</div>
+                    <div class="entity-desc">Строчная ф</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;khcy;</div>
+                    <div class="entity-symbol">х</div>
+                    <div class="entity-desc">Строчная х</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;tscy;</div>
+                    <div class="entity-symbol">ц</div>
+                    <div class="entity-desc">Строчная ц</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;chcy;</div>
+                    <div class="entity-symbol">ч</div>
+                    <div class="entity-desc">Строчная ч</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;shcy;</div>
+                    <div class="entity-symbol">ш</div>
+                    <div class="entity-desc">Строчная ш</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;shchcy;</div>
+                    <div class="entity-symbol">щ</div>
+                    <div class="entity-desc">Строчная щ</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;hardcy;</div>
+                    <div class="entity-symbol">ъ</div>
+                    <div class="entity-desc">Строчная ъ</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;ycy;</div>
+                    <div class="entity-symbol">ы</div>
+                    <div class="entity-desc">Строчная ы</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;softcy;</div>
+                    <div class="entity-symbol">ь</div>
+                    <div class="entity-desc">Строчная ь</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;ecy;</div>
+                    <div class="entity-symbol">э</div>
+                    <div class="entity-desc">Строчная э</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;yucy;</div>
+                    <div class="entity-symbol">ю</div>
+                    <div class="entity-desc">Строчная ю</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;yacy;</div>
+                    <div class="entity-symbol">я</div>
+                    <div class="entity-desc">Строчная я</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;YOcy;</div>
+                    <div class="entity-symbol">Ё</div>
+                    <div class="entity-desc">Заглавная Ё</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;yocy;</div>
+                    <div class="entity-symbol">ё</div>
+                    <div class="entity-desc">Строчная ё</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Спец символы -->
+        <div class="entities-section" id="specials-section">
+            <div class="section-header">
+                <h2>⚡ Спец символы</h2>
+                <button class="close-btn" onclick="hideSections()">×</button>
+            </div>
+            <div class="entities-grid">
+                <div class="entity-card">
+                    <div class="entity-code">&amp;lt;</div>
+                    <div class="entity-symbol"><</div>
+                    <div class="entity-desc">Знак меньше</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;gt;</div>
+                    <div class="entity-symbol">></div>
+                    <div class="entity-desc">Знак больше</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;amp;</div>
+                    <div class="entity-symbol">&</div>
+                    <div class="entity-desc">Амперсанд</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;quot;</div>
+                    <div class="entity-symbol">"</div>
+                    <div class="entity-desc">Двойная кавычка</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;apos;</div>
+                    <div class="entity-symbol">'</div>
+                    <div class="entity-desc">Одинарная кавычка</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;copy;</div>
+                    <div class="entity-symbol">©</div>
+                    <div class="entity-desc">Знак копирайта</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;reg;</div>
+                    <div class="entity-symbol">®</div>
+                    <div class="entity-desc">Знак регистрации</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;trade;</div>
+                    <div class="entity-symbol">™</div>
+                    <div class="entity-desc">Торговая марка</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;nbsp;</div>
+                    <div class="entity-symbol">[пробел]</div>
+                    <div class="entity-desc">Неразрывный пробел</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;ensp;</div>
+                    <div class="entity-symbol">[пробел]</div>
+                    <div class="entity-desc">Пробел шириной в n</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;emsp;</div>
+                    <div class="entity-symbol">[пробел]</div>
+                    <div class="entity-desc">Пробел шириной в m</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;middot;</div>
+                    <div class="entity-symbol">·</div>
+                    <div class="entity-desc">Точка по центру</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;bull;</div>
+                    <div class="entity-symbol">•</div>
+                    <div class="entity-desc">Маркер списка</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;hellip;</div>
+                    <div class="entity-symbol">…</div>
+                    <div class="entity-desc">Многоточие</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;prime;</div>
+                    <div class="entity-symbol">′</div>
+                    <div class="entity-desc">Минута/фут</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;Prime;</div>
+                    <div class="entity-symbol">″</div>
+                    <div class="entity-desc">Секунда/дюйм</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;oline;</div>
+                    <div class="entity-symbol">‾</div>
+                    <div class="entity-desc">Надчеркивание</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;frasl;</div>
+                    <div class="entity-symbol">⁄</div>
+                    <div class="entity-desc">Дробная черта</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;weierp;</div>
+                    <div class="entity-symbol">℘</div>
+                    <div class="entity-desc">Символ Вейерштрасса</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;image;</div>
+                    <div class="entity-symbol">ℑ</div>
+                    <div class="entity-desc">Мнимая часть</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;real;</div>
+                    <div class="entity-symbol">ℜ</div>
+                    <div class="entity-desc">Действительная часть</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;alefsym;</div>
+                    <div class="entity-symbol">ℵ</div>
+                    <div class="entity-desc">Символ алеф</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;lang;</div>
+                    <div class="entity-symbol">⟨</div>
+                    <div class="entity-desc">Левая угловая скобка</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;rang;</div>
+                    <div class="entity-symbol">⟩</div>
+                    <div class="entity-desc">Правая угловая скобка</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Математические -->
+        <div class="entities-section" id="math-section">
+            <div class="section-header">
+                <h2>🔢 Математические</h2>
+                <button class="close-btn" onclick="hideSections()">×</button>
+            </div>
+            <div class="entities-grid">
+                <div class="entity-card">
+                    <div class="entity-code">&amp;plusmn;</div>
+                    <div class="entity-symbol">±</div>
+                    <div class="entity-desc">Плюс-минус</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;times;</div>
+                    <div class="entity-symbol">×</div>
+                    <div class="entity-desc">Знак умножения</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;divide;</div>
+                    <div class="entity-symbol">÷</div>
+                    <div class="entity-desc">Знак деления</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;frac12;</div>
+                    <div class="entity-symbol">½</div>
+                    <div class="entity-desc">Одна вторая</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;frac14;</div>
+                    <div class="entity-symbol">¼</div>
+                    <div class="entity-desc">Одна четвертая</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;frac34;</div>
+                    <div class="entity-symbol">¾</div>
+                    <div class="entity-desc">Три четверти</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;frac13;</div>
+                    <div class="entity-symbol">⅓</div>
+                    <div class="entity-desc">Одна треть</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;frac23;</div>
+                    <div class="entity-symbol">⅔</div>
+                    <div class="entity-desc">Две трети</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;sum;</div>
+                    <div class="entity-symbol">∑</div>
+                    <div class="entity-desc">Сумма</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;prod;</div>
+                    <div class="entity-symbol">∏</div>
+                    <div class="entity-desc">Произведение</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;infin;</div>
+                    <div class="entity-symbol">∞</div>
+                    <div class="entity-desc">Бесконечность</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;radic;</div>
+                    <div class="entity-symbol">√</div>
+                    <div class="entity-desc">Квадратный корень</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;part;</div>
+                    <div class="entity-symbol">∂</div>
+                    <div class="entity-desc">Частная производная</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;int;</div>
+                    <div class="entity-symbol">∫</div>
+                    <div class="entity-desc">Интеграл</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;forall;</div>
+                    <div class="entity-symbol">∀</div>
+                    <div class="entity-desc">Для всех</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;exist;</div>
+                    <div class="entity-symbol">∃</div>
+                    <div class="entity-desc">Существует</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;empty;</div>
+                    <div class="entity-symbol">∅</div>
+                    <div class="entity-desc">Пустое множество</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;nabla;</div>
+                    <div class="entity-symbol">∇</div>
+                    <div class="entity-desc">Набла (оператор Гамильтона)</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;isin;</div>
+                    <div class="entity-symbol">∈</div>
+                    <div class="entity-desc">Принадлежит</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;notin;</div>
+                    <div class="entity-symbol">∉</div>
+                    <div class="entity-desc">Не принадлежит</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;ni;</div>
+                    <div class="entity-symbol">∋</div>
+                    <div class="entity-desc">Содержит</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;cap;</div>
+                    <div class="entity-symbol">∩</div>
+                    <div class="entity-desc">Пересечение</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;cup;</div>
+                    <div class="entity-symbol">∪</div>
+                    <div class="entity-desc">Объединение</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;there4;</div>
+                    <div class="entity-symbol">∴</div>
+                    <div class="entity-desc">Следовательно</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;sim;</div>
+                    <div class="entity-symbol">∼</div>
+                    <div class="entity-desc">Подобно</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;cong;</div>
+                    <div class="entity-symbol">≅</div>
+                    <div class="entity-desc">Конгруэнтно</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;asymp;</div>
+                    <div class="entity-symbol">≈</div>
+                    <div class="entity-desc">Приблизительно равно</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;ne;</div>
+                    <div class="entity-symbol">≠</div>
+                    <div class="entity-desc">Не равно</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;equiv;</div>
+                    <div class="entity-symbol">≡</div>
+                    <div class="entity-desc">Тождественно равно</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;le;</div>
+                    <div class="entity-symbol">≤</div>
+                    <div class="entity-desc">Меньше или равно</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;ge;</div>
+                    <div class="entity-symbol">≥</div>
+                    <div class="entity-desc">Больше или равно</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;sub;</div>
+                    <div class="entity-symbol">⊂</div>
+                    <div class="entity-desc">Подмножество</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;sup;</div>
+                    <div class="entity-symbol">⊃</div>
+                    <div class="entity-desc">Надмножество</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;nsub;</div>
+                    <div class="entity-symbol">⊄</div>
+                    <div class="entity-desc">Не подмножество</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;sube;</div>
+                    <div class="entity-symbol">⊆</div>
+                    <div class="entity-desc">Подмножество или равно</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;supe;</div>
+                    <div class="entity-symbol">⊇</div>
+                    <div class="entity-desc">Надмножество или равно</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;oplus;</div>
+                    <div class="entity-symbol">⊕</div>
+                    <div class="entity-desc">Плюс в круге</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;otimes;</div>
+                    <div class="entity-symbol">⊗</div>
+                    <div class="entity-desc">Умножение в круге</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;perp;</div>
+                    <div class="entity-symbol">⊥</div>
+                    <div class="entity-desc">Перпендикулярно</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;sdot;</div>
+                    <div class="entity-symbol">⋅</div>
+                    <div class="entity-desc">Оператор точка</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Стрелки -->
+        <div class="entities-section" id="arrows-section">
+            <div class="section-header">
+                <h2>➡️ Стрелки</h2>
+                <button class="close-btn" onclick="hideSections()">×</button>
+            </div>
+            <div class="entities-grid">
+                <div class="entity-card">
+                    <div class="entity-code">&amp;larr;</div>
+                    <div class="entity-symbol">←</div>
+                    <div class="entity-desc">Стрелка влево</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;uarr;</div>
+                    <div class="entity-symbol">↑</div>
+                    <div class="entity-desc">Стрелка вверх</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;rarr;</div>
+                    <div class="entity-symbol">→</div>
+                    <div class="entity-desc">Стрелка вправо</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;darr;</div>
+                    <div class="entity-symbol">↓</div>
+                    <div class="entity-desc">Стрелка вниз</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;harr;</div>
+                    <div class="entity-symbol">↔</div>
+                    <div class="entity-desc">Стрелка влево-вправо</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;crarr;</div>
+                    <div class="entity-symbol">↵</div>
+                    <div class="entity-desc">Стрелка возврата</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;lArr;</div>
+                    <div class="entity-symbol">⇐</div>
+                    <div class="entity-desc">Двойная стрелка влево</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;uArr;</div>
+                    <div class="entity-symbol">⇑</div>
+                    <div class="entity-desc">Двойная стрелка вверх</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;rArr;</div>
+                    <div class="entity-symbol">⇒</div>
+                    <div class="entity-desc">Двойная стрелка вправо</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;dArr;</div>
+                    <div class="entity-symbol">⇓</div>
+                    <div class="entity-desc">Двойная стрелка вниз</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;hArr;</div>
+                    <div class="entity-symbol">⇔</div>
+                    <div class="entity-desc">Двойная стрелка влево-вправо</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;loz;</div>
+                    <div class="entity-symbol">◊</div>
+                    <div class="entity-desc">Ромб</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;spades;</div>
+                    <div class="entity-symbol">♠</div>
+                    <div class="entity-desc">Пики</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;clubs;</div>
+                    <div class="entity-symbol">♣</div>
+                    <div class="entity-desc">Трефы</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;hearts;</div>
+                    <div class="entity-symbol">♥</div>
+                    <div class="entity-desc">Червы</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;diams;</div>
+                    <div class="entity-symbol">♦</div>
+                    <div class="entity-desc">Бубны</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Валюты -->
+        <div class="entities-section" id="currency-section">
+            <div class="section-header">
+                <h2>💰 Валюты</h2>
+                <button class="close-btn" onclick="hideSections()">×</button>
+            </div>
+            <div class="entities-grid">
+              <div class="entity-card">
+    <div class="entity-code">&amp;tenge;</div>
+    <div class="entity-symbol">₸</div>
+    <div class="entity-desc">Казахстанский тенге</div>
+</div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;dollar;</div>
+                    <div class="entity-symbol">$</div>
+                    <div class="entity-desc">Доллар</div>
+                </div>
+                <div class="entity-card">
+                  
+                    <div class="entity-code">&amp;euro;</div>
+                    <div class="entity-symbol">€</div>
+                    <div class="entity-desc">Евро</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;pound;</div>
+                    <div class="entity-symbol">£</div>
+                    <div class="entity-desc">Фунт стерлингов</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;yen;</div>
+                    <div class="entity-symbol">¥</div>
+                    <div class="entity-desc">Японская йена</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;cent;</div>
+                    <div class="entity-symbol">¢</div>
+                    <div class="entity-desc">Цент</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;curren;</div>
+                    <div class="entity-symbol">¤</div>
+                    <div class="entity-desc">Знак валюты</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;fnof;</div>
+                    <div class="entity-symbol">ƒ</div>
+                    <div class="entity-desc">Флорин</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;brvbar;</div>
+                    <div class="entity-symbol">¦</div>
+                    <div class="entity-desc">Прерывистая вертикальная черта</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;sect;</div>
+                    <div class="entity-symbol">§</div>
+                    <div class="entity-desc">Параграф</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;uml;</div>
+                    <div class="entity-symbol">¨</div>
+                    <div class="entity-desc">Умлаут</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;copy;</div>
+                    <div class="entity-symbol">©</div>
+                    <div class="entity-desc">Авторское право</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;ordf;</div>
+                    <div class="entity-symbol">ª</div>
+                    <div class="entity-desc">Женский порядковый индикатор</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;laquo;</div>
+                    <div class="entity-symbol">«</div>
+                    <div class="entity-desc">Левая двойная угловая кавычка</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;not;</div>
+                    <div class="entity-symbol">¬</div>
+                    <div class="entity-desc">Отрицание</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;shy;</div>
+                    <div class="entity-symbol">-</div>
+                    <div class="entity-desc">Мягкий перенос</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;macr;</div>
+                    <div class="entity-symbol">¯</div>
+                    <div class="entity-desc">Макрон</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;deg;</div>
+                    <div class="entity-symbol">°</div>
+                    <div class="entity-desc">Градус</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;plusmn;</div>
+                    <div class="entity-symbol">±</div>
+                    <div class="entity-desc">Плюс-минус</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;sup2;</div>
+                    <div class="entity-symbol">²</div>
+                    <div class="entity-desc">Верхний индекс 2</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;sup3;</div>
+                    <div class="entity-symbol">³</div>
+                    <div class="entity-desc">Верхний индекс 3</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Геометрические фигуры -->
+        <div class="entities-section" id="shapes-section">
+            <div class="section-header">
+                <h2>🔷 Геометрические фигуры</h2>
+                <button class="close-btn" onclick="hideSections()">×</button>
+            </div>
+            <div class="entities-grid">
+                <div class="entity-card">
+                    <div class="entity-code">&amp;bull;</div>
+                    <div class="entity-symbol">•</div>
+                    <div class="entity-desc">Маркер списка</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;circ;</div>
+                    <div class="entity-symbol">∘</div>
+                    <div class="entity-desc">Круг</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;star;</div>
+                    <div class="entity-symbol">☆</div>
+                    <div class="entity-desc">Звезда</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;triangle;</div>
+                    <div class="entity-symbol">△</div>
+                    <div class="entity-desc">Треугольник</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;diamond;</div>
+                    <div class="entity-symbol">◇</div>
+                    <div class="entity-desc">Ромб</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;square;</div>
+                    <div class="entity-symbol">□</div>
+                    <div class="entity-desc">Квадрат</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;rect;</div>
+                    <div class="entity-symbol">▭</div>
+                    <div class="entity-desc">Прямоугольник</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;box;</div>
+                    <div class="entity-symbol">□</div>
+                    <div class="entity-desc">Квадрат</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;oplus;</div>
+                    <div class="entity-symbol">⊕</div>
+                    <div class="entity-desc">Плюс в круге</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;otimes;</div>
+                    <div class="entity-symbol">⊗</div>
+                    <div class="entity-desc">Умножение в круге</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;perp;</div>
+                    <div class="entity-symbol">⊥</div>
+                    <div class="entity-desc">Перпендикулярно</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;angsph;</div>
+                    <div class="entity-symbol">∢</div>
+                    <div class="entity-desc">Сферический угол</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;wedge;</div>
+                    <div class="entity-symbol">∧</div>
+                    <div class="entity-desc">Логическое И</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;vee;</div>
+                    <div class="entity-symbol">∨</div>
+                    <div class="entity-desc">Логическое ИЛИ</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;cap;</div>
+                    <div class="entity-symbol">∩</div>
+                    <div class="entity-desc">Пересечение</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;cup;</div>
+                    <div class="entity-symbol">∪</div>
+                    <div class="entity-desc">Объединение</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;int;</div>
+                    <div class="entity-symbol">∫</div>
+                    <div class="entity-desc">Интеграл</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;oint;</div>
+                    <div class="entity-symbol">∮</div>
+                    <div class="entity-desc">Контурный интеграл</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;conint;</div>
+                    <div class="entity-symbol">∯</div>
+                    <div class="entity-desc">Поверхностный интеграл</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;there4;</div>
+                    <div class="entity-symbol">∴</div>
+                    <div class="entity-desc">Следовательно</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;because;</div>
+                    <div class="entity-symbol">∵</div>
+                    <div class="entity-desc">Потому что</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Греческие буквы -->
+        <div class="entities-section" id="greek-section">
+            <div class="section-header">
+                <h2>α Греческие буквы</h2>
+                <button class="close-btn" onclick="hideSections()">×</button>
+            </div>
+            <div class="entities-grid">
+                <div class="entity-card">
+                    <div class="entity-code">&amp;Alpha;</div>
+                    <div class="entity-symbol">Α</div>
+                    <div class="entity-desc">Заглавная альфа</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;Beta;</div>
+                    <div class="entity-symbol">Β</div>
+                    <div class="entity-desc">Заглавная бета</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;Gamma;</div>
+                    <div class="entity-symbol">Γ</div>
+                    <div class="entity-desc">Заглавная гамма</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;Delta;</div>
+                    <div class="entity-symbol">Δ</div>
+                    <div class="entity-desc">Заглавная дельта</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;Epsilon;</div>
+                    <div class="entity-symbol">Ε</div>
+                    <div class="entity-desc">Заглавная эпсилон</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;Zeta;</div>
+                    <div class="entity-symbol">Ζ</div>
+                    <div class="entity-desc">Заглавная дзета</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;Eta;</div>
+                    <div class="entity-symbol">Η</div>
+                    <div class="entity-desc">Заглавная эта</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;Theta;</div>
+                    <div class="entity-symbol">Θ</div>
+                    <div class="entity-desc">Заглавная тета</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;Iota;</div>
+                    <div class="entity-symbol">Ι</div>
+                    <div class="entity-desc">Заглавная йота</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;Kappa;</div>
+                    <div class="entity-symbol">Κ</div>
+                    <div class="entity-desc">Заглавная каппа</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;Lambda;</div>
+                    <div class="entity-symbol">Λ</div>
+                    <div class="entity-desc">Заглавная лямбда</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;Mu;</div>
+                    <div class="entity-symbol">Μ</div>
+                    <div class="entity-desc">Заглавная мю</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;Nu;</div>
+                    <div class="entity-symbol">Ν</div>
+                    <div class="entity-desc">Заглавная ню</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;Xi;</div>
+                    <div class="entity-symbol">Ξ</div>
+                    <div class="entity-desc">Заглавная кси</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;Omicron;</div>
+                    <div class="entity-symbol">Ο</div>
+                    <div class="entity-desc">Заглавная омикрон</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;Pi;</div>
+                    <div class="entity-symbol">Π</div>
+                    <div class="entity-desc">Заглавная пи</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;Rho;</div>
+                    <div class="entity-symbol">Ρ</div>
+                    <div class="entity-desc">Заглавная ро</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;Sigma;</div>
+                    <div class="entity-symbol">Σ</div>
+                    <div class="entity-desc">Заглавная сигма</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;Tau;</div>
+                    <div class="entity-symbol">Τ</div>
+                    <div class="entity-desc">Заглавная тау</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;Upsilon;</div>
+                    <div class="entity-symbol">Υ</div>
+                    <div class="entity-desc">Заглавная ипсилон</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;Phi;</div>
+                    <div class="entity-symbol">Φ</div>
+                    <div class="entity-desc">Заглавная фи</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;Chi;</div>
+                    <div class="entity-symbol">Χ</div>
+                    <div class="entity-desc">Заглавная хи</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;Psi;</div>
+                    <div class="entity-symbol">Ψ</div>
+                    <div class="entity-desc">Заглавная пси</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;Omega;</div>
+                    <div class="entity-symbol">Ω</div>
+                    <div class="entity-desc">Заглавная омега</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;alpha;</div>
+                    <div class="entity-symbol">α</div>
+                    <div class="entity-desc">Строчная альфа</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;beta;</div>
+                    <div class="entity-symbol">β</div>
+                    <div class="entity-desc">Строчная бета</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;gamma;</div>
+                    <div class="entity-symbol">γ</div>
+                    <div class="entity-desc">Строчная гамма</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;delta;</div>
+                    <div class="entity-symbol">δ</div>
+                    <div class="entity-desc">Строчная дельта</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;epsilon;</div>
+                    <div class="entity-symbol">ε</div>
+                    <div class="entity-desc">Строчная эпсилон</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;zeta;</div>
+                    <div class="entity-symbol">ζ</div>
+                    <div class="entity-desc">Строчная дзета</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;eta;</div>
+                    <div class="entity-symbol">η</div>
+                    <div class="entity-desc">Строчная эта</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;theta;</div>
+                    <div class="entity-symbol">θ</div>
+                    <div class="entity-desc">Строчная тета</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;iota;</div>
+                    <div class="entity-symbol">ι</div>
+                    <div class="entity-desc">Строчная йота</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;kappa;</div>
+                    <div class="entity-symbol">κ</div>
+                    <div class="entity-desc">Строчная каппа</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;lambda;</div>
+                    <div class="entity-symbol">λ</div>
+                    <div class="entity-desc">Строчная лямбда</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;mu;</div>
+                    <div class="entity-symbol">μ</div>
+                    <div class="entity-desc">Строчная мю</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;nu;</div>
+                    <div class="entity-symbol">ν</div>
+                    <div class="entity-desc">Строчная ню</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;xi;</div>
+                    <div class="entity-symbol">ξ</div>
+                    <div class="entity-desc">Строчная кси</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;omicron;</div>
+                    <div class="entity-symbol">ο</div>
+                    <div class="entity-desc">Строчная омикрон</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;pi;</div>
+                    <div class="entity-symbol">π</div>
+                    <div class="entity-desc">Строчная пи</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;rho;</div>
+                    <div class="entity-symbol">ρ</div>
+                    <div class="entity-desc">Строчная ро</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;sigmaf;</div>
+                    <div class="entity-symbol">ς</div>
+                    <div class="entity-desc">Строчная сигма (конечная)</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;sigma;</div>
+                    <div class="entity-symbol">σ</div>
+                    <div class="entity-desc">Строчная сигма</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;tau;</div>
+                    <div class="entity-symbol">τ</div>
+                    <div class="entity-desc">Строчная тау</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;upsilon;</div>
+                    <div class="entity-symbol">υ</div>
+                    <div class="entity-desc">Строчная ипсилон</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;phi;</div>
+                    <div class="entity-symbol">φ</div>
+                    <div class="entity-desc">Строчная фи</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;chi;</div>
+                    <div class="entity-symbol">χ</div>
+                    <div class="entity-desc">Строчная хи</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;psi;</div>
+                    <div class="entity-symbol">ψ</div>
+                    <div class="entity-desc">Строчная пси</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;omega;</div>
+                    <div class="entity-symbol">ω</div>
+                    <div class="entity-desc">Строчная омега</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;thetasym;</div>
+                    <div class="entity-symbol">ϑ</div>
+                    <div class="entity-desc">Символ тета</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;upsih;</div>
+                    <div class="entity-symbol">ϒ</div>
+                    <div class="entity-desc">Символ ипсилон с крюком</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;piv;</div>
+                    <div class="entity-symbol">ϖ</div>
+                    <div class="entity-desc">Символ пи</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Технические символы -->
+        <div class="entities-section" id="technical-section">
+            <div class="section-header">
+                <h2>⚙️ Технические</h2>
+                <button class="close-btn" onclick="hideSections()">×</button>
+            </div>
+            <div class="entities-grid">
+                <div class="entity-card">
+                    <div class="entity-code">&amp;lceil;</div>
+                    <div class="entity-symbol">⌈</div>
+                    <div class="entity-desc">Левая верхняя скобка</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;rceil;</div>
+                    <div class="entity-symbol">⌉</div>
+                    <div class="entity-desc">Правая верхняя скобка</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;lfloor;</div>
+                    <div class="entity-symbol">⌊</div>
+                    <div class="entity-desc">Левая нижняя скобка</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;rfloor;</div>
+                    <div class="entity-symbol">⌋</div>
+                    <div class="entity-desc">Правая нижняя скобка</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;lang;</div>
+                    <div class="entity-symbol">⟨</div>
+                    <div class="entity-desc">Левая угловая скобка</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;rang;</div>
+                    <div class="entity-symbol">⟩</div>
+                    <div class="entity-desc">Правая угловая скобка</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;loz;</div>
+                    <div class="entity-symbol">◊</div>
+                    <div class="entity-desc">Ромб</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;spades;</div>
+                    <div class="entity-symbol">♠</div>
+                    <div class="entity-desc">Пики</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;clubs;</div>
+                    <div class="entity-symbol">♣</div>
+                    <div class="entity-desc">Трефы</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;hearts;</div>
+                    <div class="entity-symbol">♥</div>
+                    <div class="entity-desc">Червы</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;diams;</div>
+                    <div class="entity-symbol">♦</div>
+                    <div class="entity-desc">Бубны</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;oline;</div>
+                    <div class="entity-symbol">‾</div>
+                    <div class="entity-desc">Надчеркивание</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;frasl;</div>
+                    <div class="entity-symbol">⁄</div>
+                    <div class="entity-desc">Дробная черта</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;weierp;</div>
+                    <div class="entity-symbol">℘</div>
+                    <div class="entity-desc">Символ Вейерштрасса</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;image;</div>
+                    <div class="entity-symbol">ℑ</div>
+                    <div class="entity-desc">Мнимая часть</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;real;</div>
+                    <div class="entity-symbol">ℜ</div>
+                    <div class="entity-desc">Действительная часть</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;alefsym;</div>
+                    <div class="entity-symbol">ℵ</div>
+                    <div class="entity-desc">Символ алеф</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;lang;</div>
+                    <div class="entity-symbol">⟨</div>
+                    <div class="entity-desc">Левая угловая скобка</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;rang;</div>
+                    <div class="entity-symbol">⟩</div>
+                    <div class="entity-desc">Правая угловая скобка</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;larr;</div>
+                    <div class="entity-symbol">←</div>
+                    <div class="entity-desc">Стрелка влево</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;uarr;</div>
+                    <div class="entity-symbol">↑</div>
+                    <div class="entity-desc">Стрелка вверх</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;rarr;</div>
+                    <div class="entity-symbol">→</div>
+                    <div class="entity-desc">Стрелка вправо</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;darr;</div>
+                    <div class="entity-symbol">↓</div>
+                    <div class="entity-desc">Стрелка вниз</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;harr;</div>
+                    <div class="entity-symbol">↔</div>
+                    <div class="entity-desc">Стрелка влево-вправо</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;crarr;</div>
+                    <div class="entity-symbol">↵</div>
+                    <div class="entity-desc">Стрелка возврата</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;lArr;</div>
+                    <div class="entity-symbol">⇐</div>
+                    <div class="entity-desc">Двойная стрелка влево</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;uArr;</div>
+                    <div class="entity-symbol">⇑</div>
+                    <div class="entity-desc">Двойная стрелка вверх</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;rArr;</div>
+                    <div class="entity-symbol">⇒</div>
+                    <div class="entity-desc">Двойная стрелка вправо</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;dArr;</div>
+                    <div class="entity-symbol">⇓</div>
+                    <div class="entity-desc">Двойная стрелка вниз</div>
+                </div>
+                <div class="entity-card">
+                    <div class="entity-code">&amp;hArr;</div>
+                    <div class="entity-symbol">⇔</div>
+                    <div class="entity-desc">Двойная стрелка влево-вправо</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showSection(sectionName) {
+            // Скрываем все секции
+            document.querySelectorAll('.entities-section').forEach(section => {
+                section.style.display = 'none';
+            });
+            
+            // Скрываем категории
+            document.getElementById('categories').style.display = 'none';
+            
+            // Показываем выбранную секцию
+            document.getElementById(sectionName + '-section').style.display = 'block';
+        }
+        
+        function hideSections() {
+            // Скрываем все секции
+            document.querySelectorAll('.entities-section').forEach(section => {
+                section.style.display = 'none';
+            });
+            
+            // Показываем категории
+            document.getElementById('categories').style.display = 'grid';
+        }
+        
+        // Добавляем обработчики клика для копирования сущностей
+        document.querySelectorAll('.entity-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const entityCode = this.querySelector('.entity-code').textContent;
+                navigator.clipboard.writeText(entityCode).then(() => {
+                    const originalText = this.querySelector('.entity-desc').textContent;
+                    this.querySelector('.entity-desc').textContent = 'Скопировано!';
+                    setTimeout(() => {
+                        this.querySelector('.entity-desc').textContent = originalText;
+                    }, 2000);
+                });
+            });
+        });
+    </script>
+</body>
+</html>
