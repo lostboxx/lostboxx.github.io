@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>📁 сбор файлов</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #999999;
+      min-height: 100vh;
+      padding: 20px;
+      color: #333;
+    }
+
+    .container {
+      max-width: 1200px; 
+      margin: 0 auto; 
+      background: white;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+
+    header {
+      background: #2c3e50;
+      color: white;
+      padding: 30px; 
+      text-align: center;
+    }
+
+    header h1 {
+      font-size: 2em; 
+      margin: 0;
+    }
+    
+    .main-content-grid {
+        display: grid;
+        grid-template-columns: 300px 1fr;
+        gap: 20px;
+        padding: 20px;
+        min-height: 300px; 
+    }
+    
+    .control-panel {
+        background: #f8f9fa; 
+        padding: 20px;
+    }
+    
+    .empty-preview {
+        background: #2c3e50;
+        padding: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 1.5em;
+        font-weight: bold;
+    }
+
+
+    .file-input-wrapper {
+        position: relative;
+        display: block;
+        width: 100%;
+        margin-bottom: 15px;
+    }
+
+    .file-input-label {
+        display: block;
+        width: 100%;
+        padding: 15px;
+        border: 2px dashed #3498db;
+        text-align: center;
+        background: white; 
+        cursor: pointer;
+        font-size: 0.95em;
+        line-height: 1.5;
+        color: #333;
+        transition: background 0.2s;
+    }
+    
+    .file-input-label:hover {
+        background: #e9f5ff;
+    }
+
+    #fileInput {
+        opacity: 0; 
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 2;
+        cursor: pointer;
+    }
+    
+    #fileCountDisplay {
+        color: #666; 
+        font-size: 0.85em; 
+        margin-bottom: 25px;
+        text-shadow: 0 1px 0 rgba(255,255,255,0.5);
+    }
+
+
+    #mergeBtn {
+      width: 100%;
+      padding: 12px; 
+      background: #3498db;
+      color: white;
+      border: none;
+      cursor: pointer;
+      margin-top: 10px;
+      font-size: 1.1em;
+      font-weight: bold;
+      transition: background 0.3s;
+      box-shadow: 0 4px #2980b9;
+      position: relative;
+      top: 0;
+    }
+
+    #mergeBtn:hover {
+      background: #2980b9;
+    }
+    
+    #mergeBtn:active {
+      background: #20597d;
+      top: 2px;
+      box-shadow: 0 2px #20597d;
+    }
+    
+    #mergeBtn:disabled {
+        background: #bdc3c7;
+        box-shadow: 0 4px #95a5a6;
+        cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+        <h3>📁 Сборщик файлов</h3>
+    </header>
+    
+    <div class="main-content-grid">
+        <div class="control-panel">
+            <div class="file-input-wrapper">
+              <span class="file-input-label" id="fileInputLabel">📂 выбери папку, и все файлы будут помещены в .txt</span>
+              <input type="file" id="fileInput" multiple webkitdirectory>
+            </div>
+            
+            <p id="fileCountDisplay">Выбрано файлов: 0</p>
+            
+            <button id="mergeBtn" disabled>🔻 собрать в together.txt</button>
+        </div>
+    </div>
+  </div>
+  
+  <script>
+    const fileInput = document.getElementById('fileInput');
+    const mergeBtn = document.getElementById('mergeBtn');
+    const fileInputLabel = document.getElementById('fileInputLabel');
+    const fileCountDisplay = document.getElementById('fileCountDisplay');
+    let files = [];
+
+    fileInput.addEventListener('change', () => {
+      files = Array.from(fileInput.files);
+      const fileCount = files.length;
+      
+      fileCountDisplay.textContent = `Выбрано файлов: ${fileCount}`;
+      
+      if (fileCount > 0) {
+          fileInputLabel.innerHTML = `✅ Выбрано ${fileCount} файлов/папок<br><small>Нажмите для изменения выбора</small>`;
+          mergeBtn.disabled = false;
+      } else {
+          fileInputLabel.innerHTML = '📂 выбери файлы или целые папки<br><small>папки будут структурированы</small>';
+          mergeBtn.disabled = true;
+      }
+    });
+
+    mergeBtn.addEventListener('click', async () => {
+      if (!files.length) return;
+
+      fileInputLabel.innerHTML = `⏳ Идет сборка...<br><small>Подождите, это может занять время</small>`;
+      mergeBtn.disabled = true;
+      fileCountDisplay.textContent = 'Обработка...';
+
+      const folders = {};
+
+      for (const file of files) {
+        // Убедимся, что webkitRelativePath доступен
+        const relPath = file.webkitRelativePath || file.name;
+        const folder = relPath.includes('/') ? relPath.split('/')[0] : 'root';
+
+        if (!folders[folder]) folders[folder] = [];
+        folders[folder].push({ file, relPath });
+      }
+
+      let result = '';
+
+      for (const [folder, list] of Object.entries(folders)) {
+        result += `\n\n-Folder! (${folder})-\n`;
+
+        for (const { file, relPath } of list) {
+          // Чтение контента файла
+          const content = await file.text();
+          result += `\n--- file: ${relPath} ---\n${content}\n`;
+        }
+
+        result += `\n-The folder is closed!-\n`;
+      }
+
+      const blob = new Blob([result], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'together.txt';
+      a.click();
+      URL.revokeObjectURL(url);
+      
+      // Возвращаем состояние после загрузки
+      mergeBtn.disabled = false;
+      fileInputLabel.innerHTML = `✅ Готово! Файл together.txt скачан!<br><small>Нажмите для нового выбора</small>`;
+      fileCountDisplay.textContent = `Выбрано файлов: ${files.length}`;
+    });
+  </script>
+
+</body>
+</html>
